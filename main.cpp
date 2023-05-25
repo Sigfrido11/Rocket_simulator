@@ -46,7 +46,7 @@ int main() {
 
 
         end = chrono::high_resolution_clock();
-        time= start-end;
+        chrono::high_resolution_clock time= start-end;
          
       }
     } else 
