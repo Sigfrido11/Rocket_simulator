@@ -1,8 +1,9 @@
-#include "menu.h"
-#include "navigate.h"
 #include <SFML/Window.hpp>
 #include <chrono>
+
 #include "array"
+#include "menu.h"
+#include "navigate.h"
 #include "rocket.h"
 #include "simulation.h"
 
@@ -13,9 +14,11 @@ int main() {
   simulation::vec force;
   simulation::Gravity gravity;
   auto start = chrono::high_resolution_clock;
-  auto end = chrono::high_resolution_clock;;
-  std::chrono::duration<double,std::nano> time; // è un double di nanosecondi
-                                                // se va a intaccare le performance mettiamo micro sec
+  auto end = chrono::high_resolution_clock;
+  ;
+  std::chrono::duration<double, std::nano>
+      time;  // è un double di nanosecondi
+             // se va a intaccare le performance mettiamo micro sec
   interface::Main_menu main_menu;
   interface::Example_menu preset;
   interface::Setting_menu setting;
@@ -41,17 +44,14 @@ int main() {
         simulate::acelerate(rocket, force, time);
         rocket.move(time);
         rocket.move_theta();
-       // stage relese, verifica fatta nella spinta
-
-
+        // stage relese, verifica fatta nella spinta
 
         end = chrono::high_resolution_clock();
-        chrono::high_resolution_clock time= start-end;
-         
+        chrono::high_resolution_clock time = start - end;
       }
-    } else 
+    } else
       navigation::Navigate(menu_pos, rocket);
-    }
   }
+}
 }
 // tempo chrono o clock?
