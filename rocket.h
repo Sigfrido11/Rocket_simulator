@@ -112,6 +112,8 @@ class Rocket {
 
   void set_velocity(Vec);
 
+  Vec const centripetal() const;
+
   void set_pos(Vec);
 
   void improve_theta();
@@ -147,6 +149,5 @@ class Rocket {
   void sojuz(){
 
   };
-};
-}  // namespace rocket
+};  // namespace rocket
 #endif

@@ -1,5 +1,5 @@
 #include "rocket.h"
-
+#include "simulation.h"
 #include <cmath>
 
 namespace rocket {
@@ -48,15 +48,22 @@ void Rocket::move(double time) {
   pos_[1] = pos_[1] + velocity_[1] * time;
 }
 
-void rocket::change_vel(Vec force, double time) {
+void Rocket::change_vel(Vec force, double time) {
   velocity_[0] = velocity_[0] + (force[0] * (1 / total_mass_) * time);
   velocity_[1] = velocity_[1] + (force[1] * (1 / total_mass_) * time);
 }
 
+Vec const Rocket::centripetal() const {
+  double f_z =  total_mass_ * std::pow(velocity_[1],2) /(simulation::costant::earth_radius_+ pos_[0]);
+  return{f_z,0};
+}
+
 Vec const Rocket::thrust(double time) {
+  double opt_velocity = 2e-9*std::pow(pos_[0],3) + 3e-5*std::pow(pos_[0],2) + 
+  0.1992 * std::pow(pos_[0],3) + 1247;
+
   if (mass_solid_container_ != 0) {
     
-
     double thrust = 
   }
   // somma spinta solida e liquida se presente deve infine verificare che vi
