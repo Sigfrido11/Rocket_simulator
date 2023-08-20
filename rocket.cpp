@@ -27,9 +27,8 @@ inline Vec const Rocket::drag(double rho) const {
   }
 }
 
-inline void set_state(std::string file_name) {
+inline void Rocket::set_state(std::string file_name) {
   Rocket::improve_theta(file_name);
-  Rocket::mass_lost();
   Rocket::stage_release();
 }
 inline double Rocket::get_theta() const { return theta_; }
@@ -40,7 +39,7 @@ inline void Rocket::mass_lost(double liq_lost, double solid_lost){
   assert(liq_lost > 0 && solid_lost >0);
   total_mass_ -= liq_lost - solid_lost;
   mass_liq_prop_[0] -= liq_lost;
-  mass_solid_prop_[0] -= solid_lost;
+  mass_solid_prop_ -= solid_lost;
 }
 
 inline void Rocket::improve_theta(std::string name_f){
@@ -81,11 +80,10 @@ inline double Rocket::get_altitude() const { return pos_[0]; }
 
 inline double Rocket::get_delta_altitude() const {return delta_altitude_;}
 
-inline Vec const Rocket::total_force(double rho, double p_ext) const {
+inline Vec const Rocket::total_force(double rho, double p_ext, Vec eng) const {
   Vec centrip = rocket::centripetal(total_mass_, pos_[0], velocity_[1]);
   Vec gra = rocket::g_force(pos_[0], total_mass_, theta_);
   Vec drag = Rocket::drag(rho);
-  Vec eng = Rocket::Engine::eng_force(p_ext);
   double z = centrip[0]+ gra[0]+drag[0]+eng[0];
   double y = centrip[1]+ gra[1]+drag[1]+eng[1];
   return {z,y};
@@ -107,7 +105,7 @@ inline void Rocket::change_vel(Vec force, double time) {
   velocity_[1] = velocity_[1] + (force[1] * (1 / total_mass_) * time);
 }
 
-inline double const opt_aceleration(double altitude) {}
+//inline double const opt_aceleration(double altitude) {}
 
 inline void Rocket::stage_release() {
   if (mass_solid_cont_ == 0) {
@@ -156,7 +154,6 @@ inline void Rocket::Engine::int_pression(double time) {
   delta_pres_ = new_pres - p_0_;
   p_0_ = new_pres;
     grain_rho_= delta_pres_/(sim::cost::R_*t_0_);
-    v_0_ += burn_a_*r_coef_*time;
 }
 
 inline void Rocket::Engine::r_coef() {
@@ -171,21 +168,19 @@ inline void Rocket::Engine::r_coef() {
   return fac1 * fac2 * std::pow(fac3, fac4);
 }
 
-inline Vec const Rocket::Engine::eng_force(double p_ext) const {
+inline Vec const Rocket::Engine::eng_force(double p_ext, double theta) const {
   double fac1 = nozzle_as_ * p_0_;
   double fac2 = (2*std::pow(sim::cost::gamma_,2)/(sim::cost::gamma_-1));
   double fac3 = 2/(sim::cost::gamma_-1);
   double exp = (sim::cost::gamma_+1)/(sim::cost::gamma_-1);
   double fac4= 1-std::pow((p_ext/p_0_), (sim::cost::gamma_-1/sim::cost::gamma_));
   double force = fac1 * std::sqrt(fac2*std::pow(fac3,exp)*fac4);
-  double theta = Rocket::get_theta();
   return {force * std::cos(theta), force * std::sin(theta)};
 }
 
-inline void Rocket::Engine::set_state(double time, double p_ext) {
+inline void Rocket::Engine::set_state(double time) {
   Rocket::Engine::r_coef();
   Rocket::Engine::int_pression(time);
-  Rocket::mass_lost(0., Rocket::Engine::delta_m(time, p_ext));
 }
 
 

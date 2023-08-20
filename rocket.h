@@ -32,8 +32,6 @@ class Rocket {
   vectorD mass_liq_cont_;
   Vec pos_{0., 0.};  // ora altitude diventa inutile ho già tutto nel pos_
   double delta_altitude_{0.};
-  double solid_thrust_{0};  // solo una volta se presente il carbutante solido
-  vectorD stage_thrust_;
   double lateral_area_{0.};
   double upper_area_{0.};
   int total_stage_{1};  // numero degli stadi
@@ -42,8 +40,8 @@ class Rocket {
  public:
   // costruttore con stadi
   // costruttore non con container
-  explicit Rocket(double x, double Up_Ar, double Lat_Ar, double spm, double st,
-                  int num_stage, vectorD lpm, vectorD lt)
+ /* explicit Rocket(double x, double Up_Ar, double Lat_Ar, double spm, double st,
+                  int num_stage, std::vector<double> lpm, std::vector<double> lt)
       : total_mass_{x + ((std::accumulate(lpm.begin(), lpm.end(), 0.) + spm) *
                          19. / 18.)},  // x in realtà solo navicella
         lateral_area_{Lat_Ar},
@@ -52,13 +50,12 @@ class Rocket {
         mass_solid_cont_{st},
         total_stage_{num_stage},
         current_stage_{num_stage},
-        mass_liq_prop_{lpm},
-        stage_thrust_{lt} {}
-
+        mass_liq_prop_{lpm}
+         {}
+*/
   // costruttore con container
-  explicit Rocket(double x, double Up_Ar, double Lat_Ar, double spm, double scm,
-                  double st, int num_stage, vectorD lpm,
-                  std::vector<double> lcm, vectorD lt)
+  Rocket(double x, double Up_Ar, double Lat_Ar, double spm, double scm, int num_stage, std::vector<double> lpm,
+                  std::vector<double> lcm)
       : total_mass_{x + std::accumulate(lpm.begin(), lpm.end(), 0.) +
                     std::accumulate(lcm.begin(), lcm.end(), 0.) + scm +
                     spm},  // x in realtà solo navicella
@@ -66,12 +63,11 @@ class Rocket {
         upper_area_{Up_Ar},
         mass_solid_prop_{spm},
         mass_solid_cont_{scm},
-        solid_thrust_{st},
         total_stage_{num_stage},
         current_stage_{num_stage},
         mass_liq_prop_{lpm},
-        mass_liq_cont_{lcm},
-        stage_thrust_{lt} {}
+        mass_liq_cont_{lcm}
+         {}
 
   Vec const drag(double) const;
 
@@ -99,33 +95,28 @@ class Rocket {
 
   void change_vel(Vec force, double time);
 
-  Vec const move(Vec position, double time);
-
   void set_state(std::string);
 
   void saturnV(){};
 
   void sojuz(){};
 
-  Vec const total_force(double, double) const;
+  Vec const total_force(double, double, Vec) const;
 
 class Engine {
   // per ogni stadio del razzo vi sarà una diversa spinta,
   // questo vettore contiene le spinte relative ad ogni stadio
   // ho tolto gli iteratori per snellire le informazioni del razzo visto che
   // dobbiamo copiarlo spesso
-  int isp_{275};
-  double nozzle_as_{0.};
-  double t_0_{0.};
-  double v_0_{0.};
-  double p_0_{0.};
-  double burn_a_{0.};
-  double molecular_weight_{0.};
-  double grain_dim_{0.};
-  double grain_rho_{0.};
-  double a_coef_{0.};
-  double r_coef_{0.};
-  double n_coef_{0.};
+  double nozzle_as_{221.0e-6};
+  double t_0_{1710.0};
+  double p_0_{0.1};
+  double molecular_weight_{0.4242};
+  double grain_dim_{0.02};
+  double grain_rho_{1879};
+  double a_coef_{0.01};
+  double r_coef_{0.1};
+  double n_coef_{0.2};
   double delta_pres_{0.};
 
  public:
@@ -139,11 +130,11 @@ class Engine {
 
   Vec const v_exit(double) const;
 
-  Vec const eng_force(double) const;
+  Vec const eng_force(double,double) const;
 
   double const delta_m(double, double) const;
 
-  void set_state(double,double);
+  void set_state(double);
 };
 };
 
