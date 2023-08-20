@@ -1,19 +1,24 @@
+#include "rocket.h"
+#include "simulation.h"
+//#include "menu.h"
+//#include "navigate.h"
 //#include <SFML/Window.hpp>
 #include <chrono>
 #include <array>
-//#include "menu.h"
-//#include "navigate.h"
-#include "rocket.h"
-#include "simulation.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+
+
 
 int main() {
   // definisco le varie parti delle impostazioni
   using Vec = std::array<double, 2>;
   namespace ch = std::chrono;
   rocket::Rocket rocket;
-  rocket::simulation::Atmosphere atm;
+  rocket::Rocket::Engine eng;
   Vec force;
-  rocket::simulation::Gravity gravity;
   std::chrono::high_resolution_clock dur;
   std::chrono::high_resolution_clock time;
   ;
@@ -33,7 +38,7 @@ int main() {
       bool keep{true};
       while (keep) {
         auto start = ch::high_resolution_clock::now();
-        force = rocket.force();
+        force = rocket::force();
         rocket.mass_lose();
         double nanosec = std::chrono::duration_cast<ch::nanoseconds>(dur);
         rocket.change_vel();
@@ -41,7 +46,7 @@ int main() {
         value secondo me poteva rallentare tanto l'esecuzione visto che contiene tante informazioni*/
         
        rocket.move(nanosec);
-        rocket.change_theta();
+        rocket.improve_theta();
         // stage relese, verifica fatta nella spinta
 
         auto dur = ch::high_resolution_clock::now() - start;
