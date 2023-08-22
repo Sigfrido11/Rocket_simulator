@@ -25,8 +25,8 @@ add_executable(razzo.t test.cpp rocket.cpp simulation.cpp)
 #if (BUILD_TESTING)
 
   # aggiungi l'eseguibile statistics.t
- # add_executable(statistics.t statistics.test.cpp statistics.cpp)
-  # aggiungi l'eseguibile statistics.t alla lista dei test
-  #add_test(NAME statistics.t COMMAND statistics.t)
+  # add_executable(statistics.t statistics.test.cpp statistics.cpp)
+   #aggiungi l'eseguibile statistics.t alla lista dei test
+#add_test(NAME statistics.t COMMAND statistics.t)
 
 #endif()

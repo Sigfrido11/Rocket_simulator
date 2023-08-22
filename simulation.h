@@ -14,13 +14,13 @@ struct Air_var {
   double p_{101'325};  // pression
   double t_{293.0};   // temperature
   double rho_{1.225}; // density
-  double air_gradient_{0.};
 
-  void set_state(double, double);
+  void set_state(double);
+
+  double const sound_speed() const;
 };
 
 struct cost {
-  static constexpr double air_gradient_{0.0065};
   static constexpr double sea_pression_{101325};
   static constexpr double R_{8.314462618};
   static constexpr double molar_mass_{0.0289644}; // kilo su mole
