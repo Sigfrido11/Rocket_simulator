@@ -69,8 +69,7 @@ class Rocket {
       assert(isp_ > 0 && cm_ > 0 && p_0_ > 0 && burn_a_ > 0);
     }
 
-    explicit Engine(double isp, double cm, double p0)
-        : isp_{isp}, cm_{cm}, p_0_{p0} {
+    Engine(double isp, double cm, double p0) : isp_{isp}, cm_{cm}, p_0_{p0} {
       assert(isp_ > 0 && cm_ > 0 && p_0_ > 0);
     }
 
@@ -82,13 +81,9 @@ class Rocket {
 
     Rocket::Engine& operator=(Rocket::Engine const& other);
 
-    Vec const eng_force(double, double, double) const;
+    Vec const eng_force(double, double, double, bool) const;
 
     double const delta_m(double) const;
-
-    Engine const solid_eng() const;
-
-    Engine const liquid_eng() const;
     /*
 
         Vec const Vel_eq() const;
@@ -108,8 +103,9 @@ class Rocket {
   };
 
  private:
-  Engine eng_s_ {Engine::solid_eng()};
-  std::vector<Engine> liq_eng_{Engine::liquid_eng()};
+  Engine eng_s_{250., 4., 5e6};
+
+  std::vector<Engine> liq_eng_;
 
  public:
   // costruttore con tutto
@@ -125,10 +121,11 @@ class Rocket {
         upper_area_{Up_Ar},
         mass_solid_prop_{s_p_m},
         mass_solid_cont_{m_s_cont},
-        total_stage_{l_p_m.size()},
+        total_stage_{static_cast<int>(l_p_m.size())},
         mass_liq_prop_{l_p_m},
         mass_liq_cont_{l_c_m},
-        eng_s{eng_s} {
+        eng_s_{eng_s},
+        liq_eng_{eng_l} {
     assert(mass_liq_cont_.size() == mass_liq_prop_.size());
     assert(lateral_area_ > 0 && upper_area_ > 0 && mass_solid_cont_ > 0 &&
            mass_solid_prop_ > 0);
@@ -136,10 +133,6 @@ class Rocket {
                   [=](double value) { assert(value > 0.); });
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
                   [=](double value) { assert(value > 0.); });
-    std::for_each(liq_eng_.begin(), liq_eng_.end(),
-                  [&](std::vector<Engine> eng) { 
-                    
-                    eng =  });
   }
 
   // costruttore senza container aree e massa struttura
@@ -150,52 +143,51 @@ class Rocket {
                     s_p_m + 15'000 * (l_p_m.size() + 1)},
         name_{name},
         mass_solid_prop_{s_p_m},
-        total_stage_{l_p_m.size()},
+        total_stage_{static_cast<int>(l_p_m.size())},
         mass_liq_prop_{l_p_m},
-        eng_s = eng_s,
-        eng_l = eng_l {
-    assert(mass_solid_prop_ > 0 && mass_liq_prop_ > 0);
+        eng_s_{eng_s},
+        liq_eng_{eng_l} {
+    assert(mass_solid_prop_ > 0.);
 
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
                   [=](double value) { assert(value > 0.); });
 
     std::for_each(mass_liq_cont_.begin(), mass_liq_cont_.end(),
                   [=](double value) { value = 15'000; });
-    mass_solid_cont_{15'000};
   }
 
   // costruttore senza container aree e carburanti
 
-  explicit Rocket(std::string name, int stage_number, Engine eng_s,
-                  std::vector<Engine> eng_l)
-      : total_mass_{15'000 + 20'000 * (stage_number + 1) +
-                    40'000 * (stage_number + 1)},
+  explicit Rocket(std::string name, Engine eng_s, std::vector<Engine> eng_l)
+      : total_stage_{static_cast<int>(eng_l.size())},
         name_{name},
-        total_stage_{stage_number},
-        eng_s = eng_s,
-        eng_l = eng_l {
+        total_mass_{15'000 + 20'000 * (static_cast<int>(eng_l.size())+ 1) +
+                    40'000 * (static_cast<int>(eng_l.size()) + 1)},
+        eng_s_{eng_s},
+        liq_eng_{eng_l} {
     assert(mass_liq_cont_.size() == mass_liq_prop_.size());
     assert(lateral_area_ > 0 && upper_area_ > 0 && mass_solid_cont_ > 0 &&
            mass_solid_prop_ > 0);
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
                   [=](double value) { assert(value > 0.); });
-
     std::for_each(mass_liq_cont_.begin(), mass_liq_cont_.end(),
                   [=](double value) { value = 15'000; });
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
                   [=](double value) { value = 40'000; });
-              
+   
   }
 
   Rocket() = default;
 
-  Vec const drag(double) const;
+  Vec const drag(double, double) const;
 
   Vec get_velocity() const;
 
   Vec get_pos() const;
 
   void mass_lost(double, double);
+
+  void delta_m();
 
   void improve_theta(std::string, double);
 
@@ -209,13 +201,13 @@ class Rocket {
 
   void change_vel(Vec force, double time);
 
-  void set_state(std::string, double, double, double);
+  void set_state(std::string, double, double);
 
   void saturnV(){};
 
   void sojuz(){};
 
-  Vec const total_force(double, Vec, double) const;
+  Vec const total_force(double, double, double, bool) const;
 };
 
 bool const is_orbiting(double, double);
