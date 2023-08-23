@@ -234,7 +234,7 @@ double const Rocket::Engine::get_pression() const { return p_0_; }
 
 // funzioni del namespace
 
-bool const is_orbiting(double pos, double velocity) {
+inline bool const is_orbiting(double pos, double velocity) {
   double inf_speed = std::sqrt(sim::cost::G_ * sim::cost::earth_mass_ /
                                (pos + sim::cost::earth_radius_));
   return ((velocity + sim::cost::earth_speed_) > inf_speed) ? true : false;

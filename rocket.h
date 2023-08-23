@@ -130,9 +130,9 @@ class Rocket {
     assert(lateral_area_ > 0 && upper_area_ > 0 && mass_solid_cont_ > 0 &&
            mass_solid_prop_ > 0);
     std::for_each(mass_liq_cont_.begin(), mass_liq_cont_.end(),
-                  [=](double value) { assert(value > 0.); });
+                  [&](double value) { assert(value > 0.); });
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
-                  [=](double value) { assert(value > 0.); });
+                  [&](double value) { assert(value > 0.); });
   }
 
   // costruttore senza container aree e massa struttura
@@ -150,10 +150,10 @@ class Rocket {
     assert(mass_solid_prop_ > 0.);
 
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
-                  [=](double value) { assert(value > 0.); });
+                  [&](double value) { assert(value > 0.); });
 
     std::for_each(mass_liq_cont_.begin(), mass_liq_cont_.end(),
-                  [=](double value) { value = 15'000; });
+                  [&](double value) { value = 15'000; });
   }
 
   // costruttore senza container aree e carburanti
@@ -169,11 +169,11 @@ class Rocket {
     assert(lateral_area_ > 0 && upper_area_ > 0 && mass_solid_cont_ > 0 &&
            mass_solid_prop_ > 0);
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
-                  [=](double value) { assert(value > 0.); });
+                  [&](double value) { assert(value > 0.); });
     std::for_each(mass_liq_cont_.begin(), mass_liq_cont_.end(),
-                  [=](double value) { value = 15'000; });
+                  [&](double value) { value = 15'000; });
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
-                  [=](double value) { value = 40'000; });
+                  [&](double value) { value = 40'000; });
    
   }
 
