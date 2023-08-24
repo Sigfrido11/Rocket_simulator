@@ -4,10 +4,14 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <cmath>
 #include <iterator>
+#include <memory>
 #include <numeric>
 #include <string>
 #include <vector>
+
+#include "simulation.h"
 
 namespace rocket {
 using Vec = std::array<double, 2>;
@@ -40,79 +44,131 @@ class Rocket {
 
  public:
   class Engine {
+   public:
+    virtual double const delta_m(double, bool) const = 0;
+
+    virtual Vec const eng_force(std::vector<double>, bool) const = 0;
+
+    virtual void release() = 0;
+
+    virtual bool const is_ad_eng() const = 0;
+
+    virtual bool const is_released() const = 0;
+
+    virtual ~Engine();
+  };
+  class Base_engine final : public Engine {
     double isp_{250};  // per i solidi
     double cm_{4.};
     double p_0_{5e6};
     double burn_a_{200e-6};
-    /*
-    // per ogni stadio del razzo vi sarà una diversa spinta,
-    // questo vettore contiene le spinte relative ad ogni stadio
-    // ho tolto gli iteratori per snellire le informazioni del razzo visto che
-    // dobbiamo copiarlo spesso
-    double nozzle_as_{221.0e-6};
-    double t_0_{1710.0};
-    double v_0_{};
-    double molecular_weight_{0.4242};
-    double grain_dim_{0.02};
-    double grain_rho_{1879};
-    double a_coef_{0.01};
-    double r_coef_{0.1};
-    double n_coef_{0.02};
-    double delta_pres_{0.};
-
-    bool is_steady_{false};
-    */
+    bool released_{false};
 
    public:
-    explicit Engine(double isp, double cm, double p0, double burn_a)
+    explicit Base_engine(double isp, double cm, double p0, double burn_a)
         : isp_{isp}, cm_{cm}, p_0_{p0}, burn_a_{burn_a} {
-      assert(isp_ > 0 && cm_ > 0 && p_0_ > 0 && burn_a_ > 0);
+      assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0 && burn_a_ >= 0);
     }
 
-    Engine(double isp, double cm, double p0) : isp_{isp}, cm_{cm}, p_0_{p0} {
-      assert(isp_ > 0 && cm_ > 0 && p_0_ > 0);
+    explicit Base_engine(double isp, double cm, double p0)
+        : isp_{isp}, cm_{cm}, p_0_{p0} {
+      assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0);
     }
 
-    explicit Engine(double isp, double cm) : isp_{isp}, cm_{cm} {
-      assert(isp_ > 0 && cm_ > 0);
+    explicit Base_engine(double isp, double cm) : isp_{isp}, cm_{cm} {
+      assert(isp_ >= 0 && cm_ >= 0);
     }
 
-    Engine() = default;
+    Base_engine() = default;
 
-    Rocket::Engine& operator=(Rocket::Engine const& other);
+    double const delta_m(double, bool) const override;
 
-    Vec const eng_force(double, double, double, bool) const;
+    void release() override;
 
-    double const delta_m(double) const;
-    /*
+    Vec const eng_force(std::vector<double>, bool) const override;
 
-        Vec const Vel_eq() const;
+    virtual bool const is_ad_eng() const override;
 
-        void int_pression(double, double);
+    virtual bool const is_released() const override;
+  };
 
-        void r_coef();
+  class Ad_engine final : public Engine {
+    double p_0_{5e6};
+    double burn_a_{200e-6};
+    double nozzle_as_{221.0e-6};
+    double t_0_{1710.0};
+    double grain_rho_{1873};
+    double grain_dim_{0.02};
+    double burn_rate_a_{0.01};
+    double burn_rate_n_{0.02};
+    bool released_{false};
 
-        Vec const v_eq() const;
+   public:
+    explicit Ad_engine(double burn_a, double nozzle_as, double t_0,
+                       double grain_dim, double grain_rho, double a_coef,
+                       double burn_rate_n)
+        : burn_a_{burn_a},
+          t_0_{t_0},
+          grain_dim_{grain_dim},
+          grain_rho_{grain_rho},
+          burn_rate_a_{burn_a} burn_rate_n_{burn_rate_n} {
+      assert(p_0_ >= 0 && burn_a_ >= 0 && nozzle_as_ >= 0 && t_0_ >= 0 &&
+             grain_dim_ >= 0 && grain_rho_ >= 0 && burn_rate_a_ >= 0 &&
+             burn_rate_n_ >= 0);
 
-        double const v_exit(double) const;
+      double fac1 = burn_rate_a_ * grain_rho_ * grain_dim_ / nozzle_as_;
+      double exponent = sim::cost::gamma_ + 1 / (sim::cost::gamma_ - 1);
+      double fac2 = std::pow(2 / sim::cost::gamma_ + 1, exponent);
+      double fac3 =
+          std::sqrt((sim::cost::gamma_ * fac2) / sim::cost::R_ * t_0_);
+      double new_pres = std::pow(fac1 / fac3, 1 / (1 - burn_rate_n_));
+      p_0_ = new_pres;
+    }
 
-        void set_state(double,double);
+        explicit Ad_engine(double p_0, double burn_a, double nozzle_as, double t_0)
+        : burn_a_{burn_a},
+          p_0_{p_0},
+          t_0_{t_0},
+         nozzle_as_{nozzle_as} {
+      assert(p_0_ >= 0 && burn_a_ >= 0 && nozzle_as_ >= 0 && t_0_ >= 0);
+    }
 
-        double const get_pression() const;
-    */
+     explicit Ad_engine(double p_0, double t_0)
+        :
+          p_0_{p_0},
+          t_0_{t_0} {
+      assert(p_0_ >= 0 && t_0_ >= 0);
+    }
+
+    explicit Ad_engine() = default;
+    }
+
+
+
+    double const delta_m(double, bool) const override;
+
+    void release() override;
+
+    Vec const eng_force(std::vector<double>, bool) const override;
+
+    virtual bool const is_ad_eng() const override;
+
+    virtual bool const is_released() const override;
   };
 
  private:
-  Engine eng_s_{250., 4., 5e6};
-
+  std::unique_ptr<Engine> eng_s_;
+  int n_sol_eng_{1};
   std::vector<Engine> liq_eng_;
+  std::vector<int> n_liq_eng_;
 
  public:
   // costruttore con tutto
   explicit Rocket(std::string name, double mass_structure, double Up_Ar,
                   double Lat_Ar, double s_p_m, double m_s_cont,
                   std::vector<double> l_p_m, std::vector<double> l_c_m,
-                  Engine eng_s, std::vector<Engine> eng_l)
+                  std::vector<double> l_c_p, std::unique_ptr<Engine> eng_s,
+                  std::vector<Engine> eng_l, int n_solid_eng, std::vector<int> n_liq_eng)
       : total_mass_{mass_structure +
                     std::accumulate(l_p_m.begin(), l_p_m.end(), 0.) + s_p_m +
                     m_s_cont + std::accumulate(l_c_m.begin(), l_c_m.end(), 0.)},
@@ -124,47 +180,57 @@ class Rocket {
         total_stage_{static_cast<int>(l_p_m.size())},
         mass_liq_prop_{l_p_m},
         mass_liq_cont_{l_c_m},
-        eng_s_{eng_s},
-        liq_eng_{eng_l} {
-    assert(mass_liq_cont_.size() == mass_liq_prop_.size());
+        liq_eng_{eng_l},
+        n_sol_eng_{n_solid_eng},
+        n_liq_eng_{n_liq_eng}
+        {
+    assert(mass_liq_cont_.size() == mass_liq_prop_.size() && 
+    n_liq_eng_.size() == mass_liq_prop_.size());
     assert(lateral_area_ > 0 && upper_area_ > 0 && mass_solid_cont_ > 0 &&
            mass_solid_prop_ > 0);
     std::for_each(mass_liq_cont_.begin(), mass_liq_cont_.end(),
                   [&](double value) { assert(value > 0.); });
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
                   [&](double value) { assert(value > 0.); });
+    eng_s_ = std::move(eng_s);
   }
 
   // costruttore senza container aree e massa struttura
 
   explicit Rocket(std::string name, double s_p_m, std::vector<double> l_p_m,
-                  Engine eng_s, std::vector<Engine> eng_l)
+                  std::unique_ptr<Engine> eng_s, std::vector<Engine> eng_l,
+                  int n_solid_eng, std::vector<int> n_liq_eng)
       : total_mass_{15'000 + std::accumulate(l_p_m.begin(), l_p_m.end(), 0.) +
                     s_p_m + 15'000 * (l_p_m.size() + 1)},
         name_{name},
         mass_solid_prop_{s_p_m},
         total_stage_{static_cast<int>(l_p_m.size())},
         mass_liq_prop_{l_p_m},
-        eng_s_{eng_s},
-        liq_eng_{eng_l} {
+        liq_eng_{eng_l},
+        n_sol_eng_{n_solid_eng},
+        n_liq_eng_{n_liq_eng}
+         {
     assert(mass_solid_prop_ > 0.);
-
+ assert(mass_liq_cont_.size() == mass_liq_prop_.size() && n_liq_eng_.size() == mass_liq_prop_.size());
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
                   [&](double value) { assert(value > 0.); });
 
     std::for_each(mass_liq_cont_.begin(), mass_liq_cont_.end(),
                   [&](double value) { value = 15'000; });
+    eng_s_ = std::move(eng_s);
   }
 
   // costruttore senza container aree e carburanti
 
-  explicit Rocket(std::string name, Engine eng_s, std::vector<Engine> eng_l)
+  explicit Rocket(std::string name, std::unique_ptr<Engine> eng_s,
+                  std::vector<Engine> eng_l, int n_solid_eng, std::vector<int> n_liq_eng)
       : total_stage_{static_cast<int>(eng_l.size())},
         name_{name},
-        total_mass_{15'000 + 20'000 * (static_cast<int>(eng_l.size())+ 1) +
+        total_mass_{15'000 + 20'000 * (static_cast<int>(eng_l.size()) + 1) +
                     40'000 * (static_cast<int>(eng_l.size()) + 1)},
-        eng_s_{eng_s},
-        liq_eng_{eng_l} {
+        liq_eng_{eng_l},
+         n_sol_eng_{n_solid_eng},
+        n_liq_eng_{n_liq_eng}{
     assert(mass_liq_cont_.size() == mass_liq_prop_.size());
     assert(lateral_area_ > 0 && upper_area_ > 0 && mass_solid_cont_ > 0 &&
            mass_solid_prop_ > 0);
@@ -174,12 +240,10 @@ class Rocket {
                   [&](double value) { value = 15'000; });
     std::for_each(mass_liq_prop_.begin(), mass_liq_prop_.end(),
                   [&](double value) { value = 40'000; });
-   
+    eng_s_ = std::move(eng_s);
   }
 
   Rocket() = default;
-
-  Vec const drag(double, double) const;
 
   Vec get_velocity() const;
 
@@ -201,7 +265,7 @@ class Rocket {
 
   void change_vel(Vec force, double time);
 
-  void set_state(std::string, double, double);
+  void set_state(std::string, double, double, bool);
 
   void saturnV(){};
 
@@ -214,11 +278,9 @@ bool const is_orbiting(double, double);
 
 Vec const centripetal(double, double, double);
 
-// double const opt_velocity(double);
-
-// double const opt_aceleration(double);
-
 Vec const g_force(double, double, double);
+
+Vec const drag(double, double, double, double, double, Vec);
 
 };  // namespace rocket
 #endif

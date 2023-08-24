@@ -23,21 +23,21 @@ int main() {
   int i{0};
   double time{1};
   Vec force;
-  Vec eng_force;
   double delta_ms{0.};
   double delta_ml{0.};
-  rocket::Rocket::Engine a;
   std::cout << "a che altezza vuoi orbitare?";
   double orbital_h;
   std::cin >> orbital_h;
   while (i < 400) {
-    rocket.set_state(file_name, orbital_h, time);
-    bool is_orbiting =
+     bool is_orbiting =
         rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1]);
+
+    rocket.set_state(file_name, orbital_h, time, is_orbiting);
+   
     air.set_state(rocket.get_pos()[0]);
 
     force =
-        rocket.total_force(air.rho_, rocket.get_pos()[0], time, is_orbiting);
+        rocket.total_force(air.rho_, air.p_, time, is_orbiting);
     rocket.change_vel(force, time);
     //    assert(rocket.get_velocity()[0]>=0. && rocket.get_velocity()[0] >=0.);
     rocket.move(time, force);
