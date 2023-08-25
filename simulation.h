@@ -5,8 +5,6 @@
 #include <cmath>
 #include <vector>
 
-#include "rocket.h"
-
 namespace sim {
 using Vec = std::array<double, 2>;
 

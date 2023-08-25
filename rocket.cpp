@@ -1,12 +1,12 @@
 #include "rocket.h"
-
+#include "simulation.h"
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <memory>
-#include "simulation.h"
+
 
 namespace rocket {
 class Rocket;
@@ -17,8 +17,8 @@ using Vec = std::array<double, 2>;
 void Rocket::set_state(std::string file_name, double orbital_h, double time,
                        bool is_orbiting) {
   improve_theta(file_name, orbital_h);
-  double ms{eng_s_->delta_m(time, is_orbiting)} * n_sol_eng_;
-  double ml{liq_eng_[0].delta_m(time, is_orbiting)} * n_liq_eng_[0];
+  double ms{eng_s_->delta_m(time, is_orbiting)* n_sol_eng_} ;
+  double ml{liq_eng_[0].delta_m(time, is_orbiting)* n_liq_eng_[0]} ;
   mass_lost(ms, ml);
   stage_release(ms, ml);
 }
@@ -30,8 +30,8 @@ double Rocket::get_mass() const { return total_mass_; }
 void Rocket::mass_lost(double solid_lost, double liq_lost) {
   assert(liq_lost >= 0 && solid_lost >= 0);
   total_mass_ -= liq_lost - solid_lost;
-  mass_liq_prop_[0] -= liq_lost;
-  mass_solid_prop_ -= solid_lost;
+  m_liq_prop_[0] -= liq_lost;
+  m_sol_prop_ -= solid_lost;
 }
 
 void Rocket::improve_theta(std::string name_f, double orbital_h) {
@@ -88,14 +88,14 @@ Vec const Rocket::total_force(double rho, double p_ext, double time,
   }
   if (liq_eng_[0].is_ad_eng()) {
     std::vector<double> par{p_ext, theta_};
-    Vec engl = liq_eng_[0].eng_force(par, is_orbiting)* n;
+    Vec engl = liq_eng_[0].eng_force(par, is_orbiting);
   } else {
     std::vector<double> par{time, theta_, pos_[0]};
     Vec engl = liq_eng_[0].eng_force(par, is_orbiting);
   }
   Vec drag_f = drag(rho, pos_[0], theta_, upper_area_, lateral_area_, velocity_);
-  double z = engs[0] *n_sol_eng + engl[0] * n_liq_eng[0] - gra[0] - drag_f[0];
-  double y = engs[1] * n_sol_eng + engl[1] * n_liq_eng[0] + centrip[1] - gra[1] - drag_f[1];
+  double z = engs[0] * n_sol_eng_ + engl[0] * n_liq_eng_[0] - gra[0] - drag_f[0];
+  double y = engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0] + centrip[1] - gra[1] - drag_f[1];
   return {z, y};
 }
 
@@ -104,7 +104,7 @@ void Rocket::move(double time, Vec force) {
             0.5 * (force[0] / total_mass_) * std::pow(time, 2);
   pos_[1] = pos_[1] + velocity_[1] * time +
             0.5 * (force[1] / total_mass_) * std::pow(time, 2);
-  // assert(pos_[0] >= 0 && pos_[1] >= 0);  // non ha un sistema di riferimento
+   assert(pos_[0] >= 0 && pos_[1] >= 0);  // non ha un sistema di riferimento
   //  cartesiano quindi no orbita completa
 }
 
@@ -116,31 +116,31 @@ void Rocket::change_vel(Vec force, double time) {
 // inline double const opt_aceleration(double altitude) {}
 
 void Rocket::stage_release(double delta_ms, double delta_ml) {
-  assert(mass_liq_prop_[0] >= 0 && mass_solid_prop_ >= 0);
-  if (mass_solid_cont_ == 0) {
+  assert(m_liq_prop_[0] >= 0 && m_sol_prop_ >= 0);
+  if (m_sol_cont_ == 0) {
     assert(current_stage_ != 0);
-    if (mass_liq_prop_[0] <= delta_ml) {
+    if (m_liq_prop_[0] <= delta_ml) {
       std::cout << "distacco avvenuto"
                 << "\n";
       current_stage_ -= 1;
-      total_mass_ -= mass_liq_cont_[0] - mass_liq_prop_[0];
-      mass_liq_cont_.erase(mass_liq_cont_.begin());
-      mass_liq_prop_.erase(mass_liq_prop_.begin());
+      total_mass_ -= m_liq_cont_[0] - m_liq_prop_[0];
+      m_liq_cont_.erase(m_liq_cont_.begin());
+      m_liq_prop_.erase(m_liq_prop_.begin());
       liq_eng_.erase(liq_eng_.begin());
-      n_liq_eng.erase(n_liq_eng.begin());
+      n_liq_eng_.erase(n_liq_eng_.begin());
     }
   } else {
     assert(current_stage_ != 0);
-    assert(mass_liq_prop_[0] != 0);
-    int len = static_cast<int>(mass_liq_prop_.size());
+    assert(m_liq_prop_[0] != 0);
+    int len = static_cast<int>(m_liq_prop_.size());
     assert(len == total_stage_);
-    if (mass_solid_prop_ <= delta_ms) {
+    if (m_sol_prop_ <= delta_ms) {
       current_stage_ -= 1;
-      total_mass_ -= mass_solid_cont_ - mass_solid_prop_;
-      mass_solid_cont_ = 0;
-      mass_solid_prop_ = 0;
+      total_mass_ -= m_sol_cont_ - m_sol_prop_;
+      m_sol_cont_ = 0;
+      m_sol_prop_ = 0;
       eng_s_->release();
-      n_sol_eng =0;
+      n_sol_eng_ =0;
     }
   }
 }
@@ -152,9 +152,8 @@ double const Rocket::Base_engine::delta_m(double time, bool is_orbiting) const {
     return 0.;
   }
 }
-
 Vec const Rocket::Base_engine::eng_force(std::vector<double> par,
-                                         double is_orbiting) const {
+                                         bool is_orbiting) const {
   double time{par[0]};
   double theta{par[1]};
   double pos{par[2]};
