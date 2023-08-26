@@ -22,6 +22,7 @@ int main() {
   sim::Air_var air;
   int i{0};
   double time{1};
+  std::streampos start_pos;
   Vec force;
   double delta_ms{0.};
   double delta_ml{0.};

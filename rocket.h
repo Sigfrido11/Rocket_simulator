@@ -8,7 +8,6 @@
 #include <numeric>
 #include <string>
 #include <vector>
-
 #include "assert.h"
 #include "simulation.h"
 
@@ -36,7 +35,6 @@ class Rocket {
   Vec velocity_{0., 0.};
   Vec pos_{0., 0.};  // ora altitude diventa inutile ho già tutto nel pos_
   int current_stage_{1};
-  std::streampos start_pos_;
   double theta_{1.57079632};  // angolo inclinazione
   double upper_drag_{0.48};
   double lateral_drag_{0.82};
@@ -147,8 +145,30 @@ class Rocket {
   };
 
  private:
-  std::unique_ptr<Engine> eng_s_;
-  int n_sol_eng_{1};
+  std::unique_ptr<Engine> eng_s_ =nullptr;
+  int n_sol_eng_{1};Vec const Rocket::thrust(double theta, double pos, double p_ext, double time,
+                         bool is_orbiting) const {
+  Vec engs;
+  Vec engl;
+  if (eng_s_->is_ad_eng()) {
+    std::vector<double> par{p_ext, theta};
+    Vec engs = eng_s_->eng_force(par, is_orbiting);
+  } else {
+    std::vector<double> par{time, theta, pos};
+    Vec engs = eng_s_->eng_force(par, is_orbiting);
+  }
+  if (liq_eng_[0].is_ad_eng()) {
+    std::vector<double> par{p_ext, theta};
+    Vec engl = liq_eng_[0].eng_force(par, is_orbiting);
+  } else {
+    std::vector<double> par{time, theta, pos};
+    Vec engl = liq_eng_[0].eng_force(par, is_orbiting);
+  }
+  double z = engs[0] * n_sol_eng_ + engl[0] * n_liq_eng_[0];
+  double y = engs[0] * n_sol_eng_+ engl[0] * n_liq_eng_[0];
+  return {z, y};
+}
+
   std::vector<Engine> liq_eng_;
   std::vector<int> n_liq_eng_;
 
@@ -158,7 +178,7 @@ class Rocket {
   explicit Rocket(std::string name, double mass_structure, double Up_Ar,
                   double Lat_Ar, double s_p_m, double m_s_cont,
                   std::vector<double> l_p_m, std::vector<double> l_c_m,
-                  std::unique_ptr<Engine> eng_s, std::vector<Engine> eng_l,
+                  Engine& eng_s, std::vector<Engine> eng_l,
                   int n_solid_eng, std::vector<int> n_liq_eng)
       : total_mass_{mass_structure +
                     std::accumulate(l_p_m.begin(), l_p_m.end(), 0.) + s_p_m +
@@ -174,7 +194,7 @@ class Rocket {
         liq_eng_{eng_l},
         n_sol_eng_{n_solid_eng},
         n_liq_eng_{n_liq_eng} {
-  /*  assert(m_liq_cont_.size() == m_liq_prop_.size() &&
+    assert(m_liq_cont_.size() == m_liq_prop_.size() &&
            n_liq_eng_.size() == m_liq_prop_.size());
     assert(lateral_area_ > 0 && upper_area_ > 0 && m_sol_cont_ > 0 &&
           m_sol_prop_ > 0);
@@ -182,16 +202,17 @@ class Rocket {
     std::for_each(n_liq_eng.begin(), n_liq_eng.end(),
                   [](int value) { assert(value >= 0); });
     std::for_each(m_liq_cont_.begin(), m_liq_cont_.end(),
-                      [&](double value) { assert(value > 0.); });
+                      [&](double value) mutable { assert(value > 0.); });
     std::for_each(m_liq_prop_.begin(), m_liq_prop_.end(),
-                  [&](double value) { assert(value > 0.); });
-    eng_s_ = std::move(eng_s);
-  */}
+                  [&](double value) mutable { assert(value > 0.); });
+    
+    *eng_s_ = eng_s;
+ }
 
   // costruttore senza container aree e massa struttura
-/*
+
   explicit Rocket(std::string name, double s_p_m, std::vector<double> l_p_m,
-                  std::unique_ptr<Engine> eng_s, std::vector<Engine> eng_l,
+                  Engine& eng_s, std::vector<Engine> eng_l,
                   int n_solid_eng, std::vector<int> n_liq_eng)
       : total_mass_{15'000 + std::accumulate(l_p_m.begin(), l_p_m.end(), 0.) +
                     s_p_m + 15'000 * (l_p_m.size() + 1)},
@@ -211,14 +232,14 @@ class Rocket {
     std::for_each(n_liq_eng.begin(), n_liq_eng.end(),
                   [](int value) { assert(value >= 0); });
 
-        std::for_each(m_liq_cont_.begin(), m_liq_cont_.end(),
-                      [&](double value) { value = 15'000; });
-    eng_s_ = std::move(eng_s);
+    std::for_each(m_liq_cont_.begin(), m_liq_cont_.end(),
+                      [&](double value) mutable { value = 15'000; });
+    *eng_s_ = eng_s;
   }
 
   // costruttore senza container aree e carburanti
 
-  explicit Rocket(std::string name, std::unique_ptr<Engine> eng_s,
+  explicit Rocket(std::string name, Engine& eng_s,
                   std::vector<Engine> eng_l, int n_solid_eng,
                   std::vector<int> n_liq_eng)
       : name_{name},
@@ -229,47 +250,48 @@ class Rocket {
     std::for_each(m_liq_prop_.begin(), m_liq_prop_.end(),
                   [](double value) { assert(value > 0.); });
     std::for_each(m_liq_cont_.begin(), m_liq_cont_.end(),
-                  [&](double value) { value = 15'000; });
+                  [&](double value) mutable { value = 15'000; });
     std::for_each(m_liq_prop_.begin(), m_liq_prop_.end(),
-                  [&](double value) { value = 40'000; });
+                  [&](double value) mutable { value = 40'000; });
     std::for_each(n_liq_eng.begin(), n_liq_eng.end(), [](int value) {
       assert(value >= 0);});
-    eng_s_ = std::move(eng_s);
+   *eng_s_ = eng_s;
     total_stage_ = static_cast<int>(eng_l.size());
     total_mass_ =
         15'000 + 20'000 * (total_stage_ + 1) + 40'000 * (total_stage_ + 1);
   }
-*/
+
   Rocket() = default;
 
-  Vec get_velocity() const;
+  Vec const get_velocity() const;
 
-  Vec get_pos() const;
+  Vec const get_pos() const;
 
   void mass_lost(double, double);
 
-  void delta_m();
+  double const get_theta() const;
 
-  void improve_theta(std::string, double);
+  void move(double, Vec);
 
-  double get_theta() const;
+  double const get_up_ar() const;
 
-  void move(double time, Vec);
+  double const get_lat_ar() const;
 
-  double get_mass() const;
+  double const get_mass() const;
+
+  void set_state(std::string, double, double, bool, std::streampos stream_pos);
 
   void stage_release(double, double);  // solo il distacco dello stadio
 
-  void change_vel(Vec force, double time);
+  void change_vel(double,Vec);
 
-  void set_state(std::string, double, double, bool);
-
-  void saturnV(){};
-
-  void sojuz(){};
-
-  Vec const total_force(double, double, double, bool) const;
+  Vec const thrust(double,double,bool) const;
 };
+
+
+Vec const total_force(double, double, double,double, double, double, bool, Vec, Vec);
+
+double improve_theta(std::string,double, double, std::streampos);
 
 bool const is_orbiting(double, double);
 
@@ -278,5 +300,6 @@ Vec const centripetal(double, double, double);
 Vec const g_force(double, double, double);
 
 Vec const drag(double, double, double, double, double, Vec);
+
 };  // namespace rocket
 #endif
