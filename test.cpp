@@ -1,9 +1,11 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <SFML/Audio.hpp>
+#include <cmath>
 
 int main()
 {
+
     float width{1200.f};
     float height{600.f};
     sf::RenderWindow window(sf::VideoMode(width, height), "Rocket simulator");
@@ -54,7 +56,6 @@ int main()
     sf::CircleShape rocket2(1.f);
     rocket2.setFillColor(sf::Color::Red);
     rocket2.setOrigin(1.f, 1.f);
-    rocket2.setPosition((width - 500.f) / 4 + 500.f, height / 4.f - 100.f);
 
     sf::Texture texture3;
     if (!texture3.loadFromFile("map.jpg"))
@@ -186,10 +187,13 @@ int main()
         int out_time_sec{out_time - out_time_min * 60};
         time.setString("Time: " + std::to_string(out_time_min) + " min " + std::to_string(out_time_sec) + " sec ");
 
-        rocket1.rotate(0.f);
-        outer_atm.move(0.f, 0.f);
-        ground.move(0.f, 0.f);
-        inner_atm.move(0.f, 0.f);
+        rocket1.rotate(0.1f);
+        outer_atm.move(0.f, 0.1f);
+        ground.move(0.f, 0.1f);
+        inner_atm.move(0.f, 0.1f);
+
+        float angle_total{};
+        rocket2.setPosition((width - 500.f) / 4 + 500.f - 100.f * std::sin(angle_total), height / 4.f - 200.f + 100.f * std::cos(angle_total));
 
         rocket3.move(0.1f, 0.f);
         const sf::Vector2f a{rocket3.getPosition()};
