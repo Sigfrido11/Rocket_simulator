@@ -7,7 +7,9 @@
 #include <fstream>
 #include <iostream>
 
+
 int main() {
+  
   using Vec = std::array<double, 2>;
   std::string file_name = "theta_data.txt";
   std::ofstream output_rocket("output_rocket.txt");
@@ -18,7 +20,32 @@ int main() {
   std::cout << "also air output is ok" << '\n';
   output_rocket << "posizione z-y   velocitàz-y    forza z-x" << '\n';
   output_rocket << "temp    pres    rho" << '\n';
-  rocket::Rocket rocket;
+  
+  std::string name{"my rocket"};
+  double mass_structure{12'000};
+  double Up_Ar{0.4};
+  double Lat_Ar{0.6};
+  double s_p_m{14'500};
+  double m_s_cont{20'000};
+  std::vector<double> l_p_m{32'000, 23'000};
+  std::vector<double> l_c_m{12'000, 13'000};
+  std::unique_ptr<rocket::Rocket::Engine> eng_b =
+      std::make_unique<rocket::Rocket::Base_engine>(0.1, 0.4);
+  std::unique_ptr<rocket::Rocket::Engine> ad_1 =
+      std::make_unique<rocket::Rocket::Ad_engine>(0.1, 0.4);
+  std::unique_ptr<rocket::Rocket::Engine> ad_2 =
+      std::make_unique<rocket::Rocket::Ad_engine>(0.1, 0.4);
+  std::vector<std::unique_ptr<rocket::Rocket::Engine>> vec_liq;
+  vec_liq.push_back(std::move(ad_1));
+  vec_liq.push_back(std::move(ad_2));
+  int n_solid_eng{1};
+  std::vector<int> n_liq_eng{1};
+
+  rocket::Rocket rocket{name,  mass_structure, Up_Ar,       Lat_Ar,
+                            s_p_m, m_s_cont,       l_p_m,       l_c_m,
+                            eng_b, vec_liq,        n_solid_eng, n_liq_eng};
+
+
   sim::Air_var air;
   int i{0};
   double time{1};
@@ -33,13 +60,18 @@ int main() {
      bool is_orbiting =
         rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1]);
 
-    rocket.set_state(file_name, orbital_h, time, is_orbiting);
+    rocket.set_state(file_name, orbital_h, time, is_orbiting, start_pos);
    
     air.set_state(rocket.get_pos()[0]);
 
+   Vec eng_force = rocket.thrust(air.p_,time,is_orbiting);
+
     force =
-        rocket.total_force(air.rho_, air.p_, time, is_orbiting);
-    rocket.change_vel(force, time);
+        rocket::total_force(air.rho_, rocket.get_theta(),
+        rocket.get_mass(), rocket.get_pos()[0],time, rocket.get_up_ar(), rocket.get_lat_ar(), 
+        is_orbiting, rocket.get_velocity(), eng_force);
+
+    rocket.change_vel(time,force);
     //    assert(rocket.get_velocity()[0]>=0. && rocket.get_velocity()[0] >=0.);
     rocket.move(time, force);
     // assert(rocket.get_pos()[0]>=0. &&rocket.get_pos()[0] >=0.);
@@ -50,4 +82,5 @@ int main() {
     output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
     i += 1;
   }
+  
 }
