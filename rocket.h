@@ -43,15 +43,15 @@ class Rocket {
  public:
   class Engine {
    public:
-    virtual double const delta_m(double, bool) const = 0;
+    virtual double delta_m(double, bool) const = 0;
 
     virtual Vec const eng_force(std::vector<double>, bool) const = 0;
 
     virtual void release() = 0;
 
-    virtual bool const is_ad_eng() const = 0;
+    virtual bool is_ad_eng() const = 0;
 
-    virtual bool const is_released() const = 0;
+    virtual bool is_released() const = 0;
 
     virtual ~Engine() = default;
   };
@@ -72,15 +72,15 @@ class Rocket {
 
     Base_engine() = default;
 
-    double const delta_m(double, bool) const override;
+    double delta_m(double, bool) const override;
 
     void release() override;
 
     Vec const eng_force(std::vector<double>, bool) const override;
 
-    virtual bool const is_ad_eng() const override;
+    virtual bool is_ad_eng() const override;
 
-    virtual bool const is_released() const override;
+    virtual bool is_released() const override;
   };
 
   class Ad_engine final : public Engine {
@@ -105,17 +105,17 @@ class Rocket {
 
     explicit Ad_engine() = default;
 
-    double const delta_m(double, bool) const override;
+    double delta_m(double, bool) const override;
 
     void release() override;
 
     Vec const eng_force(std::vector<double>, bool) const override;
 
-    virtual bool const is_ad_eng() const override;
+    virtual bool is_ad_eng() const override;
 
-    virtual bool const is_released() const override;
+    virtual bool is_released() const override;
 
-    double const get_pression() const;
+    double get_pression() const;
   };
 
  private:
@@ -154,21 +154,21 @@ class Rocket {
 
   Vec const get_pos() const;
 
-  void mass_lost(double, double);
+  void mass_lost(double const, double const);
 
-  double const get_theta() const;
+  double get_theta() const;
 
   void move(double, Vec);
 
-  double const get_up_ar() const;
+  double get_up_ar() const;
 
-  int const get_rem_stage() const;
+  int get_rem_stage() const;
 
-  double const get_rem_fuel() const;
+  double get_rem_fuel() const;
 
-  double const get_lat_ar() const;
+  double get_lat_ar() const;
 
-  double const get_mass() const;
+  double get_mass() const;
 
   void set_state(std::string, double, double, bool, std::streampos stream_pos);
 
@@ -182,7 +182,7 @@ class Rocket {
 Vec const total_force(double, double, double, double, double, double,double, bool, Vec,
                       Vec);
 
-double const improve_theta(std::string, double, double, std::streampos);
+double improve_theta(std::string, double, double, std::streampos);
 
 bool is_orbiting(double, double);
 

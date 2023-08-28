@@ -37,7 +37,7 @@ int main() {
   vec_liq.push_back(std::move(ad_1));
   vec_liq.push_back(std::move(ad_2));
   int n_solid_eng{1};
-  std::vector<int> n_liq_eng{1};
+  std::vector<int> n_liq_eng{1, 1};
 
   rocket::Rocket rocket{name,  mass_structure, Up_Ar,       Lat_Ar,
                         s_p_m, m_s_cont,       l_p_m,       l_c_m,
@@ -48,8 +48,6 @@ int main() {
   double time{1};
   std::streampos start_pos;
   Vec force;
-  double delta_ms{0.};
-  double delta_ml{0.};
   std::cout << "a che altezza vuoi orbitare?";
   double orbital_h;
   std::cin >> orbital_h;
