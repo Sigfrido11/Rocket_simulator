@@ -10,12 +10,9 @@ namespace sim
   void Air_var::set_state(double altitude)
   {
     assert(altitude >= 0);
-    double h = sim::cost::earth_radius_ * altitude /
-               (sim::cost::earth_radius_ + altitude);
-    double g = (sim::cost::G_ * sim::cost::earth_mass_) /
-               std::pow(sim::cost::earth_radius_ + altitude, 2);
-    h = h / 1'000;
-    if (h <= 11)
+    double const h {sim::cost::earth_radius_ * altitude /
+               (sim::cost::earth_radius_ + altitude)*1'000};
+     if (h <= 11)
     {
       t_ = 288.15 - (6.5 * h); // valori sperimentali
       p_ = sim::cost::sea_pression_ * std::pow(288.15 / t_, -0.255877);

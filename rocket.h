@@ -19,7 +19,7 @@ class Rocket {
   // cose da inizializzare
   std::string name_{"my_rocket"};
   double lateral_area_{400.};
-  double upper_area_{15.};
+  double upper_area_{80.};
   double m_sol_cont_{15'000};
   double m_sol_prop_{40'000.};
   std::vector<double> m_liq_prop_{15'000};  // massa carburante liquida
@@ -58,7 +58,7 @@ class Rocket {
 
   class Base_engine final : public Engine {
     double isp_{250};  // per i solidi
-    double cm_{4.}; // coefficiente perdita massa
+    double cm_{4.};    // coefficiente perdita massa
     double p_0_{5e6};
     double burn_a_{200e-6};
     bool released_{false};
@@ -66,9 +66,14 @@ class Rocket {
    public:
     explicit Base_engine(double isp, double cm, double p0, double burn_a);
 
-    explicit Base_engine(double isp, double cm, double p0);
+    explicit Base_engine(double isp, double cm, double p0)
+        : isp_{isp}, cm_{cm}, p_0_{p0} {
+      assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0);
+    }
 
-    explicit Base_engine(double isp, double cm);
+    explicit Base_engine(double isp, double cm) : isp_{isp}, cm_{cm} {
+      assert(isp_ >= 0 && cm_ >= 0);
+    }
 
     Base_engine() = default;
 
@@ -101,8 +106,6 @@ class Rocket {
 
     explicit Ad_engine(double p_0, double burn_a, double nozzle_as, double t_0);
 
-    explicit Ad_engine(double p_0, double t_0);
-
     explicit Ad_engine() = default;
 
     double delta_m(double, bool) const override;
@@ -119,7 +122,7 @@ class Rocket {
   };
 
  private:
-  std::unique_ptr<Engine> eng_s_ = std::make_unique<Base_engine>(250,3.5);
+  std::unique_ptr<Engine> eng_s_ = std::make_unique<Base_engine>(250, 3.5);
   int n_sol_eng_{1};
   std::vector<std::unique_ptr<Engine>> liq_eng_;
   std::vector<int> n_liq_eng_;
@@ -134,19 +137,7 @@ class Rocket {
                   std::vector<std::unique_ptr<Engine>>& eng_l, int n_solid_eng,
                   std::vector<int> n_liq_eng);
 
-
   // costruttore senza container aree e massa struttura
-
-  explicit Rocket(std::string name, double s_p_m, std::vector<double> l_p_m,
-                  std::unique_ptr<Engine>& eng_s,
-                  std::vector<std::unique_ptr<Engine>>& eng_l, int n_solid_eng,
-                  std::vector<int> n_liq_eng);
-
-  // costruttore senza container aree e carburanti
-
-  explicit Rocket(std::string name, std::unique_ptr<Engine>& eng_s,
-                  std::vector<std::unique_ptr<Engine>>& eng_l, int n_solid_eng,
-                  std::vector<int> n_liq_eng);
 
   Rocket() = default;
 
@@ -179,8 +170,7 @@ class Rocket {
   Vec const thrust(double, double, bool) const;
 };
 
-Vec const total_force(double, double, double, double, double, double,double, bool, Vec,
-                      Vec);
+Vec const total_force(double, double, double, double, double, double, Vec, Vec);
 
 double improve_theta(std::string, double, double, std::streampos);
 
