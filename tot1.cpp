@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <cmath>
@@ -169,27 +167,25 @@ int main()
     {
     case 'a':
       interface::select_ad_eng(ad_eng_data);
-      switch (ad_eng_data.type)
+      if (ad_eng_data.type == 'm')
       {
-      case 'm':
         ad = rocket::Rocket::Ad_engine{
             ad_eng_data.burn_a, ad_eng_data.nozzle_as,
             ad_eng_data.t_0, ad_eng_data.grain_dim,
             ad_eng_data.grain_rho, ad_eng_data.a_coef,
             ad_eng_data.burn_rate_n};
-        break;
-
-      case 'f':
+      }
+      else
+      {
         ad = rocket::Rocket::Ad_engine{ad_eng_data.p_0, ad_eng_data.burn_a,
                                        ad_eng_data.nozzle_as,
                                        ad_eng_data.t_0};
-        break;
       }
+      break;
     case 'b':
       interface::select_base_eng(base_eng_data);
-      base =
-          rocket::Rocket::Base_engine{base_eng_data.isp, base_eng_data.cm,
-                                      base_eng_data.p0, base_eng_data.burn_a};
+      base = rocket::Rocket::Base_engine{base_eng_data.isp, base_eng_data.cm,
+                                         base_eng_data.p0, base_eng_data.burn_a};
 
       std::cout << "invalid value";
       break;
@@ -317,16 +313,30 @@ int main()
                           rocket.get_pos()[0] + (height * 3 / 4) - 51'000);
 
     double const rocket_radius{rocket.get_pos()[0] + sim::cost::earth_radius_};
-    angle_total += (rocket.get_velocity()[1] * delta_time + 0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) / rocket_radius;
-    rocket2.setPosition(
-        (width - 500.f) / 4 + 500.f - 100.f * rocket_radius / sim::cost::earth_radius_ * std::sin(rocket.get_theta()),
-        height / 4.f - 200.f + 100.f * rocket_radius / sim::cost::earth_radius_ * std::cos(angle_total));
+    double const angle_var{(rocket.get_velocity()[1] * delta_time + 0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) / rocket_radius};
 
-    rocket3.move(0.1f, 0.f);
-    sf::Vector2f const a{rocket3.getPosition()};
-    if (a.x > width)
+    angle_total += angle_var;
+
+    if (rocket.get_pos()[0] / sim::cost::earth_radius_ * 100.f < 150.f)
     {
-      rocket3.setPosition(a.x - (width - 500.f), a.y);
+      rocket2.setPosition(
+          (width - 500.f) / 4 + 500.f - 100.f * rocket_radius / sim::cost::earth_radius_ * std::sin(rocket.get_theta()),
+          height / 4.f - 200.f + 100.f * rocket_radius / sim::cost::earth_radius_ * std::cos(angle_total));
+    }
+    else
+    {
+      earth.scale(0.1f, 0.1f);
+      earth.setPosition((width - 500.f) / 4 + 500.f - 10.f, height / 4.f - 10.f);
+      rocket2.setPosition(
+          (width - 500.f) / 4 + 500.f - 10.f * rocket_radius / sim::cost::earth_radius_ * std::sin(rocket.get_theta()),
+          height / 4.f - 200.f + 10.f * rocket_radius / sim::cost::earth_radius_ * std::cos(angle_total));
+    }
+
+    rocket3.move(angle_var / 2 / M_PI * 700.f, 0.f);
+    sf::Vector2f const pos3{rocket3.getPosition()};
+    if (pos3.x > width)
+    {
+      rocket3.setPosition(pos3.x - (width - 500.f), pos3.y);
     }
 
     window.clear();
