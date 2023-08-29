@@ -13,8 +13,8 @@
 
 int main()
 {
-  float width{1200.f};
-  float height{600.f};
+  float const width{1200.f};
+  float const height{600.f};
   sf::RenderWindow window(sf::VideoMode(width, height), "Rocket simulator");
   window.setPosition(sf::Vector2i(0, 0));
 
@@ -124,15 +124,14 @@ int main()
   countdown.setFillColor(sf::Color::Yellow);
   countdown.setPosition((width - 500.f) / 2, 20.f);
 
-  sf::Vertex line[] = {sf::Vertex(sf::Vector2f(500.f, 0.f)),
-                       sf::Vertex(sf::Vector2f(500.f, height))};
+  sf::Vertex line[]{sf::Vertex(sf::Vector2f(500.f, 0.f)),
+                    sf::Vertex(sf::Vector2f(500.f, height))};
 
-  sf::Vertex line1[] = {sf::Vertex(sf::Vector2f(500.f, height / 2)),
-                        sf::Vertex(sf::Vector2f(width, height / 2))};
+  sf::Vertex line1[]{sf::Vertex(sf::Vector2f(500.f, height / 2)),
+                     sf::Vertex(sf::Vector2f(width, height / 2))};
 
-  sf::Vertex line2[] = {
-      sf::Vertex(sf::Vector2f((width - 500.f) / 2 + 500.f, 0.f)),
-      sf::Vertex(sf::Vector2f((width - 500.f) / 2 + 500.f, height / 2))};
+  sf::Vertex line2[]{sf::Vertex(sf::Vector2f((width - 500.f) / 2 + 500.f, 0.f)),
+                     sf::Vertex(sf::Vector2f((width - 500.f) / 2 + 500.f, height / 2))};
 
   std::vector<sf::Drawable *> drawables{
       &map, &ground, &inner_atm, &rocket1, &earth, &rocket2, &rocket3,
@@ -142,7 +141,7 @@ int main()
 
   // inizializzazione parametri
   using Vec = std::array<double, 2>;
-  std::string file_name = "theta_data.txt";
+  std::string const file_name = "theta_data.txt";
   std::ofstream output_rocket("output_rocket.txt");
   assert(output_rocket.is_open());
   std::cout << "rocket output is ok" << '\n';
@@ -219,7 +218,7 @@ int main()
       std::cout << "invalid value";
       break;
     }
-    if (ans_eng = 'b')
+    if (ans_eng == 'b')
     {
       std::unique_ptr<rocket::Rocket::Engine> eng_b =
           std::make_unique<rocket::Rocket::Base_engine>(base);
@@ -254,11 +253,9 @@ int main()
   }
   sim::Air_var air;
   int i{0};
-  double delta_time{1.7e-2}; // camiato per ragioni di usare un int per i millisec dopo
+  double const delta_time{1.7e-2};
   std::streampos start_pos;
-  Vec force;
-  double delta_ms{0.};
-  double delta_ml{0.};
+
   std::cout << "a che altezza vuoi orbitare?";
   double orbital_h;
   std::cin >> orbital_h;
@@ -271,19 +268,18 @@ int main()
   {
     sf::Event event;
 
-    bool orbiting =
-        rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1]);
+    bool const orbiting{rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
 
     rocket.set_state(file_name, orbital_h, delta_time, orbiting, start_pos);
 
     air.set_state(rocket.get_pos()[0]);
 
-    Vec eng_force = rocket.thrust(air.p_, delta_time, orbiting);
+    Vec const eng_force{rocket.thrust(air.p_, delta_time, orbiting)};
 
-    force = rocket::total_force(
+    Vec const force{rocket::total_force(
         air.rho_, rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
         delta_time, rocket.get_up_ar(), rocket.get_lat_ar(), orbiting,
-        rocket.get_velocity(), eng_force);
+        rocket.get_velocity(), eng_force)};
 
     rocket.change_vel(delta_time, force);
     assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[0] >= 0.);
@@ -306,9 +302,9 @@ int main()
       }
     }
 
-    int out_time_min{out_time / 1000 / 60};
-    int out_time_sec{out_time / 1000 - out_time_min * 60};
-    int out_time_millisec{out_time - out_time_sec * 1000 - out_time_min * 1000 * 60};
+    int const out_time_min{out_time / 1000 / 60};
+    int const out_time_sec{out_time / 1000 - out_time_min * 60};
+    int const out_time_millisec{out_time - out_time_sec * 1000 - out_time_min * 1000 * 60};
     time.setString("Time: " + std::to_string(out_time_min) + " min " +
                    std::to_string(out_time_sec) + " s " +
                    std::to_string(out_time_millisec) + " ms ");
@@ -321,13 +317,13 @@ int main()
                           rocket.get_pos()[0] + (height * 3 / 4) - 51'000);
 
     double const rocket_radius{rocket.get_pos()[0] + sim::cost::earth_radius_};
-    angle_total += rocket.get_velocity()[1] * delta_time / rocket_radius;
+    angle_total += (rocket.get_velocity()[1] * delta_time + 0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) / rocket_radius;
     rocket2.setPosition(
         (width - 500.f) / 4 + 500.f - 100.f * rocket_radius / sim::cost::earth_radius_ * std::sin(rocket.get_theta()),
         height / 4.f - 200.f + 100.f * rocket_radius / sim::cost::earth_radius_ * std::cos(angle_total));
 
     rocket3.move(0.1f, 0.f);
-    const sf::Vector2f a{rocket3.getPosition()};
+    sf::Vector2f const a{rocket3.getPosition()};
     if (a.x > width)
     {
       rocket3.setPosition(a.x - (width - 500.f), a.y);

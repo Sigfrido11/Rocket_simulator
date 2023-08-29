@@ -1,7 +1,5 @@
 #include "rocket.h"
 #include "simulation.h"
-//#include "menu.h"
-//#include "navigate.h"
 #include <stdio.h>
 
 #include <fstream>

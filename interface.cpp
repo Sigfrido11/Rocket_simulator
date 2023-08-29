@@ -206,11 +206,11 @@ void select_ad_eng(ad_eng_data& data) {
   char ans;
   std::cout << "how many parameter do you want to insert"
             << "\n";
-  std::cout << "for many(m), some (s), few(f)"
+  std::cout << "for advanced engine: many(m), some (s), few(f)"
             << "\n";
   std::cin >> ans;
   switch (ans) {
-    case 'a':
+    case 'm':
       create_ad_eng_all(data);
       break;
 
@@ -233,11 +233,11 @@ void select_base_eng(base_eng_data& data) {
   char ans;
   std::cout << "how many parameter do you want to insert"
             << "\n";
-  std::cout << "for many(m), some (s), few(f)"
+  std::cout << "for base engine: many(m), some (s), few(f)"
             << "\n";
   std::cin >> ans;
   switch (ans) {
-    case 'a':
+    case 'm':
       create_base_eng_all(data);
       break;
 
