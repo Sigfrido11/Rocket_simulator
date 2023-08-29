@@ -97,12 +97,13 @@ class Rocket {
     double grain_dim_{0.02};
     double burn_rate_a_{0.01};
     double burn_rate_n_{0.02};
+    double prop_mm_ {178};
     bool released_{false};
 
    public:
     explicit Ad_engine(double burn_a, double nozzle_as, double t_0,
                        double grain_dim, double grain_rho, double a_coef,
-                       double burn_rate_n);
+                       double burn_rate_n, double prop_mm);
 
     explicit Ad_engine(double p_0, double burn_a, double nozzle_as, double t_0);
 
@@ -161,13 +162,13 @@ class Rocket {
 
   double get_mass() const;
 
-  void set_state(std::string, double, double, bool, std::streampos stream_pos);
+  void set_state(std::string, double, double, double, bool, std::streampos stream_pos);
 
   void stage_release(double, double);  // solo il distacco dello stadio
 
   void change_vel(double, Vec);
 
-  Vec const thrust(double, double, bool) const;
+  Vec const thrust(double, double, double, bool) const;
 };
 
 Vec const total_force(double, double, double, double, double, double, Vec, Vec);
@@ -178,9 +179,11 @@ bool is_orbiting(double, double);
 
 Vec const centripetal(double, double, double);
 
-Vec const g_force(double, double, double);
+Vec const g_force(double, double);
 
 Vec const drag(double, double, double, double, double, Vec);
+
+double improve_thrust(double, double, double, double, Vec,  Vec);
 
 };  // namespace rocket
 #endif
