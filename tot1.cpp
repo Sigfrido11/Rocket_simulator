@@ -19,12 +19,6 @@ int main()
   window.setVerticalSyncEnabled(true);
   window.setFramerateLimit(60);
 
-  sf::Music music;
-  if (!music.openFromFile("01_A Better Beginning.wav"))
-    return -1; // error
-  music.play();
-  music.setLoop(true);
-
   sf::Texture texture1;
   if (!texture1.loadFromFile("rocket.png"))
   {
@@ -257,6 +251,12 @@ int main()
   std::cin >> orbital_h;
 
   interface::run_countdown(countdown, drawables, vertices, window);
+
+  sf::Music music;
+  if (!music.openFromFile("01_A Better Beginning.wav"))
+    return -1; // error
+  music.play();
+  music.setLoop(true);
 
   // game loop starts
 
