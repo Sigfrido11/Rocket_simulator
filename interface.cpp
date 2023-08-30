@@ -131,6 +131,8 @@ namespace interface
     std::cin >> eng_data.a_coef;
     std::cout << "give me the engine burn rate n coefficent" << '\n';
     std::cin >> eng_data.burn_rate_n;
+    std::cout << "give me the molar mass of the propellant (g/mol)" << '\n';
+    std::cin >> eng_data.prop_mm;
   }
 
   void create_ad_eng_med(ad_eng_data &eng_data)

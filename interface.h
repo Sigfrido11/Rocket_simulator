@@ -40,6 +40,7 @@ struct ad_eng_data {
   double a_coef;
   double burn_rate_n;
   double p_0;
+  double prop_mm;
   char type;
 };
 
