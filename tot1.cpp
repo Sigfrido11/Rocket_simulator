@@ -249,7 +249,7 @@ int main()
   }
   sim::Air_var air;
   int i{0};
-  double const delta_time{1.7e-2};
+  double const delta_time{1.};
   std::streampos start_pos;
 
   std::cout << "a che altezza vuoi orbitare?";
@@ -277,10 +277,14 @@ int main()
         delta_time, rocket.get_up_ar(), rocket.get_lat_ar(), orbiting,
         rocket.get_velocity(), eng_force)};
 
-    rocket.change_vel(delta_time, force);
-    assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[0] >= 0.);
+    double const rocket_radius{rocket.get_pos()[0] + sim::cost::earth_radius_};
+    double const angle_var{(rocket.get_velocity()[1] * delta_time + 0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) / rocket_radius};
+    angle_total += angle_var;
+
     rocket.move(delta_time, force);
     assert(rocket.get_pos()[0] >= 0. && rocket.get_pos()[0] >= 0.);
+    rocket.change_vel(delta_time, force);
+    assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[0] >= 0.);
     output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
                   << rocket.get_velocity()[0] << "  "
                   << rocket.get_velocity()[1] << "  " << force[0] << "  "
@@ -298,12 +302,10 @@ int main()
       }
     }
 
-    int const out_time_min{out_time / 1000 / 60};
-    int const out_time_sec{out_time / 1000 - out_time_min * 60};
-    int const out_time_millisec{out_time - out_time_sec * 1000 - out_time_min * 1000 * 60};
+    int const out_time_min{out_time / 60};
+    int const out_time_sec{out_time - out_time_min * 60};
     time.setString("Time: " + std::to_string(out_time_min) + " min " +
-                   std::to_string(out_time_sec) + " s " +
-                   std::to_string(out_time_millisec) + " ms ");
+                   std::to_string(out_time_sec) + " sec ");
 
     rocket1.rotate(rocket.get_theta() * 360 / (2 * M_PI)); // forse è un set rotation in realtà
     outer_atm.setPosition(0,
@@ -311,11 +313,6 @@ int main()
     ground.setPosition(0.f, rocket.get_pos()[0] + (height * 3 / 4));
     inner_atm.setPosition(0.f,
                           rocket.get_pos()[0] + (height * 3 / 4) - 51'000);
-
-    double const rocket_radius{rocket.get_pos()[0] + sim::cost::earth_radius_};
-    double const angle_var{(rocket.get_velocity()[1] * delta_time + 0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) / rocket_radius};
-
-    angle_total += angle_var;
 
     if (rocket.get_pos()[0] / sim::cost::earth_radius_ * 100.f < 150.f)
     {
