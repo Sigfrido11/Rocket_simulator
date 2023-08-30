@@ -1,6 +1,6 @@
+
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
-
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -133,18 +133,17 @@ int main() {
   std::string const file_name = "theta_data.txt";
   std::ofstream output_rocket("output_rocket.txt");
   assert(output_rocket.is_open());
-  std::cout << "rocket output is ok" << '\n';
   std::ofstream output_air("output_air.txt");
   assert(output_air.is_open());
-  std::cout << "also air output is ok" << '\n';
   output_rocket << "posizione z-y   velocitàz-y    forza z-x" << '\n';
   output_rocket << "temp    pres    rho" << '\n';
-  rocket::Rocket rocket;
 
-  {  // aggiungo uno scope in modo da cancellare poi tutte le variabili che non
-    // servono
-    char ans_eng;
-    interface::rocket_data rocket_data;
+  interface::rocket_data rocket_data;
+  rocket::Rocket::Ad_engine ad;
+  rocket::Rocket::Base_engine base;
+   char ans_eng;
+  {  // aggiungo uno scope in modo da cancellare poi tutte le
+    // variabili che non servono
     interface::ad_eng_data ad_eng_data;
     interface::base_eng_data base_eng_data;
     std::cout << "let's build the engine of your rocket"
@@ -152,29 +151,35 @@ int main() {
               << "do you prefer an advance (a) rocket or base rocket (b)"
               << "\n";
     std::cin >> ans_eng;
-    rocket::Rocket::Ad_engine ad;
-    rocket::Rocket::Base_engine base;
-    switch (ans_eng) {
+     switch (ans_eng) {
       case 'a':
+        rocket_data.eng_type = 'a';
         interface::select_ad_eng(ad_eng_data);
         if (ad_eng_data.type == 'm') {
           ad = rocket::Rocket::Ad_engine{
-              ad_eng_data.burn_a,     ad_eng_data.nozzle_as, ad_eng_data.t_0,
-              ad_eng_data.grain_dim,  ad_eng_data.grain_rho, ad_eng_data.a_coef,
+              ad_eng_data.burn_a,      ad_eng_data.nozzle_as,
+              ad_eng_data.t_0,         ad_eng_data.grain_dim,
+              ad_eng_data.grain_rho,   ad_eng_data.a_coef,
               ad_eng_data.burn_rate_n, ad_eng_data.prop_mm};
+              
         } else {
           ad =
               rocket::Rocket::Ad_engine{ad_eng_data.p_0, ad_eng_data.burn_a,
                                         ad_eng_data.nozzle_as, ad_eng_data.t_0};
+            
         }
         break;
       case 'b':
+        rocket_data.eng_type = 'a';
         interface::select_base_eng(base_eng_data);
+
         base =
             rocket::Rocket::Base_engine{base_eng_data.isp, base_eng_data.cm,
                                         base_eng_data.p0, base_eng_data.burn_a};
-
-        std::cout << "invalid value";
+        break;
+      
+      default:
+        std::cout << "invalid value for engine ";
         break;
     }
     char ans_roc;
@@ -193,57 +198,43 @@ int main() {
         break;
 
       case 'f':
+      std::cout << "qui ci sono" << "\n";
         interface::create_minim_roc(rocket_data);
+        std::cout << "qui ci sono"<< "\n";
         break;
 
       default:
-        std::cout << "invalid value";
+        std::cout << "invalid value for rocket";
         break;
     }
-    if (ans_eng == 'b') {
-      std::unique_ptr<rocket::Rocket::Engine> eng_b =
-          std::make_unique<rocket::Rocket::Base_engine>(base);
-      std::vector<std::unique_ptr<rocket::Rocket::Engine>> vec_liq;
-      // per il momento faccio così poi vedo di cambiare
-      for (int i{0}; i <= rocket_data.stage_num; i++) {
-        vec_liq.push_back(std::move(eng_b));
-      }
-      rocket = rocket::Rocket{rocket_data.name,
-                              rocket_data.mass_structure,
-                              rocket_data.up_ar,
-                              rocket_data.lat_ar,
-                              rocket_data.s_p_m,
-                              rocket_data.m_s_cont,
-                              rocket_data.l_p_m,
-                              rocket_data.l_c_m,
-                              eng_b,
-                              vec_liq,
-                              rocket_data.n_solid_eng,
-                              rocket_data.n_liq_eng};
-    } else {
-      std::unique_ptr<rocket::Rocket::Engine> eng_ad =
-          std::make_unique<rocket::Rocket::Ad_engine>(ad);
-      std::vector<std::unique_ptr<rocket::Rocket::Engine>> vec_liq;
-      // per il momento faccio così poi vedo di cambiare
-      for (int i{0}; i <= rocket_data.stage_num; i++) {
-        vec_liq.push_back(std::move(eng_ad));
-      }
-      rocket = rocket::Rocket{rocket_data.name,
-                              rocket_data.mass_structure,
-                              rocket_data.up_ar,
-                              rocket_data.lat_ar,
-                              rocket_data.s_p_m,
-                              rocket_data.m_s_cont,
-                              rocket_data.l_p_m,
-                              rocket_data.l_c_m,
-                              eng_ad,
-                              vec_liq,
-                              rocket_data.n_solid_eng,
-                              rocket_data.n_liq_eng};
-    }
   }
+std::cout << "qui ci sono";
+std::shared_ptr<rocket::Rocket::Engine> eng;
+if(ans_eng = 'a'){
+  eng=std::make_shared<rocket::Rocket::Ad_engine>(ad);
+}
+else{
+  eng=std::make_shared<rocket::Rocket::Base_engine>(base);
+}
+std::vector<std::shared_ptr<rocket::Rocket::Engine>> vec_liq;
+      for (int i{0}; i <= rocket_data.stage_num; i++) {
+        vec_liq.push_back(std::move(eng));
+      }
+
+std::cout << "qui ci sono";
+rocket::Rocket rocket{rocket_data.name,
+                      rocket_data.mass_structure,
+                      rocket_data.up_ar,
+                      rocket_data.lat_ar,
+                      rocket_data.s_p_m,
+                      rocket_data.m_s_cont,
+                      rocket_data.l_p_m,
+                      rocket_data.l_c_m,
+                      eng,
+                      vec_liq,
+                      rocket_data.n_solid_eng,
+                      rocket_data.n_liq_eng};
   sim::Air_var air;
-  int i{0};
   double const delta_time{1.};
   std::streampos start_pos;
 
@@ -252,18 +243,14 @@ int main() {
   std::cin >> orbital_h;
 
   sf::SoundBuffer buffer;
-  if (!buffer.loadFromFile("launch_sound.mp3"))
-  {
+  if (!buffer.loadFromFile("launch_sound.mp3")) {
     return -1;
   }
-  sf::SoundBuffer buffer;
   sf::Sound sound;
   sound.setBuffer(buffer);
   sound.play();
 
-  sf::Time delay{};
-  delay.asSeconds(0.5f);
-  sf::sleep(delay);
+  sf::sleep(sf::seconds(0.5f));
 
   interface::run_countdown(countdown, drawables, vertices, window);
 
@@ -271,7 +258,7 @@ int main() {
   if (!music.openFromFile("01_A Better Beginning.wav")) {
     return -1;  // error
   }
-  
+
   music.play();
   music.setLoop(true);
 
@@ -287,8 +274,8 @@ int main() {
         rocket.get_pos()[0], delta_time, rocket.get_mass(), orbital_h,
         eng_force, rocket.get_velocity())};
 
-    rocket.set_state(file_name, orbital_h, imp_thrust, delta_time, orbiting,
-                     start_pos);
+    rocket.set_state(file_name, rocket.get_theta(), orbital_h, imp_thrust,
+                     delta_time, orbiting, start_pos);
 
     air.set_state(rocket.get_pos()[0]);
 
@@ -374,6 +361,4 @@ int main() {
 
     out_time += delta_time;
   }
-
-  return 0;
 }

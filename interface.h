@@ -5,42 +5,44 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <string>
-
+#include <vector>
+#include <algorithm> 
 namespace interface {
 
 struct rocket_data {
-  std::string name;
-  double mass_structure;
-  double up_ar;
-  double lat_ar;
-  double s_p_m;
-  double m_s_cont;
+  std::string name{"my rocket"};
+  double mass_structure {15'000};
+  double up_ar{1000.};
+  double lat_ar{9300.};
+  double s_p_m{400'000};
+  double m_s_cont{15'000};
   std::vector<double> l_p_m;
   std::vector<double> l_c_m;
-  int n_solid_eng;
+  int n_solid_eng{1};
   std::vector<int> n_liq_eng;
   char type;
-  int stage_num;
+  char eng_type;
+  int stage_num{1};
 };
 
 struct base_eng_data {
-  double isp;
-  double cm;
-  double p0;
-  double burn_a;
+  double isp{250};
+  double cm{2.5};
+  double p0{8.e6};
+  double burn_a{200e-6};
   char type;
 };
 
 struct ad_eng_data {
-  double burn_a;
-  double nozzle_as;
-  double t_0;
-  double grain_dim;
-  double grain_rho;
-  double a_coef;
-  double burn_rate_n;
-  double p_0;
-  double prop_mm;
+  double burn_a{200e-6};
+  double nozzle_as{221e-6};
+  double t_0{1710};
+  double grain_dim{0.02};
+  double grain_rho{1873};
+  double a_coef{0.01};
+  double burn_rate_n{0.02};
+  double p_0{8e6};
+  double prop_mm{178};
   char type;
 };
 

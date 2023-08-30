@@ -49,6 +49,8 @@ class Rocket {
 
     virtual void release() = 0;
 
+    virtual void set_spin(double) = 0;
+
     virtual bool is_ad_eng() const = 0;
 
     virtual bool is_released() const = 0;
@@ -61,6 +63,7 @@ class Rocket {
     double cm_{4.};    // coefficiente perdita massa
     double p_0_{5e6};
     double burn_a_{200e-6};
+    double spin_coef_;
     bool released_{false};
 
    public:
@@ -86,6 +89,8 @@ class Rocket {
     virtual bool is_ad_eng() const override;
 
     virtual bool is_released() const override;
+
+    virtual void set_spin(double) override;
   };
 
   class Ad_engine final : public Engine {
@@ -98,6 +103,7 @@ class Rocket {
     double burn_rate_a_{0.01};
     double burn_rate_n_{0.02};
     double prop_mm_ {178};
+    double spin_coef_;
     bool released_{false};
 
    public:
@@ -112,6 +118,8 @@ class Rocket {
     double delta_m(double, bool) const override;
 
     void release() override;
+
+    virtual void set_spin(double) override;
 
     Vec const eng_force(std::vector<double>, bool) const override;
 
@@ -179,7 +187,7 @@ bool is_orbiting(double, double);
 
 Vec const centripetal(double, double, double);
 
-Vec const g_force(double, double);
+double g_force(double, double);
 
 Vec const drag(double, double, double, double, double, Vec);
 

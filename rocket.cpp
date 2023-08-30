@@ -69,8 +69,6 @@ Vec const Rocket::get_velocity() const { return velocity_; }
 
 Vec const Rocket::get_pos() const { return pos_; }
 
-// double Rocket::get_delta_altitude() const { return delta_altitude_; }
-
 void Rocket::move(double time, Vec force) {
   pos_[0] = pos_[0] + velocity_[0] * time +
             0.5 * (force[0] / total_mass_) * std::pow(time, 2);
@@ -93,7 +91,7 @@ void Rocket::set_state(std::string file_name, double orbital_h,
   double const ml{liq_eng_[0]->delta_m(time, is_orbiting) * n_liq_eng_[0] *
                   imp_thrust};
   mass_lost(ms, ml);
-  stage_release(ms, ml/imp_thrust);
+  stage_release(ms, ml / imp_thrust);
 }
 
 int Rocket::get_rem_stage() const { return total_stage_; };
@@ -101,7 +99,9 @@ int Rocket::get_rem_stage() const { return total_stage_; };
 double Rocket::get_rem_fuel() const { return (m_liq_prop_[0] + m_sol_prop_); }
 
 void Rocket::stage_release(double delta_ms, double delta_ml) {
-  assert(m_liq_prop_[0] >= 0 && m_sol_prop_ >= 0);
+  if (m_liq_prop_[0] >= 0 && m_sol_prop_ >= 0) {
+    std::cout << "error in the distribution of the propellant" << '\n';
+  }
   if (m_sol_cont_ == 0) {
     int const len{static_cast<int>(m_liq_prop_.size())};
     assert(current_stage_ != len);
@@ -155,7 +155,7 @@ Vec const Rocket::thrust(double p_ext, double time, double imp_thrust,
   }
   double const z{engs[0] * n_sol_eng_ + engl[0] * n_liq_eng_[0] * imp_thrust};
   double const y{engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0] * imp_thrust};
-  return {z * std::sin(theta_), y * std::cos(theta_)};
+  return {z, y};
 }
 
 // funzioni di engine
@@ -177,6 +177,18 @@ double Rocket::Base_engine::delta_m(double time, bool is_orbiting) const {
     return 0.;
   }
 }
+
+void Rocket::Base_engine::set_spin(double mass) {
+  std::vector<double> par{1, M_PI/2,0};
+  Vec force{Base_engine::eng_force(par,false)};
+  double const weight{g_force(0,mass)};
+  spin_coef_= (force[0]-weight)/force[0];
+  if(spin_coef_ <=0){
+    std::cout << "can't take off" << "\n";
+  }
+
+}
+
 Vec const Rocket::Base_engine::eng_force(std::vector<double> par,
                                          bool is_orbiting) const {
   double const time{par[0]};
@@ -185,7 +197,7 @@ Vec const Rocket::Base_engine::eng_force(std::vector<double> par,
   double const delta_m = Rocket::Base_engine::delta_m(time, is_orbiting);
   if (!is_orbiting && !released_) {
     double const force{isp_ * delta_m * sim::cost::G_ * sim::cost::earth_mass_ /
-                       std::pow((sim::cost::earth_radius_ + pos), 2)};
+                       std::pow((sim::cost::earth_radius_ + pos), 2)*spin_coef_};
     return {force * std::sin(theta), force * std::cos(theta)};
   } else {
     return {0., 0.};
@@ -219,7 +231,6 @@ Rocket::Ad_engine::Ad_engine(double burn_a, double nozzle_as, double t_0,
   double exponent = sim::cost::gamma_ + 1 / (sim::cost::gamma_ - 1);
   double fac2 = std::pow(2 / sim::cost::gamma_ + 1, exponent);
   double fac3 = std::sqrt((sim::cost::gamma_ * fac2) / sim::cost::R_ * t_0_);
-
   p_0_ = std::pow(fac1 / fac3, 1 / (1 - burn_rate_n_));
 }
 Rocket::Ad_engine::Ad_engine(double p_0, double burn_a, double nozzle_as,
@@ -242,132 +253,147 @@ Vec const Rocket::Ad_engine::eng_force(std::vector<double> par,
     double const exp{(sim::cost::gamma_ + 1) / (sim::cost::gamma_ - 1)};
     double const fac4{1 - std::pow((p_ext / p_0_), (sim::cost::gamma_ -
                                                     1 / sim::cost::gamma_))};
-    double const force{fac1 * std::sqrt(fac2 * std::pow(fac3, exp) * fac4)};
+    double const force{fac1 * std::sqrt(fac2 * std::pow(fac3, exp) * fac4)*spin_coef_};
     return {force * std::sin(theta), force * std::cos(theta)};
   } else {
     return {0., 0.};
   }
 }
 
-double Rocket::Ad_engine::delta_m(double time, bool is_orbiting) const {
-  if (!is_orbiting && !released_) {
-    double const fac1{p_0_ * nozzle_as_};
-    double const fac2{
-        std::sqrt(sim::cost::gamma_ * prop_mm_ / (sim::cost::R_ * t_0_))};
-    double const fac3{2 / (sim::cost::gamma_ + 1)};
-    double const fac4{(sim::cost::gamma_ + 1) / (2 * (sim::cost::gamma_ - 1))};
-    double const mass{fac1 * fac2 * std::pow(fac3, fac4) * time};
-    assert(mass >= 0.);
-    return mass;
-  } else {
-    return 0.;
+void Rocket::Ad_engine::set_spin(double mass) {
+  std::vector<double> par{sim::cost::sea_pression_, M_PI/2};
+  Vec force{Ad_engine::eng_force(par,false)};
+  double const weight{g_force(0,mass)};
+  spin_coef_= (force[0]-weight)/force[0];
+   if(spin_coef_ <=0){
+    std::cout << "can't take off" << "\n";
   }
+
 }
-
-double Rocket::Ad_engine::get_pression() const { return p_0_; }
-
-void Rocket::Ad_engine::release() { released_ = true; }
-
-bool Rocket::Ad_engine::is_released() const { return released_; }
-
-// funzioni del namespace
-
-bool is_orbiting(double pos, double velocity) {
-  assert(pos >= 0 && velocity >= 0);
-  double const inf_speed{std::sqrt(sim::cost::G_ * sim::cost::earth_mass_ /
-                                   (pos + sim::cost::earth_radius_))};
-  return ((velocity + sim::cost::earth_speed_) > inf_speed) ? true : false;
-}
-
-inline Vec const centripetal(double total_mass, double altitude, double y_vel) {
-  double const f_z{total_mass * std::pow(y_vel, 2) /
-                   (sim::cost::earth_radius_ + altitude)};
-  return {f_z, 0};
-}
-
-inline Vec const g_force(double altitude, double mass) {
-  double const force{sim::cost::earth_mass_ * sim::cost::G_ * mass /
-                     (std::pow(sim::cost::earth_radius_ + altitude, 2))};
-  return {force, 0.};
-}
-inline Vec const drag(double rho, double altitude, double theta,
-                      double upper_area, double lateral_area, Vec velocity) {
-  if (altitude <= 51'000) {
-    double const z{0.5 * rho * upper_area * std::cos(theta) *
-                   std::pow(velocity[0], 2)};
-    double const y{0.5 * rho * lateral_area * std::sin(theta) *
-                   std::pow(velocity[1], 2)};
-    return {z, y};
-  } else {
-    return {0., 0.};
+  double Rocket::Ad_engine::delta_m(double time, bool is_orbiting) const {
+    if (!is_orbiting && !released_) {
+      double const fac1{p_0_ * nozzle_as_};
+      double const fac2{
+          std::sqrt(sim::cost::gamma_ * prop_mm_ / (sim::cost::R_ * t_0_))};
+      double const fac3{2 / (sim::cost::gamma_ + 1)};
+      double const fac4{(sim::cost::gamma_ + 1) /
+                        (2 * (sim::cost::gamma_ - 1))};
+      double const mass{fac1 * fac2 * std::pow(fac3, fac4) * time};
+      assert(mass >= 0.);
+      return mass;
+    } else {
+      return 0.;
+    }
   }
-}
 
-inline double improve_theta(std::string name_f, double pos,
-                            double const orbital_h, std::streampos start_pos) {
-  std::ifstream file(name_f);
-  assert(file.is_open());
-  std::string line;
-  double old_altitude{0.};
-  double altitude;
-  double angle;
-  pos = (pos * 170'000) / orbital_h;
-  double old_ang;
-  bool found{false};
-  file.seekg(start_pos);
-  while (std::getline(file, line) && !found) {
-    std::istringstream iss(line);
-    iss >> altitude >> angle;
-    if (altitude >= pos) {
-      found = true;
-      double const delta1{altitude - pos};
-      double const delta2{old_altitude - pos};
-      if (std::abs(delta1) <= std::abs(delta2)) {
-        return angle;
-      } else {
-        return old_ang;
+  double Rocket::Ad_engine::get_pression() const { return p_0_; }
+
+  void Rocket::Ad_engine::release() { released_ = true; }
+
+  bool Rocket::Ad_engine::is_released() const { return released_; }
+
+  // funzioni del namespace
+
+  bool is_orbiting(double pos, double velocity) {
+    assert(pos >= 0 && velocity >= 0);
+    double const inf_speed{std::sqrt(sim::cost::G_ * sim::cost::earth_mass_ /
+                                     (pos + sim::cost::earth_radius_))};
+    return ((velocity + sim::cost::earth_speed_) > inf_speed) ? true : false;
+  }
+
+  inline Vec const centripetal(double total_mass, double altitude,
+                               double y_vel) {
+    double const f_z{total_mass * std::pow(y_vel, 2) /
+                     (sim::cost::earth_radius_ + altitude)};
+    return {f_z, 0};
+  }
+
+  inline double g_force(double altitude, double mass) {
+    double const force{sim::cost::earth_mass_ * sim::cost::G_ * mass /
+                       (std::pow(sim::cost::earth_radius_ + altitude, 2))};
+    return force;
+  }
+  inline Vec const drag(double rho, double altitude, double theta,
+                        double upper_area, double lateral_area, Vec velocity) {
+    if (altitude <= 51'000) {
+      double const z{0.5 * rho * upper_area * std::cos(theta) *
+                     std::pow(velocity[0], 2)};
+      double const y{0.5 * rho * lateral_area * std::sin(theta) *
+                     std::pow(velocity[1], 2)};
+      return {z, y};
+    } else {
+      return {0., 0.};
+    }
+  }
+
+  inline double improve_theta(std::string name_f, double pos,
+                              double const orbital_h,
+                              std::streampos start_pos) {
+    std::ifstream file(name_f);
+    assert(file.is_open());
+    std::string line;
+    double old_altitude{0.};
+    double altitude;
+    double angle;
+    pos = (pos * 170'000) / orbital_h + 1500;
+    double old_ang;
+    bool found{false};
+    file.seekg(start_pos);
+    while (std::getline(file, line) && !found) {
+      std::istringstream iss(line);
+      iss >> altitude >> angle;
+      if (altitude >= pos) {
+        found = true;
+        double const delta1{altitude - pos};
+        double const delta2{old_altitude - pos};
+        if (std::abs(delta1) <= std::abs(delta2)) {
+          return angle;
+        } else {
+          return old_ang;
+        }
+      }
+      if (!found) {
+        old_altitude = altitude;
+        old_ang = angle;
+        start_pos = file.tellg();
       }
     }
-    if (!found) {
-      old_altitude = altitude;
-      old_ang = angle;
-      start_pos = file.tellg();
+    return 0.;
+  }
+
+  Vec const total_force(double rho, double theta, double total_mass, double pos,
+                        double upper_area, double lateral_area, Vec velocity,
+                        Vec eng) {
+    Vec const centrif{centripetal(total_mass, pos, velocity[1])};
+    Vec const gra{g_force(pos, total_mass)};
+    Vec const drag_f{drag(rho, pos, theta, upper_area, lateral_area, velocity)};
+    double const z{eng[0] + centrif[0] - gra[0] - drag_f[0]};
+    double const y{eng[1] - drag_f[1]};
+    return {z, y};
+  }
+
+  double improve_thrust(double altitude, double time, double mass,
+                        double orbital_h, Vec eng, Vec velocity) {
+    if (altitude >= 11'000) {
+      double const fac1{2 / (sim::cost::earth_radius_ + altitude) -
+                        1 / (sim::cost::earth_radius_ + orbital_h)};
+      double const opt_speed{
+          std::sqrt(sim::cost::G_ * sim::cost::earth_mass_ * fac1)};
+      double const effective_speed{
+          sqrt(std::pow(velocity[0], 2) +
+               std::pow(velocity[1] + sim::cost::earth_speed_, 2))};
+      if (opt_speed >= effective_speed) {
+        double const delta_v_prev{
+            sqrt(std::pow(eng[0], 2) + std::pow(eng[1], 2)) * time / mass};
+        double const delta_v{opt_speed - effective_speed};
+        return (delta_v >= delta_v_prev) ? (delta_v_prev / delta_v)
+                                         : (delta_v / delta_v_prev);
+      } else {
+        return 0.;
+      }
+    } else {
+      return 1.;
     }
   }
-  return 0.;
-}
-
-Vec const total_force(double rho, double theta, double total_mass, double pos,
-                      double upper_area, double lateral_area, Vec velocity,
-                      Vec eng) {
-  Vec const centrif{centripetal(total_mass, pos, velocity[1])};
-  Vec const gra{g_force(pos, total_mass)};
-  Vec const drag_f{drag(rho, pos, theta, upper_area, lateral_area, velocity)};
-  double const z{eng[0] + centrif[0] - gra[0] - drag_f[0]};
-  double const y{eng[1] - drag_f[1]};
-  return {z, y};
-}
-
-double improve_thrust(double altitude, double time, double mass,
-                      double orbital_h, Vec eng, Vec velocity) {
-  if (altitude >= 11'000) {
-    double const fac1{2 / (sim::cost::earth_radius_ + altitude) -
-                      1 / (sim::cost::earth_radius_ + orbital_h)};
-    double const opt_speed{
-        std::sqrt(sim::cost::G_ * sim::cost::earth_mass_ * fac1)};
-    double const effective_speed{
-        sqrt(std::pow(velocity[0], 2) +
-             std::pow(velocity[1] + sim::cost::earth_speed_, 2))};
-    if (opt_speed >= effective_speed) {
-      double const delta_v_prev{
-          sqrt(std::pow(eng[0], 2) + std::pow(eng[1], 2)) * time / mass};
-      double const delta_v{opt_speed-effective_speed};
-      return (delta_v >= delta_v_prev) ?  (delta_v_prev / delta_v)
-                                       : (delta_v / delta_v_prev);
-      } else {return 0.;}
-  } else {
-    return 1.;
-  }
-}
 
 };  // namespace rocket

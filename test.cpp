@@ -21,27 +21,27 @@ int main() {
 
   std::string name{"my rocket"};
   double mass_structure{12'000};
-  double Up_Ar{0.4};
-  double Lat_Ar{0.6};
-  double s_p_m{44'500};
-  double m_s_cont{20'000};
-  std::vector<double> l_p_m{32'000, 50'000};
-  std::vector<double> l_c_m{12'000, 13'000};
+  double Up_Ar{50};
+  double Lat_Ar{814.};
+  double s_p_m{440'500};
+  double m_s_cont{100'000};
+  std::vector<double> l_p_m{1000,1000};
+  std::vector<double> l_c_m{0.001,0.0001};
 
   int n_solid_eng{2};
   std::vector<int> n_liq_eng{2, 2};
 
-  rocket::Rocket::Base_engine base{200., 1.5, 8e6, 220e-6};
+  rocket::Rocket::Base_engine base{170., 1.5, 8e6, 220e-6};
   std::unique_ptr<rocket::Rocket::Engine> eng_b =
       std::make_unique<rocket::Rocket::Base_engine>(base);
 
   std::unique_ptr<rocket::Rocket::Engine> ad_1 =
-      std::make_unique<rocket::Rocket::Ad_engine>(8.2e6, 420.e-5, 250.e-5,
+      std::make_unique<rocket::Rocket::Ad_engine>(101500, 420.e-5, 250.e-5,
                                                   2'800.);
   std::unique_ptr<rocket::Rocket::Engine> ad_2 =
-      std::make_unique<rocket::Rocket::Ad_engine>(8.2e6, 420e-5, 250e-5, 2'800);
+      std::make_unique<rocket::Rocket::Ad_engine>(101500, 420e-5, 250e-5, 2'800);
   std::vector<std::unique_ptr<rocket::Rocket::Engine>> vec_liq;
-  vec_liq.push_back(std::move(ad_1));
+  //vec_liq.push_back(std::move(ad_1));
   vec_liq.push_back(std::move(ad_2));
   rocket::Rocket rocket{name,  mass_structure, Up_Ar,       Lat_Ar,
                         s_p_m, m_s_cont,       l_p_m,       l_c_m,
@@ -56,7 +56,7 @@ int main() {
   std::cin >> orbital_h;
   while (i < 400) {
     bool orbiting =
-        rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1]);
+          rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1]);
 
     double const imp_thrust{
         rocket::improve_thrust(rocket.get_pos()[0], time, rocket.get_mass(),
