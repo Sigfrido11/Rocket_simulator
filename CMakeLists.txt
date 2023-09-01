@@ -21,10 +21,6 @@ string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " -fsanitize=address,undefined -fno-o
 add_executable(rocket.t tot1.cpp rocket.cpp simulation.cpp interface.cpp)
 target_link_libraries(rocket.t sfml-graphics sfml-window sfml-system sfml-audio)
 
-# se il testing e' abilitato...
-#   per disabilitare il testing, passare -DBUILD_TESTING=OFF a cmake durante la fase di configurazione
-#if (BUILD_TESTING)
-
   # aggiungi l'eseguibile statistics.t
  add_executable(rocket_test.t test_calc.cpp rocket.cpp simulation.cpp)
    #aggiungi l'eseguibile statistics.t alla lista dei test
