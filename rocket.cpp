@@ -18,8 +18,7 @@ using Vec = std::array<double, 2>;
 Rocket::Rocket(std::string name, double mass_structure, double Up_Ar,
                double Lat_Ar, double s_p_m, double m_s_cont,
                std::vector<double> l_p_m, std::vector<double> l_c_m,
-               std::unique_ptr<Engine> &eng_s,
-               std::vector<std::unique_ptr<Engine>> &eng_l, int n_solid_eng,
+               std::shared_ptr<Engine> eng, int n_solid_eng,
                std::vector<int> n_liq_eng)
     : name_{name},
       lateral_area_{Lat_Ar},
@@ -39,17 +38,14 @@ Rocket::Rocket(std::string name, double mass_structure, double Up_Ar,
          n_liq_eng_.size() == m_liq_prop_.size());
   assert(lateral_area_ > 0 && upper_area_ > 0 && m_sol_cont_ > 0 &&
          m_sol_prop_ > 0);
-   current_stage_=total_stage_;
+  current_stage_ = total_stage_;
   std::for_each(n_liq_eng.begin(), n_liq_eng.end(),
                 [](int value) { assert(value >= 0); });
   std::for_each(m_liq_cont_.begin(), m_liq_cont_.end(),
                 [](double value) mutable { assert(value > 0.); });
   std::for_each(m_liq_prop_.begin(), m_liq_prop_.end(),
                 [](double value) mutable { assert(value > 0.); });
-
-  liq_eng_ = std::move(eng_l);
-
-  eng_s_ = std::move(eng_s);
+  eng_ = eng;
 }
 
 // funzioni Rocket
@@ -101,8 +97,8 @@ void Rocket::set_state(std::string file_name, double orbital_h, double time,
     velocity_[0] = speed * std::sin(theta_);
     velocity_[1] = speed * std::cos(theta_);
   }
-  double const ms{eng_s_->delta_m(time, is_orbiting) * n_sol_eng_};
-  double const ml{liq_eng_[0]->delta_m(time, is_orbiting) * n_liq_eng_[0]};
+  double const ms{eng_->delta_m(time, is_orbiting) * n_sol_eng_};
+  double const ml{eng_->delta_m(time, is_orbiting) * n_liq_eng_[0]};
   mass_lost(ms, ml);
   stage_release(ms, ml);
 }
@@ -126,7 +122,6 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       total_mass_ -= m_liq_cont_[0] - m_liq_prop_[0];
       m_liq_cont_.erase(m_liq_cont_.begin());
       m_liq_prop_.erase(m_liq_prop_.begin());
-      liq_eng_.erase(liq_eng_.begin());
       n_liq_eng_.erase(n_liq_eng_.begin());
     }
   } else {
@@ -139,7 +134,7 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       total_mass_ -= m_sol_cont_ - m_sol_prop_;
       m_sol_cont_ = 0;
       m_sol_prop_ = 0;
-      eng_s_->release();
+      eng_->release();
       n_sol_eng_ = 0;
       std::cout << "stage released"
                 << "\n";
@@ -153,19 +148,19 @@ double Rocket::get_up_ar() const { return upper_area_; }
 Vec const Rocket::thrust(double time, bool is_orbiting) const {
   Vec engs;
   Vec engl;
-  if (eng_s_->is_ad_eng()) {
+  if (eng_->is_ad_eng()) {
     std::vector<double> par{theta_};
-    engs = eng_s_->eng_force(par, is_orbiting);
+    engs = eng_->eng_force(par, is_orbiting);
   } else {
     std::vector<double> par{time, theta_, pos_[0]};
-    engs = eng_s_->eng_force(par, is_orbiting);
+    engs = eng_->eng_force(par, is_orbiting);
   }
-  if (liq_eng_[0]->is_ad_eng()) {
+  if (eng_->is_ad_eng()) {
     std::vector<double> par{theta_};
-    engl = liq_eng_[0]->eng_force(par, is_orbiting);
+    engl = eng_->eng_force(par, is_orbiting);
   } else {
     std::vector<double> par{time, theta_, pos_[0]};
-    engl = liq_eng_[0]->eng_force(par, is_orbiting);
+    engl = eng_->eng_force(par, is_orbiting);
   }
   double const z{engs[0] * n_sol_eng_ + engl[0] * n_liq_eng_[0]};
   double const y{engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0]};

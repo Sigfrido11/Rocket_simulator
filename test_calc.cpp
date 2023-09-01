@@ -15,29 +15,20 @@ TEST_CASE("TESTING THE CALCS") {
   SUBCASE("Testing rocket") {
     std::string name{"my rocket"};
     double mass_structure{12'000};
-    double Up_Ar{0.4};
-    double Lat_Ar{0.6};
+    double up_ar{0.4};
+    double lat_ar{0.6};
     double s_p_m{14'500};
     double m_s_cont{20'000};
     std::vector<double> l_p_m{320'000, 23'000};
     std::vector<double> l_c_m{12'000, 13'000};
-    std::unique_ptr<rocket::Rocket::Engine> eng_b =
-        std::make_unique<rocket::Rocket::Base_engine>(170., 1.5, 8e6, 220e-6);
-    std::unique_ptr<rocket::Rocket::Engine> ad_1 =
-        std::make_unique<rocket::Rocket::Ad_engine>(6e6, 420.e-2, 250.e-2,
-                                                    2'800.);
-    std::unique_ptr<rocket::Rocket::Engine> ad_2 =
-        std::make_unique<rocket::Rocket::Ad_engine>(3e6, 400.e-4, 250.e-4,
-                                                    2'800.);
-    std::vector<std::unique_ptr<rocket::Rocket::Engine>> vec_liq;
-    vec_liq.push_back(std::move(ad_1));
-    vec_liq.push_back(std::move(ad_2));
+    std::shared_ptr<rocket::Rocket::Engine> eng_b =
+        std::make_shared<rocket::Rocket::Base_engine>(170., 1.5, 8e6, 220e-6);
     int n_solid_eng{1};
     std::vector<int> n_liq_eng{1, 1};
 
-    rocket::Rocket rocket{name,  mass_structure, Up_Ar,       Lat_Ar,
+    rocket::Rocket rocket{name,  mass_structure, up_ar,       lat_ar,
                           s_p_m, m_s_cont,       l_p_m,       l_c_m,
-                          eng_b, vec_liq,        n_solid_eng, n_liq_eng};
+                          eng_b,    n_solid_eng, n_liq_eng};
 
     rocket::Rocket::Ad_engine eng_1{6e6, 420.e-2, 250.e-5, 2'800.};
     rocket::Rocket::Ad_engine eng_2{3e6, 400.e-2, 250.e-4, 2'800.};
@@ -52,14 +43,14 @@ TEST_CASE("TESTING THE CALCS") {
     CHECK(rocket.get_fuel_left() == doctest::Approx(333200));
     CHECK(rocket.get_rem_stage() == 3);
     std::array<double, 2> thrust = rocket.thrust(1, false);
-    CHECK(thrust[0] / 1e7 == doctest::Approx(3.11824));
-    CHECK(thrust[1] == doctest::Approx(0.211881));
+    CHECK(thrust[0] / 1e7 == doctest::Approx(0.879595));
+    CHECK(thrust[1] == doctest::Approx(0.0597676));
     rocket.move(2, thrust);
     rocket.change_vel(12., thrust);
-    CHECK(rocket.get_velocity()[0] == doctest::Approx(905.588));
-    CHECK(rocket.get_velocity()[1] * 1e6 == doctest::Approx(6.15338));
-    CHECK(rocket.get_pos()[0] == doctest::Approx(150.931));
-    CHECK(rocket.get_pos()[1] * 1e5 == doctest::Approx(0.102556));
+    CHECK(rocket.get_velocity()[0] == doctest::Approx(255.449));
+    CHECK(rocket.get_velocity()[1] * 1e6 == doctest::Approx(1.73575));
+    CHECK(rocket.get_pos()[0] == doctest::Approx(42.5748));
+    CHECK(rocket.get_pos()[1] * 1e5 == doctest::Approx(0.0289291));
     rocket.mass_lost(120., 320.);
     CHECK(rocket.get_mass() == 412760);
     CHECK(rocket.get_fuel_left() == 332760);
@@ -69,18 +60,18 @@ TEST_CASE("TESTING THE CALCS") {
     CHECK(rocket.get_fuel_left() == 301360);
     rocket.set_state("theta_data.txt", 170'000, 0.01, false);
     CHECK(rocket.get_theta() == doctest::Approx(1.5708));
-    CHECK(rocket.get_velocity()[0] == doctest::Approx(905.588));
+    CHECK(rocket.get_velocity()[0] == doctest::Approx(255.449));
     rocket.set_state("theta_data.txt", 170'000, 1, true);
     rocket.thrust(1, false);
-    CHECK(thrust[0] / 1e7 == doctest::Approx(3.11824));
-    CHECK(thrust[1] == doctest::Approx(0.211881));
+    CHECK(thrust[0] / 1e7 == doctest::Approx(0.879595));
+    CHECK(thrust[1] == doctest::Approx(0.0597676));
     rocket.move(5, thrust);
     rocket.change_vel(5., thrust);
-    CHECK(rocket.get_velocity()[0] == doctest::Approx(1316.59));
-    CHECK(rocket.get_velocity()[1] * 1e6 == doctest::Approx(8.94612));
-    CHECK(rocket.get_pos()[0] == doctest::Approx(5706.39));
-    CHECK(rocket.get_pos()[1] * 1e5 == doctest::Approx(3.87743 ));
-    CHECK(rocket.get_fuel_left() == doctest::Approx(299342));
+    CHECK(rocket.get_velocity()[0] == doctest::Approx(370.788));
+    CHECK(rocket.get_velocity()[1] * 1e6 == doctest::Approx(2.51947));
+    CHECK(rocket.get_pos()[0] == doctest::Approx(1608.17));
+    CHECK(rocket.get_pos()[1] * 1e5 == doctest::Approx(1.09273));
+    CHECK(rocket.get_fuel_left() == doctest::Approx(301307));
     rocket.stage_release(400,200);
     CHECK(rocket.get_rem_stage() == 3);
     

@@ -18,8 +18,8 @@ class Rocket {
   // tutte le informazioni contenute in rocket
   // cose da inizializzare
   std::string name_{"my_rocket"};
-  double lateral_area_{9300.};
-  double upper_area_{1000.};
+  double lateral_area_{400.};
+  double upper_area_{80.};
   double m_sol_cont_{15'000};
   double m_sol_prop_{40'000.};
   std::vector<double> m_liq_prop_{15'000};  // massa carburante liquida
@@ -37,8 +37,8 @@ class Rocket {
   Vec pos_{0., 0.};  // ora altitude diventa inutile ho già tutto nel pos_
   int current_stage_{1};
   double theta_{1.57079632};  // angolo inclinazione
- 
-  public:
+
+ public:
   class Engine {
    public:
     virtual double delta_m(double, bool) const = 0;
@@ -51,29 +51,25 @@ class Rocket {
 
     virtual bool is_released() const = 0;
 
-    virtual double get_pression() const =0;
+    virtual double get_pression() const = 0;
 
     virtual ~Engine() = default;
   };
 
   class Base_engine final : public Engine {
     double isp_{250};  // per i solidi
-    double cm_{2.5};    // coefficiente perdita massa
-    double p_0_{8e6};
+    double cm_{4.};    // coefficiente perdita massa
+    double p_0_{5e6};
     double burn_a_{200e-6};
     double spin_coef_{1};
     bool released_{false};
 
    public:
-    explicit Base_engine(double isp, double cm, double p0, double burn_a);
+    explicit Base_engine(double, double, double, double);
 
     explicit Base_engine(double isp, double cm, double p0)
         : isp_{isp}, cm_{cm}, p_0_{p0} {
       assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0);
-    }
-
-    explicit Base_engine(double isp, double cm) : isp_{isp}, cm_{cm} {
-      assert(isp_ >= 0 && cm_ >= 0);
     }
 
     Base_engine() = default;
@@ -92,7 +88,7 @@ class Rocket {
   };
 
   class Ad_engine final : public Engine {
-    double p_0_{8e6};
+    double p_0_{5e6};
     double burn_a_{200e-6};
     double nozzle_as_{221.0e-6};
     double t_0_{1710.0};
@@ -100,14 +96,13 @@ class Rocket {
     double grain_dim_{0.02};
     double burn_rate_a_{0.01};
     double burn_rate_n_{0.02};
-    double prop_mm_ {178};
+    double prop_mm_{178};
     double spin_coef_{1};
     bool released_{false};
 
    public:
-    explicit Ad_engine(double burn_a, double nozzle_as, double t_0,
-                       double grain_dim, double grain_rho, double a_coef,
-                       double burn_rate_n, double prop_mm);
+    explicit Ad_engine(double, double, double, double, double, double, double,
+                       double);
 
     explicit Ad_engine(double p_0, double burn_a, double nozzle_as, double t_0);
 
@@ -127,22 +122,16 @@ class Rocket {
   };
 
  private:
-  std::unique_ptr<Engine> eng_s_ = std::make_unique<Base_engine>(250, 3.5);
+  std::shared_ptr<Engine> eng_;
   int n_sol_eng_{1};
-  std::vector<std::unique_ptr<Engine>> liq_eng_;
   std::vector<int> n_liq_eng_;
 
  public:
   // costruttore con tutto
 
-  explicit Rocket(std::string name, double mass_structure, double Up_Ar,
-                  double Lat_Ar, double s_p_m, double m_s_cont,
-                  std::vector<double> l_p_m, std::vector<double> l_c_m,
-                  std::unique_ptr<Engine>& eng_s,
-                  std::vector<std::unique_ptr<Engine>>& eng_l, int n_solid_eng,
-                  std::vector<int> n_liq_eng);
-
-  // costruttore senza container aree e massa struttura
+  explicit Rocket(std::string, double, double, double, double, double,
+                  std::vector<double>, std::vector<double>,
+                  std::shared_ptr<Engine>, int, std::vector<int>);
 
   Rocket() = default;
 
@@ -175,7 +164,7 @@ class Rocket {
   Vec const thrust(double, bool) const;
 };
 
-Vec const total_force(double, double, double, double, double, double,Vec, Vec);
+Vec const total_force(double, double, double, double, double, double, Vec, Vec);
 
 double improve_theta(std::string, double, double, double);
 
@@ -187,7 +176,8 @@ double g_force(double, double);
 
 Vec const drag(double, double, double, double, double, Vec);
 
-double anti_g_turn(double gra, double centrip, double theta, bool is_orbiting, int stage);
+double anti_g_turn(double gra, double centrip, double theta, bool is_orbiting,
+                   int stage);
 
 };  // namespace rocket
 #endif
