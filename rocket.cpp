@@ -39,7 +39,7 @@ Rocket::Rocket(std::string name, double mass_structure, double Up_Ar,
          n_liq_eng_.size() == m_liq_prop_.size());
   assert(lateral_area_ > 0 && upper_area_ > 0 && m_sol_cont_ > 0 &&
          m_sol_prop_ > 0);
-
+   current_stage_=total_stage_;
   std::for_each(n_liq_eng.begin(), n_liq_eng.end(),
                 [](int value) { assert(value >= 0); });
   std::for_each(m_liq_cont_.begin(), m_liq_cont_.end(),
@@ -87,31 +87,33 @@ void Rocket::change_vel(double time, Vec force) {
   velocity_[1] = velocity_[1] + (force[1] * (1 / total_mass_) * time);
 }
 
-void Rocket::set_state(std::string file_name, double orbital_h, double time, bool is_orbiting) {
-    if ((velocity_[0] < 0 || velocity_[1] < 0) && is_orbiting == false) {
-      std::cout << "sorry guy, no orbit avaible for your rocket";
-      assert(false);
-    }
-    theta_ = improve_theta(file_name, theta_, pos_[0], orbital_h);
-    if (pos_[0] > 20'000) {
+void Rocket::set_state(std::string file_name, double orbital_h, double time,
+                       bool is_orbiting) {
+  if ((velocity_[0] < 0 || velocity_[1] < 0) && (is_orbiting == false)) {
+    std::cout << "sorry guy, no orbit avaible for your rocket";
+    assert(false);
+  }
+  double const old_theta{theta_};
+  theta_ = improve_theta(file_name, theta_, pos_[0], orbital_h);
+  if ((pos_[0] > 20'000) && old_theta != 0) {
     double const speed =
         std::sqrt(std::pow(velocity_[0], 2) + std::pow(velocity_[0], 2));
     velocity_[0] = speed * std::sin(theta_);
     velocity_[1] = speed * std::cos(theta_);
   }
   double const ms{eng_s_->delta_m(time, is_orbiting) * n_sol_eng_};
-  double const ml{liq_eng_[0]->delta_m(time, is_orbiting) * n_liq_eng_[0] };
+  double const ml{liq_eng_[0]->delta_m(time, is_orbiting) * n_liq_eng_[0]};
   mass_lost(ms, ml);
   stage_release(ms, ml);
 }
 
-int Rocket::get_rem_stage() const { return total_stage_; };
+int Rocket::get_rem_stage() const { return current_stage_; };
 
-double Rocket::get_rem_fuel() const { return (m_liq_prop_[0] + m_sol_prop_); }
+double Rocket::get_fuel_left() const { return (m_liq_prop_[0] + m_sol_prop_ ); }
 
 void Rocket::stage_release(double delta_ms, double delta_ml) {
-  if (m_liq_prop_[0] < 0 && m_sol_prop_ < 0) {
-    std::cout << "error in the distribution of the propellant \n" << '\n';
+  if (m_liq_prop_[0] < 0) {
+    std::cout << "error in the input distribution of the propellant \n" << '\n';
     assert(false);
   }
   if (m_sol_cont_ == 0) {
@@ -148,18 +150,18 @@ double Rocket::get_lat_ar() const { return lateral_area_; }
 
 double Rocket::get_up_ar() const { return upper_area_; }
 
-Vec const Rocket::thrust(double p_ext, double time, bool is_orbiting) const {
+Vec const Rocket::thrust(double time, bool is_orbiting) const {
   Vec engs;
   Vec engl;
   if (eng_s_->is_ad_eng()) {
-    std::vector<double> par{p_ext, theta_};
+    std::vector<double> par{theta_};
     engs = eng_s_->eng_force(par, is_orbiting);
   } else {
     std::vector<double> par{time, theta_, pos_[0]};
     engs = eng_s_->eng_force(par, is_orbiting);
   }
   if (liq_eng_[0]->is_ad_eng()) {
-    std::vector<double> par{p_ext, theta_};
+    std::vector<double> par{theta_};
     engl = liq_eng_[0]->eng_force(par, is_orbiting);
   } else {
     std::vector<double> par{time, theta_, pos_[0]};
@@ -234,7 +236,7 @@ Rocket::Ad_engine::Ad_engine(double burn_a, double nozzle_as, double t_0,
   double exponent = sim::cost::gamma_ + 1 / (sim::cost::gamma_ - 1);
   double fac2 = std::pow(2 / sim::cost::gamma_ + 1, exponent);
   double fac3 = std::sqrt((sim::cost::gamma_ * fac2) / sim::cost::R_ * t_0_);
-  p_0_ = std::pow(fac1 * 2.2173e3 / fac3, 1 / (1 - burn_rate_n_)) * 2.2173e3;
+  p_0_ = std::pow(fac1 * 2.2173e5 / fac3, 1 / (1 - burn_rate_n_));
 }
 Rocket::Ad_engine::Ad_engine(double p_0, double burn_a, double nozzle_as,
                              double t_0)
@@ -246,7 +248,7 @@ bool Rocket::Ad_engine::is_ad_eng() const { return true; }
 
 Vec const Rocket::Ad_engine::eng_force(std::vector<double> par,
                                        bool is_orbiting) const {
-  double const theta{par[1]};
+  double const theta{par[0]};
   if (!is_orbiting && !released_) {
     double const fac1{nozzle_as_ * p_0_};
     double const fac2{
@@ -256,8 +258,8 @@ Vec const Rocket::Ad_engine::eng_force(std::vector<double> par,
     double const fac4{1 -
                       std::pow((sim::cost::sea_pression_ / p_0_),
                                (sim::cost::gamma_ - 1 / sim::cost::gamma_))};
-    double const force{fac1 *
-                       std::sqrt(fac2 * std::pow(fac3, exp) * fac4 * 2.2173e5)};
+    double const force{
+        fac1 * std::sqrt(fac2 * std::pow(fac3, exp) * fac4 * 2.2173e-5)};
     return {force * std::sin(theta), force * std::cos(theta)};
   } else {
     return {0., 0.};
@@ -271,7 +273,7 @@ double Rocket::Ad_engine::delta_m(double time, bool is_orbiting) const {
         std::sqrt(sim::cost::gamma_ * prop_mm_ / (sim::cost::R_ * t_0_))};
     double const fac3{2 / (sim::cost::gamma_ + 1)};
     double const fac4{(sim::cost::gamma_ + 1) / (2 * (sim::cost::gamma_ - 1))};
-    double const mass{fac1 * fac2 * std::pow(fac3, fac4) * time * 2.2173e2};
+    double const mass{fac1 * fac2 * std::pow(fac3, fac4) * time * 2.2173e-1};
     assert(mass >= 0.);
     return mass;
   } else {
@@ -351,8 +353,8 @@ inline double improve_theta(std::string name_f, double theta, double pos,
 }
 
 Vec const total_force(double rho, double theta, double total_mass, double pos,
-                      double upper_area, double lateral_area,
-                      Vec velocity, Vec eng) {
+                      double upper_area, double lateral_area, Vec velocity,
+                      Vec eng) {
   double const centrip{centripetal(total_mass, pos, velocity[1])};
   double const gra{g_force(pos, total_mass)};
   Vec const drag_f{drag(rho, pos, theta, upper_area, lateral_area, velocity)};
@@ -363,6 +365,5 @@ Vec const total_force(double rho, double theta, double total_mass, double pos,
   } else {
     return {z, y};
   }
-
-}  
+}
 };  // namespace rocket

@@ -91,9 +91,8 @@ int main() {
         std::cout << "invalid value for rocket please restart";
         break;
     }
-  
-  }
-  
+}  
+
 std::unique_ptr<rocket::Rocket::Engine> eng;
 if(ans_eng == 'a'){
 eng=std::make_unique<rocket::Rocket::Ad_engine>(ad);
@@ -269,18 +268,18 @@ float const width{1200.f};
   while (window.isOpen()) {
     sf::Event event;
 
-      bool const orbiting {rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
+    bool const orbiting {rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
 
     rocket.set_state(file_name, orbital_h, delta_time, orbiting);
 
     air.set_state(rocket.get_pos()[0]);
 
-    eng_force = rocket.thrust(air.p_, delta_time, orbiting);
+    eng_force = rocket.thrust(delta_time, orbiting);
 
-    Vec force = rocket::total_force(air.rho_, rocket.get_theta(),
+    Vec const force {rocket::total_force(air.rho_, rocket.get_theta(),
                                     rocket.get_mass(), rocket.get_pos()[0],
                                     rocket.get_up_ar(), rocket.get_lat_ar(),
-                                    rocket.get_velocity(), eng_force);
+                                    rocket.get_velocity(), eng_force)};
 
 
     double const rocket_radius{rocket.get_pos()[0] + sim::cost::earth_radius_};

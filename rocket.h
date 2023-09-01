@@ -18,8 +18,8 @@ class Rocket {
   // tutte le informazioni contenute in rocket
   // cose da inizializzare
   std::string name_{"my_rocket"};
-  double lateral_area_{400.};
-  double upper_area_{80.};
+  double lateral_area_{9300.};
+  double upper_area_{1000.};
   double m_sol_cont_{15'000};
   double m_sol_prop_{40'000.};
   std::vector<double> m_liq_prop_{15'000};  // massa carburante liquida
@@ -58,8 +58,8 @@ class Rocket {
 
   class Base_engine final : public Engine {
     double isp_{250};  // per i solidi
-    double cm_{4.};    // coefficiente perdita massa
-    double p_0_{5e6};
+    double cm_{2.5};    // coefficiente perdita massa
+    double p_0_{8e6};
     double burn_a_{200e-6};
     double spin_coef_{1};
     bool released_{false};
@@ -92,7 +92,7 @@ class Rocket {
   };
 
   class Ad_engine final : public Engine {
-    double p_0_{5e6};
+    double p_0_{8e6};
     double burn_a_{200e-6};
     double nozzle_as_{221.0e-6};
     double t_0_{1710.0};
@@ -160,7 +160,7 @@ class Rocket {
 
   int get_rem_stage() const;
 
-  double get_rem_fuel() const;
+  double get_fuel_left() const;
 
   double get_lat_ar() const;
 
@@ -172,7 +172,7 @@ class Rocket {
 
   void change_vel(double, Vec);
 
-  Vec const thrust(double, double, bool) const;
+  Vec const thrust(double, bool) const;
 };
 
 Vec const total_force(double, double, double, double, double, double,Vec, Vec);
