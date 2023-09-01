@@ -5,13 +5,127 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-
+#include <memory>
+#include <stdio.h>
 #include "interface.h"
 #include "rocket.h"
 #include "simulation.h"
 
 int main() {
-  float const width{1200.f};
+  // inizializzazione parametri
+  using Vec = std::array<double, 2>;
+  std::string const file_name = "theta_data.txt";
+  std::ofstream output_rocket("output_rocket.txt");
+  assert(output_rocket.is_open());
+  std::ofstream output_air("output_air.txt");
+  assert(output_air.is_open());
+  output_rocket << "posizione z-y   velocitàz-y    forza z-x" << '\n';
+  output_rocket << "temp    pres    rho" << '\n';
+
+  rocket::Rocket::Ad_engine ad;
+  rocket::Rocket::Base_engine base;
+  interface::rocket_data rocket_data;
+   char ans_eng;
+   
+  {  // aggiungo uno scope in modo da cancellare poi tutte le
+    // variabili che non servono
+    interface::ad_eng_data ad_eng_data;
+    interface::base_eng_data base_eng_data;
+    std::cout << "let's build the engine of your rocket"
+              << "\n"
+              << "do you prefer an advance (a) rocket or base rocket (b)"
+              << "\n";
+    std::cin >> ans_eng;
+     switch (ans_eng) {
+      case 'a':
+        rocket_data.eng_type = 'a';
+        std::cout<< rocket_data.eng_type << '\n';
+        interface::select_ad_eng(ad_eng_data);
+        if (ad_eng_data.type == 'm') {
+          ad = rocket::Rocket::Ad_engine{
+              ad_eng_data.burn_a,      ad_eng_data.nozzle_as,
+              ad_eng_data.t_0,         ad_eng_data.grain_dim,
+              ad_eng_data.grain_rho,   ad_eng_data.a_coef,
+              ad_eng_data.burn_rate_n, ad_eng_data.prop_mm};
+              
+        } else {
+          ad =
+              rocket::Rocket::Ad_engine{ad_eng_data.p_0, ad_eng_data.burn_a,
+                                        ad_eng_data.nozzle_as, ad_eng_data.t_0};
+            
+        }
+        break;
+      case 'b':
+        rocket_data.eng_type = 'a';
+        interface::select_base_eng(base_eng_data);
+
+        base =
+            rocket::Rocket::Base_engine{base_eng_data.isp, base_eng_data.cm,
+                                        base_eng_data.p0, base_eng_data.burn_a};
+        break;
+      
+      default:
+        std::cout << "invalid value for rocket please restart ";
+        break;
+    }
+    char ans_roc;
+    std::cout << "how many details do you want to insert for create your"
+              << "\n"
+              << "rocket (many (m), some (s), few (f))?"
+              << "\n";
+    std::cin >> ans_roc;
+    switch (ans_roc) {
+      case 'm':
+        rocket_data = interface::create_complete_roc();
+
+        break;
+      case 's':
+        rocket_data = interface::create_med_roc();
+        break;
+
+      case 'f':
+        rocket_data = interface::create_minim_roc();
+        break;
+
+      default:
+        std::cout << "invalid value for rocket please restart";
+        break;
+    }
+  
+  }
+  
+std::unique_ptr<rocket::Rocket::Engine> eng;
+if(ans_eng == 'a'){
+eng=std::make_unique<rocket::Rocket::Ad_engine>(ad);
+}
+else{
+  eng=std::make_unique<rocket::Rocket::Base_engine>(base);
+}
+std::vector<std::unique_ptr<rocket::Rocket::Engine>> vec_liq;
+      for (int i{0}; i <= rocket_data.stage_num; i++) {
+        vec_liq.push_back(std::move(eng));
+      }
+
+rocket::Rocket rocket{rocket_data.name,
+                      rocket_data.mass_structure,
+                      rocket_data.up_ar,
+                      rocket_data.lat_ar,
+                      rocket_data.s_p_m,
+                      rocket_data.m_s_cont,
+                      rocket_data.l_p_m,
+                      rocket_data.l_c_m,
+                      eng,
+                      vec_liq,
+                      rocket_data.n_solid_eng,
+                      rocket_data.n_liq_eng};
+  sim::Air_var air;
+  double const delta_time{1.};
+  std::streampos start_pos;
+
+  std::cout << "a che altezza vuoi orbitare?(m)";
+  double orbital_h;
+  std::cin >> orbital_h;
+float const width{1200.f};
   float const height{600.f};
   sf::RenderWindow window(sf::VideoMode(width, height), "Rocket simulator");
   window.setPosition(sf::Vector2i(0, 0));
@@ -128,119 +242,7 @@ int main() {
 
   std::vector<sf::Vertex *> vertices{line, line1, line2};
 
-  // inizializzazione parametri
-  using Vec = std::array<double, 2>;
-  std::string const file_name = "theta_data.txt";
-  std::ofstream output_rocket("output_rocket.txt");
-  assert(output_rocket.is_open());
-  std::ofstream output_air("output_air.txt");
-  assert(output_air.is_open());
-  output_rocket << "posizione z-y   velocitàz-y    forza z-x" << '\n';
-  output_rocket << "temp    pres    rho" << '\n';
 
-  interface::rocket_data rocket_data;
-  rocket::Rocket::Ad_engine ad;
-  rocket::Rocket::Base_engine base;
-   char ans_eng;
-  {  // aggiungo uno scope in modo da cancellare poi tutte le
-    // variabili che non servono
-    interface::ad_eng_data ad_eng_data;
-    interface::base_eng_data base_eng_data;
-    std::cout << "let's build the engine of your rocket"
-              << "\n"
-              << "do you prefer an advance (a) rocket or base rocket (b)"
-              << "\n";
-    std::cin >> ans_eng;
-     switch (ans_eng) {
-      case 'a':
-        rocket_data.eng_type = 'a';
-        interface::select_ad_eng(ad_eng_data);
-        if (ad_eng_data.type == 'm') {
-          ad = rocket::Rocket::Ad_engine{
-              ad_eng_data.burn_a,      ad_eng_data.nozzle_as,
-              ad_eng_data.t_0,         ad_eng_data.grain_dim,
-              ad_eng_data.grain_rho,   ad_eng_data.a_coef,
-              ad_eng_data.burn_rate_n, ad_eng_data.prop_mm};
-              
-        } else {
-          ad =
-              rocket::Rocket::Ad_engine{ad_eng_data.p_0, ad_eng_data.burn_a,
-                                        ad_eng_data.nozzle_as, ad_eng_data.t_0};
-            
-        }
-        break;
-      case 'b':
-        rocket_data.eng_type = 'a';
-        interface::select_base_eng(base_eng_data);
-
-        base =
-            rocket::Rocket::Base_engine{base_eng_data.isp, base_eng_data.cm,
-                                        base_eng_data.p0, base_eng_data.burn_a};
-        break;
-      
-      default:
-        std::cout << "invalid value for engine ";
-        break;
-    }
-    char ans_roc;
-    std::cout << "how many details do you want to insert for create your"
-              << "\n"
-              << "rocket (many (m), some (s), few (f))?"
-              << "\n";
-    std::cin >> ans_roc;
-    switch (ans_roc) {
-      case 'm':
-        interface::create_complete_roc(rocket_data);
-
-        break;
-      case 's':
-        interface::create_med_roc(rocket_data);
-        break;
-
-      case 'f':
-      std::cout << "qui ci sono" << "\n";
-        interface::create_minim_roc(rocket_data);
-        std::cout << "qui ci sono"<< "\n";
-        break;
-
-      default:
-        std::cout << "invalid value for rocket";
-        break;
-    }
-  }
-std::cout << "qui ci sono";
-std::shared_ptr<rocket::Rocket::Engine> eng;
-if(ans_eng = 'a'){
-  eng=std::make_shared<rocket::Rocket::Ad_engine>(ad);
-}
-else{
-  eng=std::make_shared<rocket::Rocket::Base_engine>(base);
-}
-std::vector<std::shared_ptr<rocket::Rocket::Engine>> vec_liq;
-      for (int i{0}; i <= rocket_data.stage_num; i++) {
-        vec_liq.push_back(std::move(eng));
-      }
-
-std::cout << "qui ci sono";
-rocket::Rocket rocket{rocket_data.name,
-                      rocket_data.mass_structure,
-                      rocket_data.up_ar,
-                      rocket_data.lat_ar,
-                      rocket_data.s_p_m,
-                      rocket_data.m_s_cont,
-                      rocket_data.l_p_m,
-                      rocket_data.l_c_m,
-                      eng,
-                      vec_liq,
-                      rocket_data.n_solid_eng,
-                      rocket_data.n_liq_eng};
-  sim::Air_var air;
-  double const delta_time{1.};
-  std::streampos start_pos;
-
-  std::cout << "a che altezza vuoi orbitare?(m)";
-  double orbital_h;
-  std::cin >> orbital_h;
 
   sf::SoundBuffer buffer;
   if (!buffer.loadFromFile("launch_sound.mp3")) {
@@ -267,24 +269,19 @@ rocket::Rocket rocket{rocket_data.name,
   while (window.isOpen()) {
     sf::Event event;
 
-    bool orbiting =
-        rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1]);
+      bool const orbiting {rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
 
-    double const imp_thrust{rocket::improve_thrust(
-        rocket.get_pos()[0], delta_time, rocket.get_mass(), orbital_h,
-        eng_force, rocket.get_velocity())};
-
-    rocket.set_state(file_name, rocket.get_theta(), orbital_h, imp_thrust,
-                     delta_time, orbiting, start_pos);
+    rocket.set_state(file_name, orbital_h, delta_time, orbiting);
 
     air.set_state(rocket.get_pos()[0]);
 
-    eng_force = rocket.thrust(air.p_, delta_time, imp_thrust, orbiting);
+    eng_force = rocket.thrust(air.p_, delta_time, orbiting);
 
     Vec force = rocket::total_force(air.rho_, rocket.get_theta(),
                                     rocket.get_mass(), rocket.get_pos()[0],
                                     rocket.get_up_ar(), rocket.get_lat_ar(),
                                     rocket.get_velocity(), eng_force);
+
 
     double const rocket_radius{rocket.get_pos()[0] + sim::cost::earth_radius_};
     double const angle_var{

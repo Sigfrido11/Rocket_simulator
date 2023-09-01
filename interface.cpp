@@ -2,11 +2,10 @@
 
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm> 
-
 
 namespace interface {
 void set_text_style(sf::Text &text, sf::Font &font) {
@@ -15,7 +14,57 @@ void set_text_style(sf::Text &text, sf::Font &font) {
   text.setFillColor(sf::Color::White);
 }
 
-void create_complete_roc(rocket_data &rocket_data) {
+void create_ad_eng_all(ad_eng_data &eng_data) {
+  eng_data.type = 'm';
+  std::cout << "give me the burn area (m^2) ≈ 2e-4" << '\n';
+  std::cin >> eng_data.burn_a;
+  std::cout << "give me the throat area (m^2) ≈ 2e-4" << '\n';
+  std::cin >> eng_data.nozzle_as;
+  std::cout << "give me the temperature of the engine 1'700 < x < 2'800"
+            << '\n';
+  std::cin >> eng_data.t_0;
+  std::cout << "give me the dimension of the grain for the engine ≈0.02"
+            << '\n';
+  std::cin >> eng_data.grain_dim;
+  std::cout << "give me the density of the grain for the engine ≈1800" << '\n';
+  std::cin >> eng_data.grain_rho;
+  std::cout << "give me the engine burn rate a coefficent ≈50" << '\n';
+  std::cin >> eng_data.a_coef;
+  std::cout << "give me the engine burn rate n coefficent ≈0.02" << '\n';
+  std::cin >> eng_data.burn_rate_n;
+  std::cout << "give me the molar mass of the propellant (g/mol) ≈180" << '\n';
+  std::cin >> eng_data.prop_mm;
+}
+
+rocket_data create_minim_roc() {
+  interface::rocket_data rocket_data;
+  std::cout << "give a name to your rocket"
+            << "\n";
+  std::cin >> rocket_data.name;
+  std::cout << "how many stages do you want 1 < x < 4"
+            << "\n";
+  std::cin >> rocket_data.stage_num;
+  std::cout << "how many engine has the solid propellant at stage: < 3"
+            << "\n";
+  std::cin >> rocket_data.n_solid_eng;
+  double ans;
+  std::cout << "how many engine has the solid state at stage: < 3"
+            << "\n";
+  std::cin >> ans;
+
+  rocket_data.l_p_m.reserve(rocket_data.stage_num);
+  rocket_data.l_c_m.reserve(rocket_data.stage_num);
+  rocket_data.n_liq_eng.reserve(rocket_data.stage_num);
+  std::fill_n(rocket_data.l_p_m.begin(), rocket_data.stage_num, 100000);
+  std::fill_n(rocket_data.l_c_m.begin(), rocket_data.stage_num, 15000);
+  std::fill_n(rocket_data.n_liq_eng.begin(), rocket_data.stage_num, ans);
+  
+  return rocket_data;
+}
+
+rocket_data create_complete_roc() {
+  rocket_data rocket_data;
+
   std::cout << "give a name to your rocket"
             << "\n";
   std::cin >> rocket_data.name;
@@ -35,7 +84,7 @@ void create_complete_roc(rocket_data &rocket_data) {
             << "\n";
   std::cin >> rocket_data.m_s_cont;
   std::cout << "what's the mass of the propellant for stages of your rocket "
-            << "(kg) ≈ 300'000"
+            << "(kg) ≈ 100'000"
             << "\n";
   std::cin >> rocket_data.s_p_m;
   std::cout << "how many engine has the solid stage: < 3 "
@@ -45,19 +94,27 @@ void create_complete_roc(rocket_data &rocket_data) {
   std::cout << "how many engine has the liquid stage: < 3 "
             << "\n";
   std::cin >> ans;
-  std::fill_n(rocket_data.l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);
-  std::fill_n(rocket_data.l_c_m.begin(), rocket_data.stage_num, rocket_data.m_s_cont);
+
+  rocket_data.l_p_m.reserve(rocket_data.stage_num);
+  rocket_data.l_c_m.reserve(rocket_data.stage_num);
+  rocket_data.n_liq_eng.reserve(rocket_data.stage_num);
+  std::fill_n(rocket_data.l_p_m.begin(), rocket_data.stage_num,
+              rocket_data.s_p_m);
+  std::fill_n(rocket_data.l_c_m.begin(), rocket_data.stage_num,
+              rocket_data.m_s_cont);
   std::fill_n(rocket_data.n_liq_eng.begin(), rocket_data.stage_num, ans);
 }
 
-void create_med_roc(rocket_data &rocket_data) {
+rocket_data create_med_roc() {
+  rocket_data rocket_data;
+
   std::cout << "give a name to your rocket"
             << "\n";
   std::cin >> rocket_data.name;
   std::cout << "how many stages do you want usually 1 < x < 4"
             << "\n";
   std::cin >> rocket_data.stage_num;
-  std::cout << "what's the mass of the propellant of your rocket (kg) ≈ 300'000"
+  std::cout << "what's the mass of the propellant of your rocket (kg) ≈ 100'000"
             << "\n";
   std::cin >> rocket_data.stage_num;
   std::cout << "how many engine has the solid propellant at stage: < 3 "
@@ -67,59 +124,15 @@ void create_med_roc(rocket_data &rocket_data) {
   std::cout << "how many engine has the liquid propellant for stage: < 3"
             << "\n";
   std::cin >> ans;
-  std::fill_n(rocket_data.l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);
+  rocket_data.l_p_m.reserve(rocket_data.stage_num);
+  rocket_data.l_c_m.reserve(rocket_data.stage_num);
+  rocket_data.n_liq_eng.reserve(rocket_data.stage_num);
+  std::fill_n(rocket_data.l_p_m.begin(), rocket_data.stage_num,
+              rocket_data.s_p_m);
   std::fill_n(rocket_data.l_c_m.begin(), rocket_data.stage_num, 15'000);
   std::fill_n(rocket_data.n_liq_eng.begin(), rocket_data.stage_num, ans);
-}
 
-void create_minim_roc(rocket_data& rocket_data) {
-  std::cout << "give a name to your rocket"
-            << "\n";
-  std::cin >> rocket_data.name;
-  std::cout << "how many stages do you want 1 < x < 4"
-            << "\n";
-  std::cin >> rocket_data.stage_num;
-  std::cout << "how many engine has the solid propellant at stage: < 3"
-            << "\n";
-  std::cin >> rocket_data.n_solid_eng;
-  double ans;
-  std::cout << "how many engine has the solid state at stage:< 3"
-            << "\n";
-  std::cin >> ans;
-  std::vector<double> par;
-  rocket_data.l_p_m.resize(rocket_data.stage_num);
-  rocket_data.l_p_m[0]=2;
-  std::cout << "ok \n";
-  int a = rocket_data.stage_num;
-  //std::fill_n(par.begin(), a, 300'000);
-  std::cout << "tutto ok";
-  rocket_data.l_p_m =par;
-  /*
-  std::fill_n(rocket_data.l_c_m.begin(), rocket_data.stage_num, 15'000);
-  std::fill_n(rocket_data.n_liq_eng.begin(), rocket_data.stage_num, ans);
-*/
-}
-
-void create_ad_eng_all(ad_eng_data &eng_data) {
-  eng_data.type = 'm';
-  std::cout << "give me the burn area (m^2) ≈ 2e-4" << '\n';
-  std::cin >> eng_data.burn_a;
-  std::cout << "give me the throat area (m^2) ≈ 2e-4" << '\n';
-  std::cin >> eng_data.nozzle_as;
-  std::cout << "give me the temperature of the engine 1'700 < x < 2'800"
-            << '\n';
-  std::cin >> eng_data.t_0;
-  std::cout << "give me the dimension of the grain for the engine ≈0.02"
-            << '\n';
-  std::cin >> eng_data.grain_dim;
-  std::cout << "give me the density of the grain for the engine ≈1800" << '\n';
-  std::cin >> eng_data.grain_rho;
-  std::cout << "give me the engine burn rate a coefficent ≈0.02" << '\n';
-  std::cin >> eng_data.a_coef;
-  std::cout << "give me the engine burn rate n coefficent ≈0.02" << '\n';
-  std::cin >> eng_data.burn_rate_n;
-  std::cout << "give me the molar mass of the propellant (g/mol) ≈180" << '\n';
-  std::cin >> eng_data.prop_mm;
+  return rocket_data;
 }
 
 void create_ad_eng_med(ad_eng_data &eng_data) {
@@ -134,6 +147,7 @@ void create_ad_eng_med(ad_eng_data &eng_data) {
   std::cout << "give me the pression (pa) ≈e6" << '\n';
   std::cin >> eng_data.p_0;
 }
+
 void create_ad_eng_minim(ad_eng_data &eng_data) {
   eng_data.type = 'f';
   std::cout << "give me the pression (pa) ≈e6" << '\n';
@@ -157,7 +171,7 @@ void create_base_eng_all(base_eng_data &eng_data) {
 
 void create_base_eng_med(base_eng_data &eng_data) {
   eng_data.type = 's';
-std::cout << "give me the specific impulse (s) 150 < x < 300" << '\n';
+  std::cout << "give me the specific impulse (s) 150 < x < 300" << '\n';
   std::cin >> eng_data.isp;
   std::cout << "give me the coefficient of losing mass 1.5 < x < 4. " << '\n';
   std::cin >> eng_data.cm;
@@ -171,6 +185,7 @@ void create_base_eng_minim(base_eng_data &eng_data) {
   std::cin >> eng_data.isp;
   std::cout << "give me the coefficient of losing mass 1.5 < x < 4. " << '\n';
   std::cin >> eng_data.cm;
+  std::cout << eng_data.cm << "data cm \n";
 }
 
 void run_countdown(sf::Text &countdown, std::vector<sf::Drawable *> &drawables,
@@ -230,6 +245,8 @@ void select_ad_eng(ad_eng_data &data) {
       break;
   }
 }
+
+rocket_data create_minim_roc();
 
 void select_base_eng(base_eng_data &data) {
   char ans;

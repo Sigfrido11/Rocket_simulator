@@ -48,17 +48,17 @@ struct ad_eng_data {
 
 void set_text_style(sf::Text&, sf::Font&);
 
-void create_complete_roc(rocket_data&); 
+rocket_data create_complete_roc(); 
 
-void create_med_roc(rocket_data&);
+rocket_data create_med_roc();
 
-void create_ad_eng_all(rocket_data&);
+rocket_data create_minim_roc();
 
-void create_minim_roc(rocket_data&);
+void create_ad_eng_all(ad_eng_data&);
 
 void create_ad_eng_med(ad_eng_data&);
 
-void create_ad_eng_minim(ad_eng_data&);
+rocket_data create_ad_eng_minim(rocket_data&);
 
 void create_base_eng_minim(base_eng_data&);
 

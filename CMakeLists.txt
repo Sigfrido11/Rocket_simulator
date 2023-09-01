@@ -18,16 +18,16 @@ string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra")
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -fsanitize=address,undefined -fno-omit-frame-pointer")
 string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " -fsanitize=address,undefined -fno-omit-frame-pointer")
 
-add_executable(razzo.t tot1.cpp rocket.cpp simulation.cpp interface.cpp)
-target_link_libraries(razzo.t sfml-graphics sfml-window sfml-system sfml-audio)
+add_executable(rocket.t tot1.cpp rocket.cpp simulation.cpp interface.cpp)
+target_link_libraries(rocket.t sfml-graphics sfml-window sfml-system sfml-audio)
 
 # se il testing e' abilitato...
 #   per disabilitare il testing, passare -DBUILD_TESTING=OFF a cmake durante la fase di configurazione
 #if (BUILD_TESTING)
 
   # aggiungi l'eseguibile statistics.t
-  # add_executable(statistics.t statistics.test.cpp statistics.cpp)
+ add_executable(rocket_test.t test_calc.cpp rocket.cpp simulation.cpp)
    #aggiungi l'eseguibile statistics.t alla lista dei test
-#add_test(NAME statistics.t COMMAND statistics.t)
+add_test(NAME rocket_test.t COMMAND rocket.t)
 
-#endif()
+#endif() 

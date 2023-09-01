@@ -37,10 +37,8 @@ class Rocket {
   Vec pos_{0., 0.};  // ora altitude diventa inutile ho già tutto nel pos_
   int current_stage_{1};
   double theta_{1.57079632};  // angolo inclinazione
-  double upper_drag_{0.48};
-  double lateral_drag_{0.82};
-
- public:
+ 
+  public:
   class Engine {
    public:
     virtual double delta_m(double, bool) const = 0;
@@ -49,11 +47,11 @@ class Rocket {
 
     virtual void release() = 0;
 
-    virtual void set_spin(double) = 0;
-
     virtual bool is_ad_eng() const = 0;
 
     virtual bool is_released() const = 0;
+
+    virtual double get_pression() const =0;
 
     virtual ~Engine() = default;
   };
@@ -63,7 +61,7 @@ class Rocket {
     double cm_{4.};    // coefficiente perdita massa
     double p_0_{5e6};
     double burn_a_{200e-6};
-    double spin_coef_;
+    double spin_coef_{1};
     bool released_{false};
 
    public:
@@ -90,7 +88,7 @@ class Rocket {
 
     virtual bool is_released() const override;
 
-    virtual void set_spin(double) override;
+    virtual double get_pression() const override;
   };
 
   class Ad_engine final : public Engine {
@@ -103,7 +101,7 @@ class Rocket {
     double burn_rate_a_{0.01};
     double burn_rate_n_{0.02};
     double prop_mm_ {178};
-    double spin_coef_;
+    double spin_coef_{1};
     bool released_{false};
 
    public:
@@ -119,15 +117,13 @@ class Rocket {
 
     void release() override;
 
-    virtual void set_spin(double) override;
-
     Vec const eng_force(std::vector<double>, bool) const override;
 
     virtual bool is_ad_eng() const override;
 
     virtual bool is_released() const override;
 
-    double get_pression() const;
+    virtual double get_pression() const override;
   };
 
  private:
@@ -170,28 +166,28 @@ class Rocket {
 
   double get_mass() const;
 
-  void set_state(std::string, double, double, double, bool, std::streampos stream_pos);
+  void set_state(std::string, double, double, bool);
 
   void stage_release(double, double);  // solo il distacco dello stadio
 
   void change_vel(double, Vec);
 
-  Vec const thrust(double, double, double, bool) const;
+  Vec const thrust(double, double, bool) const;
 };
 
-Vec const total_force(double, double, double, double, double, double, Vec, Vec);
+Vec const total_force(double, double, double, double, double, double,Vec, Vec);
 
-double improve_theta(std::string, double, double, std::streampos);
+double improve_theta(std::string, double, double, double);
 
 bool is_orbiting(double, double);
 
-Vec const centripetal(double, double, double);
+double centripetal(double, double, double);
 
 double g_force(double, double);
 
 Vec const drag(double, double, double, double, double, Vec);
 
-double improve_thrust(double, double, double, double, Vec,  Vec);
+double anti_g_turn(double gra, double centrip, double theta, bool is_orbiting, int stage);
 
 };  // namespace rocket
 #endif
