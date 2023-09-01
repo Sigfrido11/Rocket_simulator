@@ -28,7 +28,7 @@ int main()
   interface::rocket_data rocket_data;
   char ans_eng;
 
-  { // aggiungo uno scope in modo da cancellare poi tutte le
+  { // aggiunto uno scope in modo da cancellare poi tutte le
     // variabili che non servono
     interface::ad_eng_data ad_eng_data;
     interface::base_eng_data base_eng_data;
@@ -172,12 +172,13 @@ int main()
   }
   sf::Sprite earth;
   earth.setTexture(texture2);
-  earth.setScale(sf::Vector2f(200.f / 1195.f, 200.f / 1193.f));
+  earth.setScale(200.f / 1195.f, 200.f / 1193.f);
   earth.setPosition((width - 500.f) / 4 + 500.f - 100.f, height / 4.f - 100.f);
 
-  sf::CircleShape rocket2(1.f);
+  sf::CircleShape rocket2(2.f);
   rocket2.setFillColor(sf::Color::Red);
-  rocket2.setOrigin(1.f, 1.f);
+  rocket2.setOrigin(2.f, 2.f);
+  rocket2.setPosition((width - 500.f) / 4 + 500.f, height / 4.f - 100.f);
 
   float angle_total{};
 
@@ -272,17 +273,29 @@ int main()
   sf::Music music;
   if (!music.openFromFile("01_A Better Beginning.wav"))
   {
-    return -1; // error
+    return -1;
   }
 
   music.play();
   music.setLoop(true);
 
-  // game loop starts
   Vec eng_force;
+
+  // game loop inizia
+
   while (window.isOpen())
   {
     sf::Event event;
+
+    while (window.pollEvent(event))
+    {
+      if (event.type == sf::Event::Closed)
+        window.close();
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+      {
+        window.close();
+      }
+    }
 
     bool const orbiting{rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
 
@@ -317,15 +330,7 @@ int main()
                   << force[1] << '\n';
     output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
 
-    while (window.pollEvent(event))
-    {
-      if (event.type == sf::Event::Closed)
-        window.close();
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-      {
-        window.close();
-      }
-    }
+    // grafica inizia
 
     int const out_time_min{out_time / 60};
     int const out_time_sec{out_time - out_time_min * 60};
@@ -355,6 +360,8 @@ int main()
 
     if (rocket.get_pos()[0] / sim::cost::earth_radius_ * 100.f < 150.f)
     {
+      earth.setScale(200.f / 1195.f, 200.f / 1193.f);
+      earth.setPosition((width - 500.f) / 4 + 500.f - 100.f, height / 4.f - 100.f);
       rocket2.setPosition((width - 500.f) / 4 + 500.f -
                               100.f * rocket_radius / sim::cost::earth_radius_ *
                                   std::sin(rocket.get_theta()),
@@ -364,7 +371,7 @@ int main()
     }
     else
     {
-      earth.scale(0.1f, 0.1f);
+      earth.setScale(2.f / 1195.f, 2.f / 1193.f);
       earth.setPosition((width - 500.f) / 4 + 500.f - 10.f,
                         height / 4.f - 10.f);
       rocket2.setPosition((width - 500.f) / 4 + 500.f -
