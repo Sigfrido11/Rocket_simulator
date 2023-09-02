@@ -19,7 +19,7 @@ class Rocket {
   // cose da inizializzare
   std::string name_{"my_rocket"};
   double lateral_area_{400.};
-  double upper_area_{15.};
+  double upper_area_{80.};
   double m_sol_cont_{15'000};
   double m_sol_prop_{40'000.};
   std::vector<double> m_liq_prop_{15'000};  // massa carburante liquida
@@ -43,22 +43,22 @@ class Rocket {
  public:
   class Engine {
    public:
-    virtual double const delta_m(double, bool) const = 0;
+    virtual double delta_m(double, bool) const = 0;
 
     virtual Vec const eng_force(std::vector<double>, bool) const = 0;
 
     virtual void release() = 0;
 
-    virtual bool const is_ad_eng() const = 0;
+    virtual bool is_ad_eng() const = 0;
 
-    virtual bool const is_released() const = 0;
+    virtual bool is_released() const = 0;
 
     virtual ~Engine() = default;
   };
 
   class Base_engine final : public Engine {
     double isp_{250};  // per i solidi
-    double cm_{4.}; // coefficiente perdita massa
+    double cm_{4.};    // coefficiente perdita massa
     double p_0_{5e6};
     double burn_a_{200e-6};
     bool released_{false};
@@ -66,21 +66,26 @@ class Rocket {
    public:
     explicit Base_engine(double isp, double cm, double p0, double burn_a);
 
-    explicit Base_engine(double isp, double cm, double p0);
+    explicit Base_engine(double isp, double cm, double p0)
+        : isp_{isp}, cm_{cm}, p_0_{p0} {
+      assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0);
+    }
 
-    explicit Base_engine(double isp, double cm);
+    explicit Base_engine(double isp, double cm) : isp_{isp}, cm_{cm} {
+      assert(isp_ >= 0 && cm_ >= 0);
+    }
 
     Base_engine() = default;
 
-    double const delta_m(double, bool) const override;
+    double delta_m(double, bool) const override;
 
     void release() override;
 
     Vec const eng_force(std::vector<double>, bool) const override;
 
-    virtual bool const is_ad_eng() const override;
+    virtual bool is_ad_eng() const override;
 
-    virtual bool const is_released() const override;
+    virtual bool is_released() const override;
   };
 
   class Ad_engine final : public Engine {
@@ -101,25 +106,23 @@ class Rocket {
 
     explicit Ad_engine(double p_0, double burn_a, double nozzle_as, double t_0);
 
-    explicit Ad_engine(double p_0, double t_0);
-
     explicit Ad_engine() = default;
 
-    double const delta_m(double, bool) const override;
+    double delta_m(double, bool) const override;
 
     void release() override;
 
     Vec const eng_force(std::vector<double>, bool) const override;
 
-    virtual bool const is_ad_eng() const override;
+    virtual bool is_ad_eng() const override;
 
-    virtual bool const is_released() const override;
+    virtual bool is_released() const override;
 
-    double const get_pression() const;
+    double get_pression() const;
   };
 
  private:
-  std::unique_ptr<Engine> eng_s_ = std::make_unique<Base_engine>(250,3.5);
+  std::unique_ptr<Engine> eng_s_ = std::make_unique<Base_engine>(250, 3.5);
   int n_sol_eng_{1};
   std::vector<std::unique_ptr<Engine>> liq_eng_;
   std::vector<int> n_liq_eng_;
@@ -134,19 +137,7 @@ class Rocket {
                   std::vector<std::unique_ptr<Engine>>& eng_l, int n_solid_eng,
                   std::vector<int> n_liq_eng);
 
-
   // costruttore senza container aree e massa struttura
-
-  explicit Rocket(std::string name, double s_p_m, std::vector<double> l_p_m,
-                  std::unique_ptr<Engine>& eng_s,
-                  std::vector<std::unique_ptr<Engine>>& eng_l, int n_solid_eng,
-                  std::vector<int> n_liq_eng);
-
-  // costruttore senza container aree e carburanti
-
-  explicit Rocket(std::string name, std::unique_ptr<Engine>& eng_s,
-                  std::vector<std::unique_ptr<Engine>>& eng_l, int n_solid_eng,
-                  std::vector<int> n_liq_eng);
 
   Rocket() = default;
 
@@ -154,21 +145,21 @@ class Rocket {
 
   Vec const get_pos() const;
 
-  void mass_lost(double, double);
+  void mass_lost(double const, double const);
 
-  double const get_theta() const;
+  double get_theta() const;
 
   void move(double, Vec);
 
-  double const get_up_ar() const;
+  double get_up_ar() const;
 
-  int const get_rem_stage() const;
+  int get_rem_stage() const;
 
-  double const get_rem_fuel() const;
+  double get_rem_fuel() const;
 
-  double const get_lat_ar() const;
+  double get_lat_ar() const;
 
-  double const get_mass() const;
+  double get_mass() const;
 
   void set_state(std::string, double, double, bool, std::streampos stream_pos);
 
@@ -179,12 +170,11 @@ class Rocket {
   Vec const thrust(double, double, bool) const;
 };
 
-Vec const total_force(double, double, double, double, double, double,double, bool, Vec,
-                      Vec);
+Vec const total_force(double, double, double, double, double, double, Vec, Vec);
 
-double const improve_theta(std::string, double, double, std::streampos);
+double improve_theta(std::string, double, double, std::streampos);
 
-bool const is_orbiting(double, double);
+bool is_orbiting(double, double);
 
 Vec const centripetal(double, double, double);
 

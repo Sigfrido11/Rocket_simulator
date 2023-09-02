@@ -15,7 +15,6 @@ struct Air_var {
 
   void set_state(double);
 
-  double const sound_speed() const;
 };
 
 struct cost {
