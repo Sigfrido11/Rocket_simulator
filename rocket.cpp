@@ -84,10 +84,10 @@ void Rocket::change_vel(double time, Vec force) {
 
 void Rocket::set_state(std::string file_name, double orbital_h, double time,
                        bool is_orbiting) {
- // if ((velocity_[0] < 0 || velocity_[1] < 0) && (is_orbiting == false)) {
- //   std::cout << "sorry guy, no orbit avaible for your rocket";
- //   assert(false);
- // }
+  // if ((velocity_[0] < 0 || velocity_[1] < 0) && (is_orbiting == false)) {
+  //   std::cout << "sorry guy, no orbit avaible for your rocket";
+  //   assert(false);
+  // }
   double const old_theta{theta_};
   theta_ = improve_theta(file_name, theta_, pos_[0], orbital_h);
   if ((pos_[0] > 20'000) && old_theta != 0) {
@@ -122,6 +122,9 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       m_liq_cont_.erase(m_liq_cont_.begin());
       m_liq_prop_.erase(m_liq_prop_.begin());
       n_liq_eng_.erase(n_liq_eng_.begin());
+      if (current_stage_ == 0) {  // quando perde tutti gli stadi è zero, vero?
+        eng_->release();
+      }
     }
   } else {
     assert(current_stage_ != 0);
@@ -133,7 +136,6 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       total_mass_ -= m_sol_cont_ - m_sol_prop_;
       m_sol_cont_ = 0;
       m_sol_prop_ = 0;
-      eng_->release();
       n_sol_eng_ = 0;
       std::cout << "stage released"
                 << "\n";

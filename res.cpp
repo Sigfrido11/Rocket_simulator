@@ -166,7 +166,7 @@ int main() {
   
 
     bool const orbiting{
-        rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
+    rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
 
     rocket.set_state(file_name, orbital_h, delta_time, orbiting);
 
