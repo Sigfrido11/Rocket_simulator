@@ -18,7 +18,8 @@ using Vec = std::array<double, 2>;
 Rocket::Rocket(std::string name, double mass_structure, double Up_Ar,
                double Lat_Ar, double s_p_m, double m_s_cont,
                std::vector<double> l_p_m, std::vector<double> l_c_m,
-               Engine* eng, int n_solid_eng, std::vector<int> n_liq_eng)
+               std::shared_ptr<Engine> eng, int n_solid_eng,
+               std::vector<int> n_liq_eng)
     : name_{name},
       lateral_area_{Lat_Ar},
       upper_area_{Up_Ar},

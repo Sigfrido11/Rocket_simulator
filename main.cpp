@@ -11,7 +11,7 @@ int main() {
   rocket::Rocket::Ad_engine ad_eng;
   rocket::Rocket::Base_engine base_eng;
   interface::rocket_data rocket_data;
-  rocket::Rocket::Engine* eng;
+  std::shared_ptr<rocket::Rocket::Engine> eng;
   std::vector<double> l_p_m;
   std::vector<double> l_c_m;
   std::vector<int> n_liq_eng;
@@ -60,10 +60,10 @@ int main() {
         assert(false);
         break;
     }
-    if (ans_eng == 'a') {
-      eng = &ad_eng;
+     if (ans_eng == 'a') {
+      eng = std::make_shared<rocket::Rocket::Ad_engine>(ad_eng);
     } else {
-      eng = &base_eng;
+      eng = std::make_shared<rocket::Rocket::Base_engine>(base_eng);
     }
     char ans_roc;
     std::cout << "how many details do you want to insert to create your"
@@ -160,7 +160,7 @@ int main() {
   sf::RenderWindow window(sf::VideoMode(width, height), rocket_data.name);
   window.setPosition(sf::Vector2i(0, 0));
 
-  window.setFramerateLimit(5);
+  window.setFramerateLimit(20);
 
   sf::Texture texture1;
   if (!texture1.loadFromFile("rocket.png")) {

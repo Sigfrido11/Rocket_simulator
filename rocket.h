@@ -122,7 +122,7 @@ class Rocket {
   };
 
  private:
-  Engine* eng_;
+  std::shared_ptr<Engine> eng_;
   int n_sol_eng_{1};
   std::vector<int> n_liq_eng_;
 
@@ -131,7 +131,7 @@ class Rocket {
 
   explicit Rocket(std::string, double, double, double, double, double,
                   std::vector<double>, std::vector<double>,
-                  Engine*, int, std::vector<int>);
+                  std::shared_ptr<Engine>, int, std::vector<int>);
 
   Rocket() = default;
 

@@ -21,13 +21,14 @@ TEST_CASE("TESTING THE CALCS") {
     double m_s_cont{20'000};
     std::vector<double> l_p_m{320'000, 23'000};
     std::vector<double> l_c_m{12'000, 13'000};
-    rocket::Rocket::Base_engine eng_b{170., 1.5, 8e6, 220e-6};
+    std::shared_ptr<rocket::Rocket::Engine> eng_b =
+        std::make_shared<rocket::Rocket::Base_engine>(170., 1.5, 8e6, 220e-6);
     int n_solid_eng{1};
     std::vector<int> n_liq_eng{1, 1};
 
-    rocket::Rocket rocket{name,  mass_structure, up_ar,    lat_ar,
-                          s_p_m, m_s_cont,       l_p_m,    l_c_m,
-                          &eng_b, n_solid_eng,    n_liq_eng};
+    rocket::Rocket rocket{name,   mass_structure, up_ar,    lat_ar,
+                          s_p_m,  m_s_cont,       l_p_m,    l_c_m,
+                          eng_b, n_solid_eng,    n_liq_eng};
 
     rocket::Rocket::Ad_engine eng_1{6e6, 420.e-2, 250.e-5, 2'800.};
     rocket::Rocket::Ad_engine eng_2{3e6, 400.e-2, 250.e-4, 2'800.};

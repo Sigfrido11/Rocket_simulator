@@ -18,7 +18,7 @@ string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra")
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -fsanitize=address,undefined -fno-omit-frame-pointer")
 string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " -fsanitize=address,undefined -fno-omit-frame-pointer")
 
-add_executable(rocket.t res.cpp rocket.cpp simulation.cpp interface.cpp)
+add_executable(rocket.t main.cpp rocket.cpp simulation.cpp interface.cpp)
 target_link_libraries(rocket.t sfml-graphics sfml-window sfml-system sfml-audio)
 
   # aggiungi l'eseguibile statistics.t
