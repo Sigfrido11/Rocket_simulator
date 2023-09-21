@@ -164,7 +164,7 @@ class Rocket {
   Vec const thrust(double, bool) const;
 };
 
-Vec const total_force(double, double, double, double, double, double, Vec, Vec);
+Vec const total_force(double, double, double, double, double, Vec, Vec);
 
 double improve_theta(std::string, double, double, double);
 
@@ -174,7 +174,7 @@ double centripetal(double, double, double);
 
 double g_force(double, double);
 
-Vec const drag(double, double, double, double, double, Vec);
+Vec const drag(double, double, double, double, Vec);
 
 double anti_g_turn(double gra, double centrip, double theta, bool is_orbiting,
                    int stage);

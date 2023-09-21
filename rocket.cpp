@@ -79,8 +79,8 @@ void Rocket::move(double time, Vec force) {
 }
 
 void Rocket::change_vel(double time, Vec force) {
-  velocity_[0] = velocity_[0] + (force[0] * (1 / total_mass_) * time);
-  velocity_[1] = velocity_[1] + (force[1] * (1 / total_mass_) * time);
+  velocity_[0] = velocity_[0] + (force[0] / total_mass_) * time;
+  velocity_[1] = velocity_[1] + (force[1] / total_mass_) * time;
 }
 
 void Rocket::set_state(std::string file_name, double orbital_h, double time,
@@ -123,7 +123,7 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       m_liq_cont_.erase(m_liq_cont_.begin());
       m_liq_prop_.erase(m_liq_prop_.begin());
       n_liq_eng_.erase(n_liq_eng_.begin());
-      if (current_stage_ == 0) {  // quando perde tutti gli stadi è zero, vero?
+      if (current_stage_ == 0) {
         eng_->release();
       }
     }
@@ -305,13 +305,14 @@ inline double g_force(double altitude, double mass) {
   return force;
 }
 inline Vec const drag(double rho, double altitude, double theta,
-                      double upper_area, double lateral_area, Vec velocity) {
+                      double upper_area, Vec velocity) {
   if (altitude <= 51'000) {
-    double const z{0.5 * rho * upper_area * std::sin(theta) *
-                   std::pow(velocity[0], 2) * 0.5};
-    double const y{0.5 * rho * lateral_area * std::cos(theta) *
-                   std::pow(velocity[1], 2) * 0.75};
-    return {z, y};
+    double const speed2{std::pow(velocity[0], 2) + std::pow(velocity[1], 2)};
+    double drag{0.37 *rho * upper_area * speed2};
+    if(velocity[0]<=0){
+      drag=-drag;
+    }
+    return {drag*std::sin(theta), drag*std::cos(theta)};
   } else {
     return {0., 0.};
   }
@@ -350,11 +351,11 @@ inline double improve_theta(std::string name_f, double theta, double pos,
 }
 
 Vec const total_force(double rho, double theta, double total_mass, double pos,
-                      double upper_area, double lateral_area, Vec velocity,
+                      double upper_area, Vec velocity,
                       Vec eng) {
   double const centrip{centripetal(total_mass, pos, velocity[1])};
   double const gra{g_force(pos, total_mass)};
-  Vec const drag_f{drag(rho, pos, theta, upper_area, lateral_area, velocity)};
+  Vec const drag_f{drag(rho, pos, theta, upper_area, velocity)};
   double const z{eng[0] + centrip - gra - drag_f[0]};
   double const y{eng[1] - drag_f[1]};
   if (y <= 0) {

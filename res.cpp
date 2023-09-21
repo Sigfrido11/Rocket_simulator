@@ -114,7 +114,7 @@ int main() {
                "(strcly less than solid): < 3"
             << "\n";
         std::cin >> ans;
-        std::fill_n(l_p_m.begin(), rocket_data.stage_num, 100'000);
+        std::fill_n(l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);// mettilo da inizializzare
         std::fill_n(l_c_m.begin(), rocket_data.stage_num, 15'000);
         std::fill_n(n_liq_eng.begin(), rocket_data.stage_num, ans);
         break;
@@ -159,9 +159,7 @@ int main() {
   Vec eng_force;
 
   double delta_time{1};
-  // game loop inizia
-  
-  
+  // game loop iniziass
   while (true) {
   
 
@@ -176,7 +174,7 @@ int main() {
 
     Vec const force{rocket::total_force(air.rho_, rocket.get_theta(),
                                         rocket.get_mass(), rocket.get_pos()[0],
-                                        rocket.get_up_ar(), rocket.get_lat_ar(),
+                                        rocket.get_up_ar(),
                                         rocket.get_velocity(), eng_force)};
 
 
@@ -185,7 +183,8 @@ int main() {
 
     rocket.change_vel(delta_time, force);
 
-   assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >= 0.);
+
+  // assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >= 0.);
 
     assert(rocket.get_pos()[0] >= 0. && rocket.get_pos()[1] >= 0.);
     output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
