@@ -62,17 +62,13 @@ void create_ad_eng_minim(ad_eng_data &eng_data) {
 
 rocket_data create_complete_roc() {
   rocket_data rocket_data;
-
   std::cout << "give a name to your rocket"
             << "\n";
   std::cin >> rocket_data.name;
   std::cout << "how many stages do you want: 1 < x < 4"
             << "\n";
   std::cin >> rocket_data.stage_num;
-  std::cout << "what's the lateral area of your rocket (square metres) ≈ 9300"
-            << "\n";
-  std::cin >> rocket_data.lat_ar;
-  std::cout << "what's the upper area of your rocket (square metres) ≈ 1000"
+  std::cout << "what's the upper area of your rocket (square metres) ≈ 15"
             << "\n";
   std::cin >> rocket_data.up_ar;
   std::cout << "what's the mass structure of your rocket (kg) ≈ 10'000"

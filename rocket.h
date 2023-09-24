@@ -18,7 +18,6 @@ class Rocket {
   // tutte le informazioni contenute in rocket
   // cose da inizializzare
   std::string name_{"my_rocket"};
-  double lateral_area_{400.};
   double upper_area_{80.};
   double m_sol_cont_{15'000};
   double m_sol_prop_{40'000.};
@@ -61,9 +60,8 @@ class Rocket {
     double cm_{4.};    // coefficiente perdita massa
     double p_0_{5e6};
     double burn_a_{200e-6};
-    double spin_coef_{1};
     bool released_{false};
-
+    
    public:
     explicit Base_engine(double, double, double, double);
 
@@ -97,9 +95,7 @@ class Rocket {
     double burn_rate_a_{0.01};
     double burn_rate_n_{0.02};
     double prop_mm_{178};
-    double spin_coef_{1};
     bool released_{false};
-
    public:
     explicit Ad_engine(double, double, double, double, double, double, double,
                        double);
@@ -122,16 +118,16 @@ class Rocket {
   };
 
  private:
-  std::shared_ptr<Engine> eng_;
+  std::unique_ptr<Engine> eng_;
   int n_sol_eng_{1};
   std::vector<int> n_liq_eng_;
 
  public:
   // costruttore con tutto
 
-  explicit Rocket(std::string, double, double, double, double, double,
+  explicit Rocket(std::string, double, double, double, double,
                   std::vector<double>, std::vector<double>,
-                  std::shared_ptr<Engine>, int, std::vector<int>);
+                  std::unique_ptr<Engine>&, int, std::vector<int>);
 
   Rocket() = default;
 
@@ -155,7 +151,7 @@ class Rocket {
 
   double get_mass() const;
 
-  void set_state(std::string, double, double, bool);
+  void set_state(std::string, double, double, bool,std::streampos&);
 
   void stage_release(double, double);  // solo il distacco dello stadio
 
@@ -166,7 +162,7 @@ class Rocket {
 
 Vec const total_force(double, double, double, double, double, Vec, Vec);
 
-double improve_theta(std::string, double, double, double);
+double improve_theta(std::string, double, double, double, std::streampos&);
 
 bool is_orbiting(double, double);
 

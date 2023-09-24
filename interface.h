@@ -12,8 +12,7 @@ namespace interface {
 struct rocket_data {
   std::string name{"my rocket"};
   double mass_structure{15'000};
-  double up_ar{1000.};
-  double lat_ar{9300.};
+  double up_ar{15.};
   double s_p_m{400'000};
   double m_s_cont{15'000};
   int n_solid_eng{1};

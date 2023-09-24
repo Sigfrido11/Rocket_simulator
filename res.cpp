@@ -11,7 +11,7 @@ int main() {
   rocket::Rocket::Ad_engine ad_eng;
   rocket::Rocket::Base_engine base_eng;
   interface::rocket_data rocket_data;
-  std::shared_ptr<rocket::Rocket::Engine> eng;
+  std::unique_ptr<rocket::Rocket::Engine> eng;
   std::vector<double> l_p_m;
   std::vector<double> l_c_m;
   std::vector<int> n_liq_eng;
@@ -60,10 +60,10 @@ int main() {
         assert(false);
         break;
     }
-     if (ans_eng == 'a') {
-      eng = std::make_shared<rocket::Rocket::Ad_engine>(ad_eng);
+    if (ans_eng == 'a') {
+      eng = std::make_unique<rocket::Rocket::Ad_engine>(ad_eng);
     } else {
-      eng = std::make_shared<rocket::Rocket::Base_engine>(base_eng);
+      eng = std::make_unique<rocket::Rocket::Base_engine>(base_eng);
     }
     char ans_roc;
     std::cout << "how many details do you want to insert to create your"
@@ -78,16 +78,15 @@ int main() {
         l_p_m.resize(rocket_data.stage_num);
         l_c_m.resize(rocket_data.stage_num);
         n_liq_eng.resize(rocket_data.stage_num);
-        std::cout << "how many engines does the liquid propellant have for "
-                     "each stage "
-                     "(strcly less than solid): < 3"
-                  << "\n";
-        std::cin >> ans;
         std::fill_n(l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);
         std::fill_n(l_c_m.begin(), rocket_data.stage_num, rocket_data.m_s_cont);
-        std::fill_n(n_liq_eng.begin(), rocket_data.stage_num, ans);
-        std::cout << l_p_m.size();
-
+        for (int i{0}; i < rocket_data.stage_num; i++) {
+          std::cout << "how many engines does the liquid propellant have for "
+                       "stage "
+                    << i << "\n";
+          std::cin >> ans;
+          n_liq_eng.push_back(ans);
+        }
         break;
       case 's':
         rocket_data = interface::create_med_roc();
@@ -114,14 +113,14 @@ int main() {
                "(strcly less than solid): < 3"
             << "\n";
         std::cin >> ans;
-        std::fill_n(l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);// mettilo da inizializzare
+        std::fill_n(l_p_m.begin(), rocket_data.stage_num,
+                    rocket_data.s_p_m);  // mettilo da inizializzare
         std::fill_n(l_c_m.begin(), rocket_data.stage_num, 15'000);
         std::fill_n(n_liq_eng.begin(), rocket_data.stage_num, ans);
         break;
 
       default:
         std::cout << "invalid value for rocket please restart";
-
         assert(false);
         break;
     }
@@ -141,7 +140,6 @@ int main() {
   rocket::Rocket rocket{rocket_data.name,
                         rocket_data.mass_structure,
                         rocket_data.up_ar,
-                        rocket_data.lat_ar,
                         rocket_data.s_p_m,
                         rocket_data.m_s_cont,
                         l_p_m,
@@ -155,36 +153,29 @@ int main() {
   double orbital_h;
   std::cin >> orbital_h;
 
-
   Vec eng_force;
-
+  std::streampos file_pos;
   double delta_time{1};
   // game loop iniziass
   while (true) {
-  
-
     bool const orbiting{
-    rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
+        rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
 
-    rocket.set_state(file_name, orbital_h, delta_time, orbiting);
+    rocket.set_state(file_name, orbital_h, delta_time, orbiting, file_pos);
 
     air.set_state(rocket.get_pos()[0]);
 
     eng_force = rocket.thrust(delta_time, orbiting);
 
-    Vec const force{rocket::total_force(air.rho_, rocket.get_theta(),
-                                        rocket.get_mass(), rocket.get_pos()[0],
-                                        rocket.get_up_ar(),
-                                        rocket.get_velocity(), eng_force)};
-
-
+    Vec const force{rocket::total_force(
+        air.rho_, rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
+        rocket.get_up_ar(), rocket.get_velocity(), eng_force)};
 
     rocket.move(delta_time, force);
 
     rocket.change_vel(delta_time, force);
 
-
-  // assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >= 0.);
+    // assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >= 0.);
 
     assert(rocket.get_pos()[0] >= 0. && rocket.get_pos()[1] >= 0.);
     output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
@@ -192,7 +183,5 @@ int main() {
                   << rocket.get_velocity()[1] << "  " << force[0] << "  "
                   << force[1] << '\n';
     output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
-
- 
   }
 }

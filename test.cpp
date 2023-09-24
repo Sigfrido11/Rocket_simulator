@@ -15,18 +15,18 @@ TEST_CASE("TESTING THE CALCS") {
   SUBCASE("Testing rocket") {
     std::string name{"my rocket"};
     double mass_structure{12'000};
-    double up_ar{0.4};
-    double lat_ar{0.6};
+    double up_ar{400};
     double s_p_m{14'500};
     double m_s_cont{20'000};
     std::vector<double> l_p_m{320'000, 23'000};
     std::vector<double> l_c_m{12'000, 13'000};
-    std::shared_ptr<rocket::Rocket::Engine> eng_b =
-        std::make_shared<rocket::Rocket::Base_engine>(170., 1.5, 8e6, 220e-6);
+    std::streampos file_pos;
+    std::unique_ptr<rocket::Rocket::Engine> eng_b =
+        std::make_unique<rocket::Rocket::Base_engine>(170., 1.5, 8e6, 220e-6);
     int n_solid_eng{1};
     std::vector<int> n_liq_eng{1, 1};
 
-    rocket::Rocket rocket{name,   mass_structure, up_ar,    lat_ar,
+    rocket::Rocket rocket{name,   mass_structure, up_ar,
                           s_p_m,  m_s_cont,       l_p_m,    l_c_m,
                           eng_b, n_solid_eng,    n_liq_eng};
 
@@ -36,7 +36,7 @@ TEST_CASE("TESTING THE CALCS") {
     double const pres2{eng_2.get_pression()};
     CHECK(pres1 == doctest::Approx(6e6));
     CHECK(pres2 == doctest::Approx(3e6));
-    CHECK(rocket.get_up_ar() == doctest::Approx(0.4));
+    CHECK(rocket.get_up_ar() == doctest::Approx(400));
     CHECK(rocket.get_mass() == doctest::Approx(414500));
     rocket.mass_lost(300, 1000);
     CHECK(rocket.get_mass() == doctest::Approx(413200));
@@ -58,10 +58,10 @@ TEST_CASE("TESTING THE CALCS") {
     CHECK(rocket.get_rem_stage() == 3);
     CHECK(rocket.get_mass() == 381360);
     CHECK(rocket.get_fuel_left() == 301360);
-    rocket.set_state("theta_data.txt", 170'000, 0.01, false);
+    rocket.set_state("theta_data.txt", 170'000, 0.01, false, file_pos);
     CHECK(rocket.get_theta() == doctest::Approx(1.5708));
     CHECK(rocket.get_velocity()[0] == doctest::Approx(255.449));
-    rocket.set_state("theta_data.txt", 170'000, 1, true);
+    rocket.set_state("theta_data.txt", 170'000, 1, true, file_pos);
     rocket.thrust(1, false);
     CHECK(thrust[0] / 1e7 == doctest::Approx(0.879595));
     CHECK(thrust[1] == doctest::Approx(0.0597676));
@@ -120,44 +120,51 @@ TEST_CASE("TESTING THE CALCS") {
   };
   SUBCASE("drag") {
     std::array<double, 2> drag_f =
-        rocket::drag(1, 1'000, 1.5, 10, 500, {800., 240.});
-    CHECK((drag_f[0] / 1e6) == doctest::Approx(1.59599));
-    CHECK((drag_f[1] / 1e6) == doctest::Approx(0.763962));
-    drag_f = rocket::drag(0.8, 2'000, 1.5, 10, 500, {2800., 2040.});
-    CHECK((drag_f[0] / 1e7) == doctest::Approx(1.56407));
-    CHECK((drag_f[1] / 1e7) == doctest::Approx(4.4157));
-    drag_f = rocket::drag(0.8, 53'000, 1.5, 10, 500, {2800., 2040.});
+        rocket::drag(1, 1'000, 1.5, 15, {800., 240.});
+    CHECK((drag_f[0] / 1e6) == doctest::Approx(3.86198));
+    CHECK((drag_f[1] / 1e6) == doctest::Approx(0.273872));
+    drag_f = rocket::drag(0.8, 2'000, 1.5, 15, {2800., 2040.});
+    CHECK((drag_f[0] / 1e7) == doctest::Approx(5.31536));
+    CHECK((drag_f[1] / 1e7) == doctest::Approx(0.376938));
+    drag_f = rocket::drag(0.8, 53'000, 1.5, 15, {2800., 2040.});
     CHECK(drag_f[0] == doctest::Approx(0.));
     CHECK(drag_f[1] == doctest::Approx(0.));
+    drag_f = rocket::drag(0.8, 23'000, 1.5, 15, {-2800., 2040.});
+    CHECK(drag_f[0]/ 1e7 == doctest::Approx(-5.31536));
+    CHECK(drag_f[1]/ 1e6 == doctest::Approx(3.76938));
   }
   SUBCASE("improve_theta") {
     std::string file_name = "theta_data.txt";
     std::ifstream file(file_name);
-    double thetha = rocket::improve_theta(file_name, 1.56, 57'000, 80'000);
+    std::streampos file_pos1=0;
+    std::streampos file_pos2=0;
+    double thetha = rocket::improve_theta(file_name, 1.56, 57'000, 80'000, file_pos1);
     CHECK(thetha == doctest::Approx(0.182038));
     std::chrono::high_resolution_clock clock;
     auto start = clock.now();
-    thetha = rocket::improve_theta(file_name, 1.56, 57'500, 80'000);
+    thetha = rocket::improve_theta(file_name, 1.56, 57'500, 80'000, file_pos1);
     auto dur1 = clock.now() - start;
     CHECK(thetha == doctest::Approx(0.178687));
-    thetha = rocket::improve_theta(file_name, 1.56, 5'500, 80'000);
+    start =clock.now();
+    thetha = rocket::improve_theta(file_name, 1.56, 5'500, 80'000, file_pos2);
+    auto dur2 = clock.now() - start;
     CHECK(thetha == doctest::Approx(1.04009));
+    CHECK(dur1 <= dur2);
   }
   SUBCASE("Total force") {
     double rho{1.};
     double theta{1.};
     double tot_m{150'000};
     double altitude{5'00};
-    double lat_a{100.};
     double up_a{800.};
     std::array<double, 2> vel{846, 150};
     std::array<double, 2> eng_f{100'000, 10'000};
     std::array<double, 2> tot = rocket::total_force(rho, theta, tot_m, altitude,
-                                                    up_a, lat_a, vel, eng_f);
+                                                    up_a, vel, eng_f);
     double centrip{rocket::centripetal(tot_m, altitude, vel[1])};
     double gra{rocket::g_force(altitude, tot_m)};
     std::array<double, 2> drag_f =
-        rocket::drag(rho, altitude, theta, up_a, lat_a, vel);
+        rocket::drag(rho, altitude, theta, up_a, vel);
     double z = eng_f[0] + centrip - gra - drag_f[0];
     CHECK(tot[0] == z);
     CHECK(tot[1] == 0);
@@ -165,15 +172,14 @@ TEST_CASE("TESTING THE CALCS") {
     theta = 0.1;
     tot_m = 10'000;
     altitude = 75'00;
-    lat_a = 100.;
     up_a = 800.;
     vel = {7846, 9150};
     eng_f = {0., 0.};
-    tot = rocket::total_force(rho, theta, tot_m, altitude, up_a, lat_a, vel,
+    tot = rocket::total_force(rho, theta, tot_m, altitude, up_a, vel,
                               eng_f);
     centrip = rocket::centripetal(tot_m, altitude, vel[1]);
     gra = rocket::g_force(altitude, tot_m);
-    drag_f = rocket::drag(rho, altitude, theta, up_a, lat_a, vel);
+    drag_f = rocket::drag(rho, altitude, theta, up_a, vel);
     z = eng_f[0] + centrip - gra - drag_f[0];
     double y{eng_f[1] - drag_f[1]};
     CHECK(tot[0] == z);

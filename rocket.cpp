@@ -16,12 +16,10 @@ using Vec = std::array<double, 2>;
 // costruttori di Rocket
 
 Rocket::Rocket(std::string name, double mass_structure, double Up_Ar,
-               double Lat_Ar, double s_p_m, double m_s_cont,
-               std::vector<double> l_p_m, std::vector<double> l_c_m,
-               std::shared_ptr<Engine> eng, int n_solid_eng,
-               std::vector<int> n_liq_eng)
+               double s_p_m, double m_s_cont, std::vector<double> l_p_m,
+               std::vector<double> l_c_m, std::unique_ptr<Engine>& eng,
+               int n_solid_eng, std::vector<int> n_liq_eng)
     : name_{name},
-      lateral_area_{Lat_Ar},
       upper_area_{Up_Ar},
       m_sol_cont_{m_s_cont},
       m_sol_prop_{s_p_m},
@@ -36,7 +34,7 @@ Rocket::Rocket(std::string name, double mass_structure, double Up_Ar,
       n_liq_eng_{n_liq_eng} {
   assert(m_liq_cont_.size() == m_liq_prop_.size() &&
          n_liq_eng_.size() == m_liq_prop_.size());
-  assert(lateral_area_ > 0 && upper_area_ > 0 && m_sol_cont_ > 0 &&
+  assert(upper_area_ > 0 && m_sol_cont_ > 0 &&
          m_sol_prop_ > 0);
   current_stage_ = total_stage_;
   std::for_each(n_liq_eng.begin(), n_liq_eng.end(),
@@ -45,7 +43,7 @@ Rocket::Rocket(std::string name, double mass_structure, double Up_Ar,
                 [](double value) mutable { assert(value > 0.); });
   std::for_each(m_liq_prop_.begin(), m_liq_prop_.end(),
                 [](double value) mutable { assert(value > 0.); });
-  eng_ = eng;
+  eng_ = std::move(eng);
 }
 
 // funzioni Rocket
@@ -84,13 +82,13 @@ void Rocket::change_vel(double time, Vec force) {
 }
 
 void Rocket::set_state(std::string file_name, double orbital_h, double time,
-                       bool is_orbiting) {
+                       bool is_orbiting,std::streampos& file_pos) {
   // if ((velocity_[0] < 0 || velocity_[1] < 0) && (is_orbiting == false)) {
   //   std::cout << "sorry guy, no orbit avaible for your rocket";
   //   assert(false);
   // }
   double const old_theta{theta_};
-  theta_ = improve_theta(file_name, theta_, pos_[0], orbital_h);
+  theta_ = improve_theta(file_name, theta_, pos_[0], orbital_h, file_pos);
   if ((pos_[0] > 20'000) && old_theta != 0) {
     double const speed =
         std::sqrt(std::pow(velocity_[0], 2) + std::pow(velocity_[0], 2));
@@ -143,7 +141,6 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
     }
   }
 }
-double Rocket::get_lat_ar() const { return lateral_area_; }
 
 double Rocket::get_up_ar() const { return upper_area_; }
 
@@ -308,18 +305,17 @@ inline Vec const drag(double rho, double altitude, double theta,
                       double upper_area, Vec velocity) {
   if (altitude <= 51'000) {
     double const speed2{std::pow(velocity[0], 2) + std::pow(velocity[1], 2)};
-    double drag{0.37 *rho * upper_area * speed2};
-    if(velocity[0]<=0){
-      drag=-drag;
-    }
-    return {drag*std::sin(theta), drag*std::cos(theta)};
+    double drag{0.37 * rho * upper_area * speed2};
+    int dir {1};
+    velocity[0] <=0 ? dir=-1 : dir =1; 
+    return {drag * std::sin(theta)*dir, drag * std::cos(theta)};
   } else {
     return {0., 0.};
   }
 }
 
 inline double improve_theta(std::string name_f, double theta, double pos,
-                            double const orbital_h) {
+                            double orbital_h, std::streampos& file_pos) {
   std::ifstream file(name_f);
   assert(file.is_open());
   std::string line;
@@ -329,6 +325,7 @@ inline double improve_theta(std::string name_f, double theta, double pos,
   pos = (pos * 170'000) / orbital_h;
   double old_ang;
   bool found{false};
+  file.seekg(file_pos);
   while (std::getline(file, line) && !found) {
     std::istringstream iss(line);
     iss >> altitude >> angle;
@@ -345,14 +342,14 @@ inline double improve_theta(std::string name_f, double theta, double pos,
     if (!found) {
       old_altitude = altitude;
       old_ang = angle;
+      file_pos = file.tellg();
     }
   }
   return 0.;
 }
 
 Vec const total_force(double rho, double theta, double total_mass, double pos,
-                      double upper_area, Vec velocity,
-                      Vec eng) {
+                      double upper_area, Vec velocity, Vec eng) {
   double const centrip{centripetal(total_mass, pos, velocity[1])};
   double const gra{g_force(pos, total_mass)};
   Vec const drag_f{drag(rho, pos, theta, upper_area, velocity)};
