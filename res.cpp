@@ -1,11 +1,10 @@
-#include <stdio.h>
-
-#include <fstream>
-#include <iostream>
-
 #include "interface.h"
 #include "rocket.h"
 #include "simulation.h"
+
+#include <stdio.h>
+#include <fstream>
+#include <iostream>
 
 int main() {
   rocket::Rocket::Ad_engine ad_eng;
@@ -157,31 +156,39 @@ int main() {
   std::streampos file_pos;
   double delta_time{1};
   // game loop iniziass
-  while (true) {
-    bool const orbiting{
-        rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
+  try {
+    while (true) {
+      bool const orbiting{
+          rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
 
-    rocket.set_state(file_name, orbital_h, delta_time, orbiting, file_pos);
+      rocket.set_state(file_name, orbital_h, delta_time, orbiting, file_pos);
 
-    air.set_state(rocket.get_pos()[0]);
+      air.set_state(rocket.get_pos()[0]);
 
-    eng_force = rocket.thrust(delta_time, orbiting);
+      eng_force = rocket.thrust(delta_time, orbiting);
 
-    Vec const force{rocket::total_force(
-        air.rho_, rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
-        rocket.get_up_ar(), rocket.get_velocity(), eng_force)};
+      Vec const force{rocket::total_force(
+          air.rho_, rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
+          rocket.get_up_ar(), rocket.get_velocity(), eng_force)};
 
-    rocket.move(delta_time, force);
+      rocket.move(delta_time, force);
 
-    rocket.change_vel(delta_time, force);
+      rocket.change_vel(delta_time, force);
 
-    // assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >= 0.);
+      // assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >=
+      // 0.);
 
-    assert(rocket.get_pos()[0] >= 0. && rocket.get_pos()[1] >= 0.);
-    output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
-                  << rocket.get_velocity()[0] << "  "
-                  << rocket.get_velocity()[1] << "  " << force[0] << "  "
-                  << force[1] << '\n';
-    output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
+      assert(rocket.get_pos()[0] >= 0. && rocket.get_pos()[1] >= 0.);
+      output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
+                    << rocket.get_velocity()[0] << "  "
+                    << rocket.get_velocity()[1] << "  " << force[0] << "  "
+                    << force[1] << '\n';
+      output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
+    }
   }
+
+catch (std::runtime_error const& e) {
+  std::cerr << e.what() << '\n';
+};
 }
+

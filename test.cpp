@@ -1,5 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
+#include "doctest.h"
+#include "rocket.h"
+#include "simulation.h"
+
 #include <array>
 #include <chrono>
 #include <fstream>
@@ -7,9 +11,6 @@
 #include <memory>
 #include <sstream>
 
-#include "doctest.h"
-#include "rocket.h"
-#include "simulation.h"
 
 TEST_CASE("TESTING THE CALCS") {
   SUBCASE("Testing rocket") {

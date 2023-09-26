@@ -1,11 +1,12 @@
-#include <stdio.h>
-
-#include <fstream>
-#include <iostream>
-
 #include "interface.h"
 #include "rocket.h"
 #include "simulation.h"
+
+#include <stdio.h>
+#include <fstream>
+#include <iostream>
+
+
 
 int main() {
   rocket::Rocket::Ad_engine ad_eng;
@@ -141,7 +142,6 @@ int main() {
   rocket::Rocket rocket{rocket_data.name,
                         rocket_data.mass_structure,
                         rocket_data.up_ar,
-                        rocket_data.lat_ar,
                         rocket_data.s_p_m,
                         rocket_data.m_s_cont,
                         l_p_m,

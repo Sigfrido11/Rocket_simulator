@@ -1,5 +1,7 @@
 #ifndef ROCKET_H
 #define ROCKET_H
+#include "assert.h"
+#include "simulation.h"
 
 #include <algorithm>
 #include <cmath>
@@ -9,8 +11,6 @@
 #include <string>
 #include <vector>
 
-#include "assert.h"
-#include "simulation.h"
 
 namespace rocket {
 using Vec = std::array<double, 2>;

@@ -1,5 +1,4 @@
 #include "simulation.h"
-
 #include <assert.h>
 
 #include <cmath>

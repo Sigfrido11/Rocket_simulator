@@ -34,8 +34,7 @@ Rocket::Rocket(std::string name, double mass_structure, double Up_Ar,
       n_liq_eng_{n_liq_eng} {
   assert(m_liq_cont_.size() == m_liq_prop_.size() &&
          n_liq_eng_.size() == m_liq_prop_.size());
-  assert(upper_area_ > 0 && m_sol_cont_ > 0 &&
-         m_sol_prop_ > 0);
+  assert(upper_area_ > 0 && m_sol_cont_ > 0 && m_sol_prop_ > 0);
   current_stage_ = total_stage_;
   std::for_each(n_liq_eng.begin(), n_liq_eng.end(),
                 [](int value) { assert(value >= 0); });
@@ -60,7 +59,8 @@ void Rocket::mass_lost(double solid_lost, double liq_lost) {
   if (total_mass_ <= 0) {
     std::cout
         << "wrong input fuel distribution between liquid and solid stages";
-    assert(false);
+    throw std::runtime_error(
+        "wrong input fuel distribution between liquid and solid stages");
   }
 }
 
@@ -73,7 +73,9 @@ void Rocket::move(double time, Vec force) {
             0.5 * (force[0] / total_mass_) * std::pow(time, 2);
   pos_[1] = pos_[1] + velocity_[1] * time +
             0.5 * (force[1] / total_mass_) * std::pow(time, 2);
-  assert(pos_[0] >= 0 && pos_[1] >= 0);
+  if (pos_[0] >= 0 && pos_[1] >= 0) {
+    throw std::runtime_error("not enough thrust");
+  }
 }
 
 void Rocket::change_vel(double time, Vec force) {
@@ -82,7 +84,7 @@ void Rocket::change_vel(double time, Vec force) {
 }
 
 void Rocket::set_state(std::string file_name, double orbital_h, double time,
-                       bool is_orbiting,std::streampos& file_pos) {
+                       bool is_orbiting, std::streampos& file_pos) {
   // if ((velocity_[0] < 0 || velocity_[1] < 0) && (is_orbiting == false)) {
   //   std::cout << "sorry guy, no orbit avaible for your rocket";
   //   assert(false);
@@ -107,8 +109,8 @@ double Rocket::get_fuel_left() const { return (m_liq_prop_[0] + m_sol_prop_); }
 
 void Rocket::stage_release(double delta_ms, double delta_ml) {
   if (m_liq_prop_[0] < 0) {
-    std::cout << "error in the input distribution of the propellant \n" << '\n';
-    assert(false);
+    std::cout << "error in the input distribution of the propellant" << '\n';
+    throw std::runtime_error("error in the input distribution of the propellant");
   }
   if (m_sol_cont_ == 0) {
     int const len{static_cast<int>(m_liq_prop_.size())};
@@ -306,9 +308,9 @@ inline Vec const drag(double rho, double altitude, double theta,
   if (altitude <= 51'000) {
     double const speed2{std::pow(velocity[0], 2) + std::pow(velocity[1], 2)};
     double drag{0.37 * rho * upper_area * speed2};
-    int dir {1};
-    velocity[0] <=0 ? dir=-1 : dir =1; 
-    return {drag * std::sin(theta)*dir, drag * std::cos(theta)};
+    int dir{1};
+    velocity[0] <= 0 ? dir = -1 : dir = 1;
+    return {drag * std::sin(theta) * dir, drag * std::cos(theta)};
   } else {
     return {0., 0.};
   }
@@ -361,4 +363,5 @@ Vec const total_force(double rho, double theta, double total_mass, double pos,
     return {z, y};
   }
 }
+
 };  // namespace rocket
