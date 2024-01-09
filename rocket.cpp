@@ -73,7 +73,7 @@ void Rocket::move(double time, Vec const& force) {
             0.5 * (force[0] / total_mass_) * std::pow(time, 2);
   pos_[1] = pos_[1] + velocity_[1] * time +
             0.5 * (force[1] / total_mass_) * std::pow(time, 2);
-  if (pos_[0] >= 0 && pos_[1] >= 0) {
+  if (pos_[0] <= 0 && pos_[1] <= 0) {
     throw std::runtime_error("not enough thrust");
   }
 }
