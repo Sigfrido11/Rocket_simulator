@@ -319,9 +319,9 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
   double old_ang;
   bool found{false};
   file.seekg(file_pos);
-  if (file.tellg() == std::ios::pos_type(file.seekg(0, std::ios::end))) {
-    return 0.;
-  }
+  // if (file.tellg() == std::ios::pos_type(file.seekg(0, std::ios::end))) {
+  //   return 0.;
+  // }
   while (std::getline(file, line) && !found) {
     std::istringstream iss(line);
     iss >> altitude >> angle;

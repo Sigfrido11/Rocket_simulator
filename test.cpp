@@ -158,7 +158,7 @@ int main() {
   sf::Texture texture1;
   if (!texture1.loadFromFile("rocket.png")) {
     std::cout << "error in loading rocket.png";
-        throw std::runtime_error("error in loading rocket.png");
+    throw std::runtime_error("error in loading rocket.png");
   }
   sf::Sprite rocket1;
   rocket1.setTexture(texture1);
@@ -181,7 +181,7 @@ int main() {
   sf::Texture texture2;
   if (!texture2.loadFromFile("earth.jpeg")) {
     std::cout << "error in loading earth.jpeg";
-        throw std::runtime_error("error in loading earth.jpeg");
+    throw std::runtime_error("error in loading earth.jpeg");
   }
   sf::Sprite earth;
   earth.setTexture(texture2);
@@ -198,7 +198,7 @@ int main() {
   sf::Texture texture3;
   if (!texture3.loadFromFile("map.jpg")) {
     std::cout << "error in loading map.jpg";
-        throw std::runtime_error("error in loading map.jpg");
+    throw std::runtime_error("error in loading map.jpg");
   }
   sf::Sprite map;
   map.setTexture(texture3);
@@ -213,7 +213,7 @@ int main() {
   sf::Font tnr;
   if (!tnr.loadFromFile("times_new_roman.ttf")) {
     std::cout << "error in loading the font";
-        throw std::runtime_error("error in loading the font");
+    throw std::runtime_error("error in loading the font");
   }
 
   sf::Text altitude;
@@ -273,7 +273,7 @@ int main() {
   sf::SoundBuffer buffer;
   if (!buffer.loadFromFile("launch.wav")) {
     std::cout << "error in loading the countdown audio";
-        throw std::runtime_error("error in loading the countdown audio");
+    throw std::runtime_error("error in loading the countdown audio");
   }
   sf::Sound sound;
   sound.setBuffer(buffer);
@@ -285,8 +285,8 @@ int main() {
 
   sf::Music music;
   if (!music.openFromFile("background_music.wav")) {
-   std::cout << "error in loading the background music";
-        throw std::runtime_error("error in loading the background music");
+    std::cout << "error in loading the background music";
+    throw std::runtime_error("error in loading the background music");
   }
 
   music.play();
@@ -298,7 +298,6 @@ int main() {
   // game loop inizia
   try {
     while (window.isOpen()) {
-
       sf::Event event;
 
       while (window.pollEvent(event)) {
@@ -383,7 +382,7 @@ int main() {
       inner_atm.setPosition(0.f,
                             rocket.get_pos()[0] + (height * 3 / 4) - 51'000);
 
-      if (rocket.get_pos()[0] / sim::cost::earth_radius_ * 100.f < 150.f) {
+      if (rocket.get_pos()[0] / sim::cost::earth_radius_ * 100.f < 50.f) {
         earth.setScale(200.f / 1195.f, 200.f / 1193.f);
         earth.setPosition((width - 500.f) / 4 + 500.f - 100.f,
                           height / 4.f - 100.f);
@@ -391,26 +390,26 @@ int main() {
             (width - 500.f) / 4 + 500.f -
                 100.f * rocket_radius / sim::cost::earth_radius_ *
                     std::sin(angle_total),
-            height / 4.f - 200.f +
-                100.f * rocket_radius / sim::cost::earth_radius_ *
-                    std::cos(angle_total));
+            height / 4.f - 100.f * rocket_radius / sim::cost::earth_radius_ *
+                               std::cos(angle_total));
       } else {
         earth.setScale(2.f / 1195.f, 2.f / 1193.f);
-        earth.setPosition((width - 500.f) / 4 + 500.f - 10.f,
-                          height / 4.f - 10.f);
-        rocket2.setPosition(
-            (width - 500.f) / 4 + 500.f -
-                10.f * rocket_radius / sim::cost::earth_radius_ *
-                    std::sin(rocket.get_theta()),
-            height / 4.f - 200.f +
-                10.f * rocket_radius / sim::cost::earth_radius_ *
-                    std::cos(angle_total));
+        earth.setPosition((width - 500.f) / 4 + 500.f - 1.f,
+                          height / 4.f - 1.f);
+        rocket2.setPosition((width - 500.f) / 4 + 500.f -
+                                1.f * rocket_radius / sim::cost::earth_radius_ *
+                                    std::sin(rocket.get_theta()),
+                            height / 4.f - 1.f * rocket_radius /
+                                               sim::cost::earth_radius_ *
+                                               std::cos(angle_total));
       }
 
-      rocket3.move(angle_var / 2 / M_PI * 700.f, 0.f);
+      rocket3.setPosition(angle_total / 2 / M_PI * 700.f, 0.f);
       sf::Vector2f const pos3{rocket3.getPosition()};
       if (pos3.x > width) {
-        rocket3.setPosition(pos3.x - (width - 500.f), pos3.y);
+        rocket3.setPosition(pos3.x - floor((pos3.x - 500.f) / (width - 500.f)) *
+                                         (width - 500.f),
+                            pos3.y);
       }
 
       window.clear();
