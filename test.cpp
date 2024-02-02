@@ -153,6 +153,7 @@ int main() {
 
     float const width{1200.f};
     float const height{600.f};
+    /*
     sf::RenderWindow window(sf::VideoMode(width, height), "Rocket simulator");
     window.setPosition(sf::Vector2i(0, 0));
 
@@ -290,12 +291,14 @@ int main() {
 
     music.play();
     music.setLoop(true);
-
+*/
     Vec eng_force;
 
     double delta_time{1};
     // game loop inizia
-    while (window.isOpen()) {
+    //while (window.isOpen()) {
+    while (true) {
+/*    
       sf::Event event;
 
       while (window.pollEvent(event)) {
@@ -304,7 +307,7 @@ int main() {
           window.close();
         }
       }
-
+*/
       bool const orbiting{
           rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
 
@@ -317,7 +320,7 @@ int main() {
       Vec const force{rocket::total_force(
           air.rho_, rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
           rocket.get_up_ar(), rocket.get_velocity(), eng_force)};
-
+/*
       double const rocket_radius{rocket.get_pos()[0] +
                                  sim::cost::earth_radius_};
       double const angle_var{
@@ -325,14 +328,27 @@ int main() {
            0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) /
           rocket_radius};
       angle_total += angle_var;
-
+*/
       rocket.move(delta_time, force);
 
       rocket.change_vel(delta_time, force);
 
-      assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >= 0.);
+      if(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >= 0.)
+      {
+    std::cout
+        << "error in velocity";
+    throw std::runtime_error(
+        "error in velocity");
+  }
+};
 
-      assert(rocket.get_pos()[0] >= 0. && rocket.get_pos()[1] >= 0.);
+      if(rocket.get_pos()[0] >= 0. && rocket.get_pos()[1] >= 0.){
+    std::cout
+        << "error in position";
+    throw std::runtime_error(
+        "error in position");
+};
+
       output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
                     << rocket.get_velocity()[0] << "  "
                     << rocket.get_velocity()[1] << "  " << force[0] << "  "
@@ -340,7 +356,7 @@ int main() {
       output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
 
       // grafica inizia
-
+/*
       int const out_time_min{out_time / 60};
       int const out_time_sec{out_time - out_time_min * 60};
       time.setString("Time: " + std::to_string(out_time_min) + " min " +
@@ -412,7 +428,7 @@ int main() {
                     [&](sf::Vertex *obj) { window.draw(obj, 2, sf::Lines); });
 
       window.display();
-
+*/
       out_time += delta_time;
     }
   } catch (const std::exception &e) {
