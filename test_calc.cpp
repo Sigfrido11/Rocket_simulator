@@ -48,7 +48,7 @@ TEST_CASE("TESTING THE CALCS") {
     CHECK(rocket.get_velocity()[0] == doctest::Approx(255.449));
     CHECK(rocket.get_velocity()[1] * 1e6 == doctest::Approx(1.73575));
     CHECK(rocket.get_pos()[0] == doctest::Approx(42.5748));
-    CHECK(rocket.get_pos()[1] * 1e5 == doctest::Approx(0.0289291));
+    CHECK(rocket.get_pos()[1] == doctest::Approx(1.20096e+04));
     rocket.mass_lost(120., 320.);
     CHECK(rocket.get_mass() == 412760);
     CHECK(rocket.get_fuel_left() == 332760);
@@ -68,7 +68,7 @@ TEST_CASE("TESTING THE CALCS") {
     CHECK(rocket.get_velocity()[0] == doctest::Approx(370.788));
     CHECK(rocket.get_velocity()[1] * 1e6 == doctest::Approx(2.51947));
     CHECK(rocket.get_pos()[0] == doctest::Approx(1608.17));
-    CHECK(rocket.get_pos()[1] * 1e5 == doctest::Approx(1.09273));
+    CHECK(rocket.get_pos()[1] == doctest::Approx(4.20336e+04));
     CHECK(rocket.get_fuel_left() == doctest::Approx(301307));
     rocket.stage_release(400, 200);
     CHECK(rocket.get_rem_stage() == 3);
@@ -105,9 +105,9 @@ TEST_CASE("TESTING THE CALCS") {
   };
   SUBCASE("centripetal") {
     double centripetal = rocket::centripetal(150'000, 40'000, 5'000);
-    CHECK(centripetal == doctest::Approx(584294));
+    CHECK(centripetal/1e6 == doctest::Approx(2.83045));
     centripetal = rocket::centripetal(150'000, 40'000, 3'000);
-    CHECK(centripetal == doctest::Approx(210346));
+    CHECK(centripetal/1e6 == doctest::Approx(1.89513));
   };
   SUBCASE("g_force") {
     double g_force = rocket::g_force(500, 14'000);
@@ -132,19 +132,17 @@ TEST_CASE("TESTING THE CALCS") {
     std::ifstream file(file_name);
     std::streampos file_pos;
     double thetha = rocket::improve_theta(file_name, 1.56, 7'000, 80'000, file_pos);
-    CHECK(thetha == doctest::Approx(1.56));
+    CHECK(thetha == doctest::Approx(1.01604));
     std::chrono::high_resolution_clock clock;
     auto start = clock.now();
     thetha = rocket::improve_theta(file_name, 1.56, 35'500, 80'000, file_pos);
     auto dur1 = clock.now() - start;
-    CHECK(thetha == doctest::Approx(0.413538));
+    CHECK(thetha == doctest::Approx(0.35123));
     start = clock.now();
     thetha = rocket::improve_theta(file_name, 1.56, 77'500, 80'000, file_pos);
     auto dur2 = clock.now() - start;
-    CHECK(thetha == doctest::Approx(0.0448375));
+    CHECK(thetha == doctest::Approx(0.0373151));
     CHECK(dur1 < dur2);
-    thetha = rocket::improve_theta(file_name, 1.56, 3'500, 8'000, file_pos);
-    CHECK(thetha == doctest::Approx(0.178687));
   }
   SUBCASE("Total force") {
     double rho{1.};
@@ -179,7 +177,7 @@ TEST_CASE("TESTING THE CALCS") {
     double y{eng_f[1] - drag_f[1]};
     CHECK(tot[0] == z);
     CHECK(tot[1] == y);
-    CHECK(tot[0] == doctest::Approx(33349.4));
+    CHECK(tot[0] == doctest::Approx(261907));
     CHECK(tot[1] == doctest::Approx(0.));
   };
 

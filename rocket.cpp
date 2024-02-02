@@ -317,7 +317,7 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
   double old_altitude{0.};
   double altitude;
   double angle;
-  pos = std::max(0., (pos * 170'000) / orbital_h - 5e8 / pos);
+  pos = std::max(0., (pos * 170'000) / orbital_h - 1e7 / pos);
   double old_ang;
   bool found{false};
   file.seekg(file_pos);
@@ -339,9 +339,6 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
       old_ang = angle;
       file_pos = file.tellg();
     }
-  }
-  if (file.eof() == file_pos) {
-    return 0.;
   }
   return 0.;
 }
