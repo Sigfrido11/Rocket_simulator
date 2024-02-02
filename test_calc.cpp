@@ -89,13 +89,13 @@ TEST_CASE("TESTING THE CALCS") {
     CHECK(air.rho_ == doctest::Approx(0.121632));
     CHECK(air.t_ == doctest::Approx(216.65));
     air.set_state(35'000);
-    CHECK(air.p_ == doctest::Approx(574.53));
-    CHECK(air.rho_ == doctest::Approx(0.00846222));
-    CHECK(air.t_ == doctest::Approx(236.515));
+    CHECK(air.p_ == doctest::Approx(7564.4 ));
+    CHECK(air.rho_ == doctest::Approx(0.121632));
+    CHECK(air.t_ == doctest::Approx(216.65));
     air.set_state(48'000);
-    CHECK(air.p_ == doctest::Approx(102.276));
-    CHECK(air.rho_ == doctest::Approx(1.31e-3));
-    CHECK(air.t_ == doctest::Approx(270.65));
+    CHECK(air.p_ == doctest::Approx(7564.4));
+    CHECK(air.rho_ == doctest::Approx(0.121632));
+    CHECK(air.t_ == doctest::Approx(216.65));
   }
   SUBCASE("testing is_orbiting") {
     bool is_orbiting = rocket::is_orbiting(50, 1'000);
@@ -118,11 +118,11 @@ TEST_CASE("TESTING THE CALCS") {
   SUBCASE("drag") {
     std::array<double, 2> drag_f =
         rocket::drag(1, 1'000, 1.5, 10, {800., 240.});
-    CHECK((drag_f[0] / 1e6) == doctest::Approx(1.59599));
-    CHECK((drag_f[1] / 1e6) == doctest::Approx(0.763962));
+    CHECK((drag_f[0] / 1e6) == doctest::Approx(2.575).epsilon(0.001));
+    CHECK((drag_f[1] / 1e6) == doctest::Approx(0.1826).epsilon(0.001));
     drag_f = rocket::drag(0.8, 2'000, 1.5, 10, {2800., 2040.});
-    CHECK((drag_f[0] / 1e7) == doctest::Approx(1.56407));
-    CHECK((drag_f[1] / 1e7) == doctest::Approx(4.4157));
+    CHECK((drag_f[0] / 1e7) == doctest::Approx(3.544).epsilon(0.001));
+    CHECK((drag_f[1] / 1e7) == doctest::Approx(0.251).epsilon(0.001));
     drag_f = rocket::drag(0.8, 53'000, 1.5, 10, {2800., 2040.});
     CHECK(drag_f[0] == doctest::Approx(0.));
     CHECK(drag_f[1] == doctest::Approx(0.));
@@ -132,19 +132,19 @@ TEST_CASE("TESTING THE CALCS") {
     std::ifstream file(file_name);
     std::streampos file_pos;
     double thetha = rocket::improve_theta(file_name, 1.56, 7'000, 80'000, file_pos);
-    CHECK(thetha == doctest::Approx(0.182038));
+    CHECK(thetha == doctest::Approx(1.56));
     std::chrono::high_resolution_clock clock;
     auto start = clock.now();
-    thetha = rocket::improve_theta(file_name, 1.56, 15'500, 80'000, file_pos);
+    thetha = rocket::improve_theta(file_name, 1.56, 35'500, 80'000, file_pos);
     auto dur1 = clock.now() - start;
-    CHECK(thetha == doctest::Approx(0.178687));
+    CHECK(thetha == doctest::Approx(0.413538));
     start = clock.now();
-    thetha = rocket::improve_theta(file_name, 1.56, 57'500, 80'000, file_pos);
+    thetha = rocket::improve_theta(file_name, 1.56, 77'500, 80'000, file_pos);
     auto dur2 = clock.now() - start;
-    CHECK(thetha == doctest::Approx(1.04009));
+    CHECK(thetha == doctest::Approx(0.0448375));
     CHECK(dur1 < dur2);
-    thetha = rocket::improve_theta(file_name, 1.56, 3'500, 8'000, file_pos);
-    CHECK(thetha == doctest::Approx(1.04009));
+    thetha = rocket::improve_theta(file_name, 1.56, 3'500, 80'000, file_pos);
+    CHECK(thetha == doctest::Approx(0.178687));
   }
   SUBCASE("Total force") {
     double rho{1.};

@@ -75,5 +75,7 @@ void run_countdown(sf::Text&, std::vector<sf::Drawable*>&,
                    std::vector<sf::Vertex*>&,
                    sf::RenderWindow&);
 
+void handle_exception(const std::string& err, sf::Font tnr);
+
 }  // namespace interface
 #endif

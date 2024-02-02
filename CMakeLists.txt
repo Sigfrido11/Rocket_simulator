@@ -22,12 +22,11 @@ add_executable(razzo.t test.cpp rocket.cpp simulation.cpp interface.cpp)
 target_link_libraries(razzo.t sfml-graphics sfml-window sfml-system sfml-audio)
 # se il testing e' abilitato...
 #   per disabilitare il testing, passare -DBUILD_TESTING=OFF a cmake durante la fase di configurazione
-#if (BUILD_TESTING)
+if (BUILD_TESTING)
 
 # aggiungi l'eseguibile 
-  
-# add_executable(test.t statistics.test.cpp statistics.cpp)
-   #aggiungi l'eseguibile statistics.t alla lista dei test
-#add_test(NAME statistics.t COMMAND statistics.t)
+add_executable(rocket_test test_calc.cpp simulation.cpp rocket.cpp )
 
-#endif()
+add_test(NAME rocket_test COMMAND rocket_test)
+
+endif()

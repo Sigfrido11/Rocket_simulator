@@ -317,10 +317,13 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
   double old_altitude{0.};
   double altitude;
   double angle;
-  pos = (pos * 170'000) / orbital_h;
+  pos = std::max(0.,(pos * 170'000) / orbital_h - 5e8/pos);
   double old_ang;
   bool found{false};
   file.seekg(file_pos);
+    if (file.eof()) {
+        return 0.;
+    }
   while (std::getline(file, line) && !found) {
     std::istringstream iss(line);
     iss >> altitude >> angle;
