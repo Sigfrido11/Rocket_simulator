@@ -279,7 +279,7 @@ double Ad_engine::delta_m(double time, bool is_orbiting) const {
         std::sqrt(sim::cost::gamma_ * prop_mm_ / (sim::cost::R_ * t_0_))};
     double const fac3{2 / (sim::cost::gamma_ + 1)};
     double const fac4{(sim::cost::gamma_ + 1) / (2 * (sim::cost::gamma_ - 1))};
-    double const mass{fac1 * fac2 * std::pow(fac3, fac4) * time * 2.2173e-1};
+    double const mass{fac1 * fac2 * std::pow(fac3, fac4) * time * 2.2173e-2};
     assert(mass >= 0.);
     return mass;
   } else {

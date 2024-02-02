@@ -244,8 +244,8 @@ TEST_CASE("TESTING THE CALCS") {
     CHECK(ad_all.is_released() == false);
     CHECK(ad_med.is_released() == false);
 
-    CHECK(ad_all.delta_m(0.1, false) == doctest::Approx(8324.65));
-    CHECK(ad_med.delta_m(0.1, false) == doctest::Approx(5925.42));
+    CHECK(ad_all.delta_m(0.1, false) == doctest::Approx(832.465));
+    CHECK(ad_med.delta_m(0.1, false) == doctest::Approx(592.542));
 
     CHECK(ad_all.delta_m(0.1, true) == doctest::Approx(0.));
     CHECK(ad_med.delta_m(0.1, true) == doctest::Approx(0.));
