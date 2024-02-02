@@ -108,8 +108,8 @@ int main() {
   double delta_time{1};
   double x{};
   double y{};
-  double a{};
-  double b{};
+  double rotation{};
+  double polar_angle{};
   // game loop inizia
   while (window.isOpen()) {
     sf::Event event;
@@ -128,7 +128,7 @@ int main() {
 
     x += 10;
     y += x * x;
-    a += 10 * 3.14 / 180;
+    rotation += 10 * 3.14 / 180;
 
     assert(y >= 0. && x >= 0.);
 
@@ -141,35 +141,37 @@ int main() {
 
     altitude.setString("Altitude: " + std::to_string(y) + " m");
 
-    angle.setString("Angle: " + std::to_string(a * 360 / (2 * M_PI)) + "°");
+    angle.setString("Angle: " + std::to_string(rotation) + " rad");
 
-    rocket1.setRotation(90 - a * 360 / (2 * M_PI));
+    rocket1.setRotation(90 - rotation * 360 / (2 * M_PI));
     outer_atm.setPosition(0.f, y + (height * 3 / 4) - 100'000);
     ground.setPosition(0.f, y + (height * 3 / 4));
     inner_atm.setPosition(0.f, y + (height * 3 / 4) - 51'000);
 
-    b += 6;
+    polar_angle += 6. / 20.;
+
     if (y / sim::cost::earth_radius_ * 100.f < 50.f) {
       earth.setScale(200.f / 1195.f, 200.f / 1193.f);
       earth.setPosition((width - 500.f) / 4 + 500.f - 100.f,
                         height / 4.f - 100.f);
       rocket2.setPosition((width - 500.f) / 4 + 500.f -
                               100.f * rocket_radius / sim::cost::earth_radius_ *
-                                  std::sin(b / 20),
+                                  std::sin(polar_angle),
                           height / 4.f - 100.f * rocket_radius /
                                              sim::cost::earth_radius_ *
-                                             std::cos(b / 20));
+                                             std::cos(polar_angle));
     } else {
       earth.setScale(2.f / 1195.f, 2.f / 1193.f);
       earth.setPosition((width - 500.f) / 4 + 500.f - 1.f, height / 4.f - 1.f);
-      rocket2.setPosition(
-          (width - 500.f) / 4 + 500.f -
-              1.f * rocket_radius / sim::cost::earth_radius_ * std::sin(b / 20),
-          height / 4.f - 1.f * rocket_radius / sim::cost::earth_radius_ *
-                             std::cos(b / 20));
+      rocket2.setPosition((width - 500.f) / 4 + 500.f -
+                              1.f * rocket_radius / sim::cost::earth_radius_ *
+                                  std::sin(polar_angle),
+                          height / 4.f - 1.f * rocket_radius /
+                                             sim::cost::earth_radius_ *
+                                             std::cos(polar_angle));
     }
 
-    rocket3.setPosition((b / 20) / 2 / M_PI * 700.f + 750.f, height / 4 * 3);
+    rocket3.setPosition(polar_angle / 2 / M_PI * 700.f + 750.f, height / 4 * 3);
     sf::Vector2f const pos3{rocket3.getPosition()};
     if (pos3.x > width) {
       rocket3.setPosition(

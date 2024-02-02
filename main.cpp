@@ -1,22 +1,20 @@
+#include <stdio.h>
+
+#include <fstream>
+#include <iostream>
+
 #include "interface.h"
 #include "rocket.h"
 #include "simulation.h"
 
-#include <stdio.h>
-#include <fstream>
-#include <iostream>
-
-
-
 int main() {
-  rocket::Rocket::Ad_engine ad_eng;
-  rocket::Rocket::Base_engine base_eng;
+  rocket::Ad_engine ad_eng;
+  rocket::Base_engine base_eng;
   interface::rocket_data rocket_data;
-  std::shared_ptr<rocket::Rocket::Engine> eng;
+  rocket::Engine *eng;
   std::vector<double> l_p_m;
   std::vector<double> l_c_m;
   std::vector<int> n_liq_eng;
-
   char ans_eng;
 
   {  // aggiungo uno scope in modo da cancellare poi tutte le
@@ -24,65 +22,60 @@ int main() {
 
     interface::ad_eng_data ad_eng_data;
     interface::base_eng_data base_eng_data;
-    std::cout
-        << "let's build the engine for the solid propellant of your rocket"
-        << "\n"
-        << "do you prefer an advance (a) rocket or base rocket (b)"
-        << "\n";
+    std::cout << "let's build the engine for your rocket"
+              << "\n"
+              << "do you prefer an advance (a) rocket or base rocket (b)"
+              << "\n";
     std::cin >> ans_eng;
     switch (ans_eng) {
       case 'a':
         rocket_data.eng_type = 'a';
-        std::cout << rocket_data.eng_type << '\n';
         interface::select_ad_eng(ad_eng_data);
         if (ad_eng_data.type == 'm') {
-          ad_eng = rocket::Rocket::Ad_engine{
-              ad_eng_data.burn_a,      ad_eng_data.nozzle_as,
-              ad_eng_data.t_0,         ad_eng_data.grain_dim,
-              ad_eng_data.grain_rho,   ad_eng_data.a_coef,
-              ad_eng_data.burn_rate_n, ad_eng_data.prop_mm};
-        } else {
           ad_eng =
-              rocket::Rocket::Ad_engine{ad_eng_data.p_0, ad_eng_data.burn_a,
-                                        ad_eng_data.nozzle_as, ad_eng_data.t_0};
+              rocket::Ad_engine{ad_eng_data.burn_a,      ad_eng_data.nozzle_as,
+                                ad_eng_data.t_0,         ad_eng_data.grain_dim,
+                                ad_eng_data.grain_rho,   ad_eng_data.a_coef,
+                                ad_eng_data.burn_rate_n, ad_eng_data.prop_mm};
+        } else {
+          ad_eng = rocket::Ad_engine{ad_eng_data.p_0, ad_eng_data.burn_a,
+                                     ad_eng_data.nozzle_as, ad_eng_data.t_0};
         }
         break;
       case 'b':
         rocket_data.eng_type = 'a';
         interface::select_base_eng(base_eng_data);
 
-        base_eng =
-            rocket::Rocket::Base_engine{base_eng_data.isp, base_eng_data.cm,
-                                        base_eng_data.p0, base_eng_data.burn_a};
+        base_eng = rocket::Base_engine{base_eng_data.isp, base_eng_data.cm,
+                                       base_eng_data.p0, base_eng_data.burn_a};
         break;
 
       default:
-        std::cout << "invalid value for rocket please restart ";
-        assert(false);
+        throw std::runtime_error(
+            "invalid value insert for rocket please restart ");
         break;
     }
-     if (ans_eng == 'a') {
-      eng = std::make_shared<rocket::Rocket::Ad_engine>(ad_eng);
+    if (ans_eng == 'a') {
+      eng = &ad_eng;
     } else {
-      eng = std::make_shared<rocket::Rocket::Base_engine>(base_eng);
+      eng = &base_eng;
     }
-    char ans_roc;
-    std::cout << "how many details do you want to insert to create your"
+    char ans_rocket;
+    std::cout << "how many details do you want to insert for create your"
               << "\n"
               << "rocket (many (m), some (s), few (f))?"
               << "\n";
-    std::cin >> ans_roc;
-    switch (ans_roc) {
+    std::cin >> ans_rocket;
+    switch (ans_rocket) {
       int ans;
       case 'm':
         rocket_data = interface::create_complete_roc();
         l_p_m.resize(rocket_data.stage_num);
         l_c_m.resize(rocket_data.stage_num);
         n_liq_eng.resize(rocket_data.stage_num);
-        std::cout << "how many engines does the liquid propellant have for "
-                     "each stage "
-                     "(strcly less than solid): < 3"
-                  << "\n";
+        std::cout
+            << "how many engine has the liquid propellant for each stage: < 3"
+            << "\n";
         std::cin >> ans;
         std::fill_n(l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);
         std::fill_n(l_c_m.begin(), rocket_data.stage_num, rocket_data.m_s_cont);
@@ -96,8 +89,7 @@ int main() {
         l_c_m.resize(rocket_data.stage_num);
         n_liq_eng.resize(rocket_data.stage_num);
         std::cout
-            << "how many engine does the liquid propellant have for each stage "
-               "(strcly less than solid): < 3"
+            << "how many engine has the liquid propellant for each stage: < 3"
             << "\n";
         std::cin >> ans;
         std::fill_n(l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);
@@ -111,34 +103,32 @@ int main() {
         l_c_m.resize(rocket_data.stage_num);
         n_liq_eng.resize(rocket_data.stage_num);
         std::cout
-            << "how many engine does the liquid propellant have for each stage "
-               "(strcly less than solid): < 3"
+            << "how many engine has the liquid propellant for each stage: < 3"
             << "\n";
         std::cin >> ans;
-        std::fill_n(l_p_m.begin(), rocket_data.stage_num, 100'000);
+        std::fill_n(l_p_m.begin(), rocket_data.stage_num, 400'000);
         std::fill_n(l_c_m.begin(), rocket_data.stage_num, 15'000);
         std::fill_n(n_liq_eng.begin(), rocket_data.stage_num, ans);
         break;
 
       default:
-        std::cout << "invalid value for rocket please restart";
-
-        assert(false);
+        throw std::runtime_error(
+            "invalid value insert for rocket please restart ");
         break;
     }
   }
-
   using Vec = std::array<double, 2>;
   std::string file_name = "theta_data.txt";
   std::ofstream output_rocket("output_rocket.txt");
-  assert(output_rocket.is_open());
+  std::streampos start_pos;
   std::cout << "rocket output is ok" << '\n';
   std::ofstream output_air("output_air.txt");
-  assert(output_air.is_open());
   std::cout << "also air output is ok" << '\n';
   output_rocket << "posizione z-y   velocità z-y    forza z-x" << '\n';
   output_air << "temp    pres    rho" << '\n';
-
+  if (!output_rocket.is_open() or !output_air.is_open()) {
+    throw std::runtime_error("impossible to open file");
+  }
   rocket::Rocket rocket{rocket_data.name,
                         rocket_data.mass_structure,
                         rocket_data.up_ar,
@@ -149,22 +139,25 @@ int main() {
                         eng,
                         rocket_data.n_solid_eng,
                         n_liq_eng};
+
   sim::Air_var air;
-  std::cout << "at which altitude do you want to orbit? (m)"
+  std::cout << "at which altitude do you want to orbit? (m) >60'000"
             << "\n";
   double orbital_h;
   std::cin >> orbital_h;
 
   float const width{1200.f};
   float const height{600.f};
-  sf::RenderWindow window(sf::VideoMode(width, height), rocket_data.name);
+
+  sf::RenderWindow window(sf::VideoMode(width, height), "Rocket simulator");
   window.setPosition(sf::Vector2i(0, 0));
 
-  window.setFramerateLimit(20);
+  window.setFramerateLimit(5);
 
   sf::Texture texture1;
   if (!texture1.loadFromFile("rocket.png")) {
-    return -1;
+    std::cout << "error in loading rocket.png";
+    throw std::runtime_error("error in loading rocket.png");
   }
   sf::Sprite rocket1;
   rocket1.setTexture(texture1);
@@ -186,7 +179,8 @@ int main() {
 
   sf::Texture texture2;
   if (!texture2.loadFromFile("earth.jpeg")) {
-    return -1;
+    std::cout << "error in loading earth.jpeg";
+    throw std::runtime_error("error in loading earth.jpeg");
   }
   sf::Sprite earth;
   earth.setTexture(texture2);
@@ -202,7 +196,8 @@ int main() {
 
   sf::Texture texture3;
   if (!texture3.loadFromFile("map.jpg")) {
-    return -1;
+    std::cout << "error in loading map.jpg";
+    throw std::runtime_error("error in loading map.jpg");
   }
   sf::Sprite map;
   map.setTexture(texture3);
@@ -216,7 +211,8 @@ int main() {
 
   sf::Font tnr;
   if (!tnr.loadFromFile("times_new_roman.ttf")) {
-    return -1;
+    std::cout << "error in loading the font";
+    throw std::runtime_error("error in loading the font");
   }
 
   sf::Text altitude;
@@ -275,7 +271,8 @@ int main() {
 
   sf::SoundBuffer buffer;
   if (!buffer.loadFromFile("launch.wav")) {
-    return -1;
+    std::cout << "error in loading the countdown audio";
+    throw std::runtime_error("error in loading the countdown audio");
   }
   sf::Sound sound;
   sound.setBuffer(buffer);
@@ -287,7 +284,8 @@ int main() {
 
   sf::Music music;
   if (!music.openFromFile("background_music.wav")) {
-    return -1;
+    std::cout << "error in loading the background music";
+    throw std::runtime_error("error in loading the background music");
   }
 
   music.play();
@@ -297,120 +295,140 @@ int main() {
 
   double delta_time{1};
   // game loop inizia
-  while (window.isOpen()) {
-    sf::Event event;
+  try {
+    while (window.isOpen()) {
+      sf::Event event;
 
-    while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed) window.close();
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-        window.close();
+      while (window.pollEvent(event)) {
+        if (event.type == sf::Event::Closed) window.close();
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+          window.close();
+        }
       }
+
+      bool const orbiting{
+          rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
+
+      rocket.set_state(file_name, orbital_h, delta_time, orbiting, start_pos);
+
+      air.set_state(rocket.get_pos()[0]);
+
+      eng_force = rocket.thrust(delta_time, orbiting);
+
+      Vec const force{rocket::total_force(
+          air.rho_, rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
+          rocket.get_up_ar(), rocket.get_velocity(), eng_force)};
+
+      double const rocket_radiud{rocket.get_pos()[0] +
+                                 sim::cost::earth_radius_};
+      double const angle_var{
+          ((rocket.get_velocity()[1] + sim::cost::earth_speed_) * delta_time +
+           0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) /
+          rocket_radiud};
+      angle_total += angle_var;
+
+      rocket.move(delta_time, force);
+
+      rocket.change_vel(delta_time, force);
+
+      if ((rocket.get_velocity()[0] < 0. && eng_force != Vec({0, 0})) ||
+          rocket.get_velocity()[1] < 0.) {
+        std::cout << "error in velocity";
+        throw std::runtime_error("error in velocity");
+      }
+
+      if (rocket.get_pos()[0] <= 0. || rocket.get_pos()[1] < 0.) {
+        std::cout << "error in position";
+        throw std::runtime_error("error in position");
+      };
+
+      output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
+                    << rocket.get_velocity()[0] << "  "
+                    << rocket.get_velocity()[1] << "  " << force[0] << "  "
+                    << force[1] << '\n';
+      output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
+
+      // grafica
+
+      int const out_time_min{out_time / 60};
+      int const out_time_sec{out_time - out_time_min * 60};
+      time.setString("Time: " + std::to_string(out_time_min) + " min " +
+                     std::to_string(out_time_sec) + " sec ");
+
+      altitude.setString("Altitude: " + std::to_string(rocket.get_pos()[0]) +
+                         " m");
+
+      angle.setString("Angle: " + std::to_string(rocket.get_theta()) + " rad");
+
+      stage.setString("Stage: " + std::to_string(rocket.get_rem_stage()) + "/" +
+                      std::to_string(rocket_data.stage_num + 1));
+
+      speed.setString(
+          "Speed: " +
+          std::to_string(
+              sqrt(std::pow(rocket.get_velocity()[0], 2) +
+                   std::pow(rocket.get_velocity()[1] + sim::cost::earth_speed_,
+                            2))) +
+          " m/s");
+
+      fuel_left.setString("Fuel left: " +
+                          std::to_string(rocket.get_fuel_left()));
+
+      rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * M_PI));
+      outer_atm.setPosition(0.f,
+                            rocket.get_pos()[0] + (height * 3 / 4) - 100'000);
+      ground.setPosition(0.f, rocket.get_pos()[0] + (height * 3 / 4));
+      inner_atm.setPosition(0.f,
+                            rocket.get_pos()[0] + (height * 3 / 4) - 51'000);
+
+      if (rocket.get_pos()[0] / sim::cost::earth_radius_ * 100.f < 50.f) {
+        earth.setScale(200.f / 1195.f, 200.f / 1193.f);
+        earth.setPosition((width - 500.f) / 4 + 500.f - 100.f,
+                          height / 4.f - 100.f);
+        rocket2.setPosition(
+            (width - 500.f) / 4 + 500.f -
+                100.f * rocket_radiud / sim::cost::earth_radius_ *
+                    std::sin(angle_total),
+            height / 4.f - 100.f * rocket_radiud / sim::cost::earth_radius_ *
+                               std::cos(angle_total));
+      } else {
+        earth.setScale(2.f / 1195.f, 2.f / 1193.f);
+        earth.setPosition((width - 500.f) / 4 + 500.f - 1.f,
+                          height / 4.f - 1.f);
+        rocket2.setPosition((width - 500.f) / 4 + 500.f -
+                                1.f * rocket_radiud / sim::cost::earth_radius_ *
+                                    std::sin(rocket.get_theta()),
+                            height / 4.f - 1.f * rocket_radiud /
+                                               sim::cost::earth_radius_ *
+                                               std::cos(angle_total));
+      }
+
+      rocket3.setPosition(angle_total / 2 / M_PI * 700.f + 750.f,
+                          height / 4 * 3);
+      sf::Vector2f const pos3{rocket3.getPosition()};
+      if (pos3.x > width) {
+        rocket3.setPosition(pos3.x - floor((pos3.x - 500.f) / (width - 500.f)) *
+                                         (width - 500.f),
+                            pos3.y);
+      }
+
+      window.clear();
+
+      std::for_each(drawables.begin(), drawables.end(),
+                    [&](sf::Drawable *obj) { window.draw(*obj); });
+
+      std::for_each(vertices.begin(), vertices.end(),
+                    [&](sf::Vertex *obj) { window.draw(obj, 2, sf::Lines); });
+
+      window.display();
+
+      out_time += delta_time;
     }
+  } catch (const std::exception &e) {
+    interface::handle_exception(e.what(), tnr);
 
-    bool const orbiting{
-        rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
-
-    rocket.set_state(file_name, orbital_h, delta_time, orbiting);
-
-    air.set_state(rocket.get_pos()[0]);
-
-    eng_force = rocket.thrust(delta_time, orbiting);
-
-    Vec const force{rocket::total_force(air.rho_, rocket.get_theta(),
-                                        rocket.get_mass(), rocket.get_pos()[0],
-                                        rocket.get_up_ar(), rocket.get_lat_ar(),
-                                        rocket.get_velocity(), eng_force)};
-
-    double const rocket_radius{rocket.get_pos()[0] + sim::cost::earth_radius_};
-    double const angle_var{
-        (rocket.get_velocity()[1] * delta_time +
-         0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) /
-        rocket_radius};
-    angle_total += angle_var;
-
-    rocket.move(delta_time, force);
-
-    rocket.change_vel(delta_time, force);
-
-   // assert(rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >= 0.);
-
-    assert(rocket.get_pos()[0] >= 0. && rocket.get_pos()[1] >= 0.);
-    output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
-                  << rocket.get_velocity()[0] << "  "
-                  << rocket.get_velocity()[1] << "  " << force[0] << "  "
-                  << force[1] << '\n';
-    output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
-
-    // grafica inizia
-
-    int const out_time_min{out_time / 60};
-    int const out_time_sec{out_time - out_time_min * 60};
-    time.setString("Time: " + std::to_string(out_time_min) + " min " +
-                   std::to_string(out_time_sec) + " sec ");
-
-    altitude.setString("Altitude: " + std::to_string(rocket.get_pos()[0]) +
-                       " m");
-
-    angle.setString("Angle: " + std::to_string(rocket.get_theta()) + "°");
-
-    stage.setString(
-        "Stage: " +
-        std::to_string((rocket_data.stage_num + 1 - rocket.get_rem_stage()) %
-                       (rocket_data.stage_num + 1)) +
-        "/" + std::to_string(rocket_data.stage_num));
-
-    speed.setString(
-        "Speed: " +
-        std::to_string(sqrt(std::pow(rocket.get_velocity()[0], 2) +
-                            std::pow(rocket.get_velocity()[1], 2))) +
-        " m/s");
-
-    fuel_left.setString("Fuel left: " + std::to_string(rocket.get_fuel_left()));
-
-    rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * M_PI));
-    outer_atm.setPosition(0.f,
-                          rocket.get_pos()[0] + (height * 3 / 4) - 100'000);
-    ground.setPosition(0.f, rocket.get_pos()[0] + (height * 3 / 4));
-    inner_atm.setPosition(0.f, rocket.get_pos()[0] + (height * 3 / 4) - 51'000);
-
-    if (rocket.get_pos()[0] / sim::cost::earth_radius_ * 100.f < 150.f) {
-      earth.setScale(200.f / 1195.f, 200.f / 1193.f);
-      earth.setPosition((width - 500.f) / 4 + 500.f - 100.f,
-                        height / 4.f - 100.f);
-      rocket2.setPosition((width - 500.f) / 4 + 500.f -
-                              100.f * rocket_radius / sim::cost::earth_radius_ *
-                                  std::sin(angle_total),
-                          height / 4.f - 200.f +
-                              100.f * rocket_radius / sim::cost::earth_radius_ *
-                                  std::cos(angle_total));
-    } else {
-      earth.setScale(2.f / 1195.f, 2.f / 1193.f);
-      earth.setPosition((width - 500.f) / 4 + 500.f - 10.f,
-                        height / 4.f - 10.f);
-      rocket2.setPosition((width - 500.f) / 4 + 500.f -
-                              10.f * rocket_radius / sim::cost::earth_radius_ *
-                                  std::sin(rocket.get_theta()),
-                          height / 4.f - 200.f +
-                              10.f * rocket_radius / sim::cost::earth_radius_ *
-                                  std::cos(angle_total));
-    }
-
-    rocket3.move(angle_var / 2 / M_PI * 700.f, 0.f);
-    sf::Vector2f const pos3{rocket3.getPosition()};
-    if (pos3.x > width) {
-      rocket3.setPosition(pos3.x - (width - 500.f), pos3.y);
-    }
-
-    window.clear();
-
-    std::for_each(drawables.begin(), drawables.end(),
-                  [&](sf::Drawable *obj) { window.draw(*obj); });
-
-    std::for_each(vertices.begin(), vertices.end(),
-                  [&](sf::Vertex *obj) { window.draw(obj, 2, sf::Lines); });
-
-    window.display();
-
-    out_time += delta_time;
+  } catch (...) {
+    std::cerr << "unknown exception detected:" << std::endl;
+    interface::handle_exception("unknown exception", tnr);
   }
 }
