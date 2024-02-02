@@ -17,8 +17,8 @@ using Vec = std::array<double, 2>;
 
 Rocket::Rocket(std::string const& name, double mass_structure, double Up_Ar,
                double s_p_m, double m_s_cont, std::vector<double> const& l_p_m,
-               std::vector<double> const& l_c_m, Engine* eng,
-               int n_solid_eng, std::vector<int> const& n_liq_eng)
+               std::vector<double> const& l_c_m, Engine* eng, int n_solid_eng,
+               std::vector<int> const& n_liq_eng)
     : name_{name},
       upper_area_{Up_Ar},
       m_sol_cont_{m_s_cont},
@@ -78,13 +78,14 @@ void Rocket::move(double time, Vec const& force) {
   }
 }
 
-void Rocket::change_vel(double time, Vec const&  force) {
+void Rocket::change_vel(double time, Vec const& force) {
   velocity_[0] = velocity_[0] + (force[0] / total_mass_) * time;
   velocity_[1] = velocity_[1] + (force[1] / total_mass_) * time;
 }
 
-void Rocket::set_state(std::string const& file_name, double orbital_h, double time,
-                       bool is_orbiting, std::streampos& file_pos) {
+void Rocket::set_state(std::string const& file_name, double orbital_h,
+                       double time, bool is_orbiting,
+                       std::streampos& file_pos) {
   // if ((velocity_[0] < 0 || velocity_[1] < 0) && (is_orbiting == false)) {
   //   std::cout << "sorry guy, no orbit avaible for your rocket";
   //   assert(false);
@@ -110,7 +111,8 @@ double Rocket::get_fuel_left() const { return (m_liq_prop_[0] + m_sol_prop_); }
 void Rocket::stage_release(double delta_ms, double delta_ml) {
   if (m_liq_prop_[0] < 0) {
     std::cout << "error in the input distribution of the propellant" << '\n';
-    throw std::runtime_error("error in the input distribution of the propellant");
+    throw std::runtime_error(
+        "error in the input distribution of the propellant");
   }
   if (m_sol_cont_ == 0) {
     int const len{static_cast<int>(m_liq_prop_.size())};
@@ -169,8 +171,7 @@ Vec const Rocket::thrust(double time, bool is_orbiting) const {
 
 // costruttori di Base_engine
 
-Base_engine::Base_engine(double isp, double cm, double p0,
-                                 double burn_a)
+Base_engine::Base_engine(double isp, double cm, double p0, double burn_a)
     : isp_{isp}, cm_{cm}, p_0_{p0}, burn_a_{burn_a} {
   assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0 && burn_a_ >= 0);
 }
@@ -185,8 +186,7 @@ double Base_engine::delta_m(double time, bool is_orbiting) const {
   }
 }
 
-Vec const Base_engine::eng_force(eng_par const& par,
-                                         bool is_orbiting) const {
+Vec const Base_engine::eng_force(eng_par const& par, bool is_orbiting) const {
   double const delta_m = Base_engine::delta_m(par.time, is_orbiting);
   if (!is_orbiting && !released_) {
     double const force{isp_ * delta_m * sim::cost::G_ * sim::cost::earth_mass_ /
@@ -208,8 +208,8 @@ double Base_engine::get_pression() const { return p_0_; }
 // costruttori Ad_Engine
 
 Ad_engine::Ad_engine(double burn_a, double nozzle_as, double t_0,
-                             double grain_dim, double grain_rho, double a_coef,
-                             double burn_rate_n, double prop_mm)
+                     double grain_dim, double grain_rho, double a_coef,
+                     double burn_rate_n, double prop_mm)
     : burn_a_{burn_a},
       nozzle_as_{nozzle_as},
       t_0_{t_0},
@@ -228,16 +228,14 @@ Ad_engine::Ad_engine(double burn_a, double nozzle_as, double t_0,
   double fac3 = std::sqrt((sim::cost::gamma_ * fac2) / sim::cost::R_ * t_0_);
   p_0_ = std::pow(fac1 * 2.2173e5 / fac3, 1 / (1 - burn_rate_n_));
 }
-Ad_engine::Ad_engine(double p_0, double burn_a, double nozzle_as,
-                             double t_0)
+Ad_engine::Ad_engine(double p_0, double burn_a, double nozzle_as, double t_0)
     : p_0_{p_0}, burn_a_{burn_a}, nozzle_as_{nozzle_as}, t_0_{t_0} {
   assert(p_0_ >= 0 && burn_a_ >= 0 && nozzle_as_ >= 0 && t_0_ >= 0);
 }
 
 bool Ad_engine::is_ad_eng() const { return true; }
 
-Vec const Ad_engine::eng_force(eng_par const& par,
-                                       bool is_orbiting) const {
+Vec const Ad_engine::eng_force(eng_par const& par, bool is_orbiting) const {
   if (!is_orbiting && !released_) {
     double const fac1{nozzle_as_ * p_0_};
     double const fac2{
@@ -317,13 +315,13 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
   double old_altitude{0.};
   double altitude;
   double angle;
-  pos = std::max(0.,(pos * 170'000) / orbital_h - 5e8/pos);
+  pos = std::max(0., (pos * 170'000) / orbital_h - 5e8 / pos);
   double old_ang;
   bool found{false};
   file.seekg(file_pos);
-    if (file.eof()) {
-        return 0.;
-    }
+  if (file.tellg() == std::ios::pos_type(file.seekg(0, std::ios::end))) {
+    return 0.;
+  }
   while (std::getline(file, line) && !found) {
     std::istringstream iss(line);
     iss >> altitude >> angle;
