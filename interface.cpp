@@ -6,7 +6,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
 namespace interface {
+
 void set_text_style(sf::Text &text, sf::Font &font) {
   text.setFont(font);
   text.setCharacterSize(24);
@@ -40,18 +42,18 @@ void create_ad_eng_med(ad_eng_data &eng_data) {
   std::cin >> eng_data.burn_a;
   std::cout << "give me the throat area (m^2) ≈ 2.2" << '\n';
   std::cin >> eng_data.nozzle_as;
-  std::cout << "give me the temperature of the engine 2'500 < x < 3'800"
+  std::cout << "give me the temperature inside the engine 2'500 < x < 3'800"
             << '\n';
   std::cin >> eng_data.t_0;
-  std::cout << "give me the pression (pa) ≈e6" << '\n';
+  std::cout << "give me the pressure inside the engine (Pa) ≈e6" << '\n';
   std::cin >> eng_data.p_0;
 }
 
 void create_ad_eng_minim(ad_eng_data &eng_data) {
   eng_data.type = 'f';
-  std::cout << "give me the pression (pa) ≈e6" << '\n';
+  std::cout << "give me the pressure inside the engine (Pa) ≈e6" << '\n';
   std::cin >> eng_data.p_0;
-  std::cout << "give me the temperature of the engine 2'500 < x < 3'800"
+  std::cout << "give me the temperature inside the engine 2'500 < x < 3'800"
             << '\n';
   std::cin >> eng_data.t_0;
 }
@@ -60,26 +62,25 @@ rocket_data create_complete_roc() {
   rocket_data rocket_data;
 
   std::cout << "give a name to your rocket"
-            << "\n";
+            << '\n';
   std::cin >> rocket_data.name;
   std::cout << "how many liquid stages do you want (usually 1 < x < 4)"
-            << "\n";
+            << '\n';
   std::cin >> rocket_data.stage_num;
   std::cout << "what's the upper area of your rocket (metres) ≈ 1000"
-            << "\n";
+            << '\n';
   std::cin >> rocket_data.up_ar;
-  std::cout << "what's the mass structure of your rocket (kg) ≈ 10'000"
-            << "\n";
+  std::cout << "what's the mass of the structure of your rocket (kg) ≈ 10'000"
+            << '\n';
   std::cin >> rocket_data.mass_structure;
-  std::cout << "what's the mass of the conteiner of your rocket (kg) ≈ 15'000"
-            << "\n";
+  std::cout << "what's the mass of each fuel container of your rocket (kg) ≈ 15'000"
+            << '\n';
   std::cin >> rocket_data.m_s_cont;
-  std::cout << "what's the propellant mass for each stage of your rocket "
-            << "(kg) ≈ 100'000"
-            << "\n";
+  std::cout << "what's the mass of the propellant for each stage of your rocket (kg) ≈ 100'000"
+            << '\n';
   std::cin >> rocket_data.s_p_m;
   std::cout << "how many engines does the solid stage have: < 3 "
-            << "\n";
+            << '\n';
   std::cin >> rocket_data.n_solid_eng;
   return rocket_data;
 }
@@ -88,16 +89,17 @@ rocket_data create_med_roc() {
   rocket_data rocket_data;
 
   std::cout << "give a name to your rocket"
-            << "\n";
+            << '\n';
   std::cin >> rocket_data.name;
   std::cout << "how many liquid stages do you want (usually 1 < x < 4)"
-            << "\n";
+            << '\n';
   std::cin >> rocket_data.stage_num;
-  std::cout << "what's the propellant mass for each stage of your rocket (kg) ≈ 100'000"
-            << "\n";
+  std::cout << "what's the mass of the propellant for each stage of your rocket (kg) "
+               "≈ 100'000"
+            << '\n';
   std::cin >> rocket_data.s_p_m;
   std::cout << "how many engines does the solid stage have: < 3 "
-            << "\n";
+            << '\n';
   std::cin >> rocket_data.n_solid_eng;
   return rocket_data;
 }
@@ -105,13 +107,13 @@ rocket_data create_med_roc() {
 rocket_data create_minim_roc() {
   interface::rocket_data rocket_data;
   std::cout << "give a name to your rocket"
-            << "\n";
+            << '\n';
   std::cin >> rocket_data.name;
   std::cout << "how many liquid stages do you want 1 < x < 4"
-            << "\n";
+            << '\n';
   std::cin >> rocket_data.stage_num;
-  std::cout << "how many engine does the solid stage have: < 3"
-            << "\n";
+  std::cout << "how many engines does the solid stage have: < 3"
+            << '\n';
   std::cin >> rocket_data.n_solid_eng;
   return rocket_data;
 }
@@ -122,7 +124,7 @@ void create_base_eng_all(base_eng_data &eng_data) {
   std::cin >> eng_data.isp;
   std::cout << "give me the coefficient of losing mass 1.5 < x < 4. " << '\n';
   std::cin >> eng_data.cm;
-  std::cout << "give me the pression of the engine (pa) ≈e6" << '\n';
+  std::cout << "give me the pressure inside the engine (Pa) ≈e6" << '\n';
   std::cin >> eng_data.p0;
   std::cout << "give me the burn area for the engine (m^2) ≈ 2e-4" << '\n';
   std::cin >> eng_data.burn_a;
@@ -134,7 +136,7 @@ void create_base_eng_med(base_eng_data &eng_data) {
   std::cin >> eng_data.isp;
   std::cout << "give me the coefficient of losing mass 1.5 < x < 4. " << '\n';
   std::cin >> eng_data.cm;
-  std::cout << "give me the pression of the engine (pa) ≈e6" << '\n';
+  std::cout << "give me the pressure inside the engine (Pa) ≈e6" << '\n';
   std::cin >> eng_data.p0;
 }
 
@@ -187,10 +189,10 @@ void run_countdown(sf::Text &countdown, std::vector<sf::Drawable *> &drawables,
 
 void select_ad_eng(ad_eng_data &data) {
   char ans;
-  std::cout << "how many parameter do you want to insert"
-            << "\n";
-  std::cout << "for advanced engine: many(m), some (s), few(f)"
-            << "\n";
+  std::cout << "how many parameters do you want to insert"
+            << '\n';
+  std::cout << "for this advanced engine: many(m), some (s), few(f)"
+            << '\n';
   std::cin >> ans;
   switch (ans) {
     case 'm':
@@ -207,19 +209,17 @@ void select_ad_eng(ad_eng_data &data) {
 
     default:
       std::cout << "invalid value for advanced engine"
-                << "\n";
+                << '\n';
       break;
   }
 }
 
-rocket_data create_minim_roc();
-
 void select_base_eng(base_eng_data &data) {
   char ans;
-  std::cout << "how many parameter do you want to insert"
-            << "\n";
-  std::cout << "for base engine: many(m), some (s), few(f)"
-            << "\n";
+  std::cout << "how many parameters do you want to insert"
+            << '\n';
+  std::cout << "for this base engine: many(m), some (s), few(f)"
+            << '\n';
   std::cin >> ans;
   switch (ans) {
     case 'm':
@@ -236,18 +236,18 @@ void select_base_eng(base_eng_data &data) {
 
     default:
       std::cout << "invalid value for base engine"
-                << "\n";
+                << '\n';
       break;
   }
 }
 
-void handle_exception(const std::string& err, sf::Font tnr) {
-  std::cerr << "known exception detected: " << err << std::endl;
+void handle_exception(const std::string &err, sf::Font tnr) {
+  std::cerr << "known exception detected: " << err << '\n';
 
   sf::RenderWindow error_window(sf::VideoMode(800, 600), "error SFML");
 
   if (!error_window.isOpen()) {
-    std::cerr << "error: Impossibile create the error windows" << std::endl;
+    std::cerr << "error: Impossibile create the error windows" << '\n';
     return;
   }
   sf::Text error_text(err, tnr, 30);

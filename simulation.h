@@ -35,4 +35,3 @@ struct cost {
 
 };     // namespace sim
 #endif // SIMULATION_H
-

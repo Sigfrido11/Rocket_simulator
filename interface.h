@@ -20,8 +20,6 @@ struct rocket_data {
   std::vector<double> l_c_m;
   int n_solid_eng{1};
   std::vector<int> n_liq_eng;
-  char type;
-  char eng_type;
   int stage_num{1};
 };
 
@@ -58,7 +56,7 @@ void create_ad_eng_all(ad_eng_data&);
 
 void create_ad_eng_med(ad_eng_data&);
 
-rocket_data create_ad_eng_minim(rocket_data&);
+void create_ad_eng_minim(rocket_data&);
 
 void create_base_eng_minim(base_eng_data&);
 
