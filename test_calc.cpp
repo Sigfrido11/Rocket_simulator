@@ -143,7 +143,7 @@ TEST_CASE("TESTING THE CALCS") {
     auto dur2 = clock.now() - start;
     CHECK(thetha == doctest::Approx(0.0448375));
     CHECK(dur1 < dur2);
-    thetha = rocket::improve_theta(file_name, 1.56, 3'500, 80'000, file_pos);
+    thetha = rocket::improve_theta(file_name, 1.56, 3'500, 8'000, file_pos);
     CHECK(thetha == doctest::Approx(0.178687));
   }
   SUBCASE("Total force") {

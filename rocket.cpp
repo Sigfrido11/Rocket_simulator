@@ -9,6 +9,12 @@
 
 #include "simulation.h"
 
+
+//
+// asse x [1]
+// asse y [0]
+//
+
 namespace rocket {
 class Rocket;
 using Vec = std::array<double, 2>;
@@ -71,7 +77,7 @@ Vec const Rocket::get_pos() const { return pos_; }
 void Rocket::move(double time, Vec const& force) {
   pos_[0] = pos_[0] + velocity_[0] * time +
             0.5 * (force[0] / total_mass_) * std::pow(time, 2);
-  pos_[1] = pos_[1] + velocity_[1] * time +
+  pos_[1] = pos_[1] + (velocity_[1]+sim::cost::earth_speed_) * time +
             0.5 * (force[1] / total_mass_) * std::pow(time, 2);
   if (pos_[0] <= 0 && pos_[1] <= 0) {
     throw std::runtime_error("not enough thrust");
@@ -86,10 +92,6 @@ void Rocket::change_vel(double time, Vec const& force) {
 void Rocket::set_state(std::string const& file_name, double orbital_h,
                        double time, bool is_orbiting,
                        std::streampos& file_pos) {
-  // if ((velocity_[0] < 0 || velocity_[1] < 0) && (is_orbiting == false)) {
-  //   std::cout << "sorry guy, no orbit avaible for your rocket";
-  //   assert(false);
-  // }
   double const old_theta{theta_};
   theta_ = improve_theta(file_name, theta_, pos_[0], orbital_h, file_pos);
   if ((pos_[0] > 20'000) && old_theta != 0) {
@@ -283,8 +285,8 @@ bool is_orbiting(double pos, double velocity) {
   return ((velocity + sim::cost::earth_speed_) > inf_speed) ? true : false;
 }
 
-inline double centripetal(double total_mass, double altitude, double y_vel) {
-  double const f_z{total_mass * std::pow(y_vel, 2) /
+inline double centripetal(double total_mass, double altitude, double x_vel) {
+  double const f_z{total_mass * std::pow(x_vel+sim::cost::earth_speed_, 2) /
                    (sim::cost::earth_radius_ + altitude)};
   return f_z;
 }
@@ -299,9 +301,9 @@ inline Vec const drag(double rho, double altitude, double theta,
   if (altitude <= 51'000) {
     double const speed2{std::pow(velocity[0], 2) + std::pow(velocity[1], 2)};
     double drag{0.37 * rho * upper_area * speed2};
-    int dir{1};
-    velocity[0] <= 0 ? dir = -1 : dir = 1;
-    return {drag * std::sin(theta) * dir, drag * std::cos(theta)};
+    int direction{1};
+    velocity[0] <= 0 ? direction = -1 : direction = 1;
+    return {drag * std::sin(theta) * direction, drag * std::cos(theta)};
   } else {
     return {0., 0.};
   }
@@ -319,9 +321,6 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
   double old_ang;
   bool found{false};
   file.seekg(file_pos);
-  if (file.tellg() == std::ios::pos_type(file.seekg(0, std::ios::end))) {
-    return 0.;
-  }
   while (std::getline(file, line) && !found) {
     std::istringstream iss(line);
     iss >> altitude >> angle;
@@ -340,6 +339,9 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
       old_ang = angle;
       file_pos = file.tellg();
     }
+  }
+  if (file.eof() == file_pos) {
+    return 0.;
   }
   return 0.;
 }
