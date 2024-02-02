@@ -178,7 +178,7 @@ double improve_theta(std::string const& name_f, double theta, double pos,
 
 bool is_orbiting(double pos, double velocity);
 
-double centripetal(double total_mass, double altitude, double y_vel);
+double centripetal(double total_mass, double altitude, double x_vel);
 
 double g_force(double altitude, double mass);
 

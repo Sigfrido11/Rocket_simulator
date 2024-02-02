@@ -108,7 +108,12 @@ void Rocket::set_state(std::string const& file_name, double orbital_h,
 
 int Rocket::get_rem_stage() const { return current_stage_; };
 
-double Rocket::get_fuel_left() const { return (m_liq_prop_[0] + m_sol_prop_); }
+double Rocket::get_fuel_left() const { 
+  if(current_stage_==0){
+    return 0;
+  } else{
+  return (m_liq_prop_[0] + m_sol_prop_); 
+  }}
 
 void Rocket::stage_release(double delta_ms, double delta_ml) {
   if (m_liq_prop_[0] < 0) {
@@ -125,10 +130,12 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       current_stage_ -= 1;
       total_mass_ -= m_liq_cont_[0] - m_liq_prop_[0];
       m_liq_cont_.erase(m_liq_cont_.begin());
+      m_liq_prop_[0]=0;
       m_liq_prop_.erase(m_liq_prop_.begin());
       n_liq_eng_.erase(n_liq_eng_.begin());
       if (current_stage_ == 0) {
         eng_->release();
+
       }
     }
   } else {
