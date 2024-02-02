@@ -52,27 +52,27 @@ rocket_data create_med_roc();
 
 rocket_data create_minim_roc();
 
-void create_ad_eng_all(ad_eng_data&);
+void create_ad_eng_all(ad_eng_data& eng_data);
 
-void create_ad_eng_med(ad_eng_data&);
+void create_ad_eng_med(ad_eng_data& eng_data);
 
-void create_ad_eng_minim(rocket_data&);
+void create_ad_eng_minim(rocket_data& eng_data);
 
-void create_base_eng_minim(base_eng_data&);
+void create_base_eng_minim(base_eng_data& eng_data);
 
-void create_base_eng_all(base_eng_data&);
+void create_base_eng_all(base_eng_data& eng_data);
 
-void create_base_eng_med(base_eng_data&);
+void create_base_eng_med(base_eng_data& eng_data);
 
-void select_ad_eng(ad_eng_data&);
+void select_ad_eng(ad_eng_data& eng_data);
 
-void select_base_eng(base_eng_data&);
+void select_base_eng(base_eng_data& eng_data);
 
-void run_countdown(sf::Text&, std::vector<sf::Drawable*>&,
-                   std::vector<sf::Vertex*>&,
-                   sf::RenderWindow&);
+void run_countdown(sf::Text& countdown, std::vector<sf::Drawable *> const &drawables,
+                   std::vector<sf::Vertex *> const& vertices,
+                   sf::RenderWindow& window);
 
-void handle_exception(const std::string& err, sf::Font tnr);
+void handle_exception(const std::string& err, sf::Font const& tnr);
 
 }  // namespace interface
 #endif

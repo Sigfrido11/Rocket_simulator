@@ -1,8 +1,8 @@
-#include <stdio.h>
-
 #include <fstream>
 #include <iostream>
 
+
+#include <stdio.h>
 #include "interface.h"
 #include "rocket.h"
 #include "simulation.h"
@@ -21,7 +21,7 @@ int main() {
   std::vector<double> l_c_m;
   std::vector<int> n_liq_eng;
   char ans_eng;
-
+  try {
   {  // aggiungo uno scope in modo da cancellare poi tutte le
     // variabili che non servono
 
@@ -55,7 +55,7 @@ int main() {
 
       default:
         throw std::runtime_error(
-            "invalid value inserted for rocket, please restart ");
+            "invalid value inserted, please restart ");
         break;
     }
     if (ans_eng == 'a') {
@@ -70,12 +70,12 @@ int main() {
               << "\n";
     std::cin >> ans_rocket;
     switch (ans_rocket) {
-      int ans;
       case 'm':
         rocket_data = interface::create_complete_roc();
         l_p_m.resize(rocket_data.stage_num);
         l_c_m.resize(rocket_data.stage_num);
         n_liq_eng.resize(rocket_data.stage_num);
+        int ans;
         std::cout
             << "how many engines does each liquid stage have: < 3"
             << "\n";
@@ -83,7 +83,6 @@ int main() {
         std::fill_n(l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);
         std::fill_n(l_c_m.begin(), rocket_data.stage_num, rocket_data.m_s_cont);
         std::fill_n(n_liq_eng.begin(), rocket_data.stage_num, ans);
-        std::cout << l_p_m.size();
 
         break;
       case 's':
@@ -120,17 +119,20 @@ int main() {
         break;
     }
   }
+
   using Vec = std::array<double, 2>;
   std::string file_name = "theta_data.txt";
   std::ofstream output_rocket("output_rocket.txt");
   std::streampos start_pos;
-  std::cout << "rocket output is ok" << '\n';
   std::ofstream output_air("output_air.txt");
-  std::cout << "also air output is ok" << '\n';
-  output_rocket << "posizione z-y   velocità z-y    forza z-x" << '\n';
+  output_rocket << "posizione y-x   velocità y-x    forza y-x" << '\n';
   output_air << "temp    pres    rho" << '\n';
   if (!output_rocket.is_open() or !output_air.is_open()) {
     throw std::runtime_error("impossible to open file");
+  }
+  else{
+  std::cout << "rocket output is ok" << '\n';
+  std::cout << "also air output is ok" << '\n';
   }
   rocket::Rocket rocket{rocket_data.name,
                         rocket_data.mass_structure,
@@ -298,7 +300,6 @@ int main() {
 
   double delta_time{1};
   // game loop inizia
-  try {
     while (window.isOpen()) {
       sf::Event event;
 
@@ -428,10 +429,14 @@ int main() {
       out_time += delta_time;
     }
   } catch (const std::exception &e) {
-    interface::handle_exception(e.what(), tnr);
+    sf::Font font;
+    font.loadFromFile("times_new_roman.ttf");
+    interface::handle_exception(e.what(), font);
 
   } catch (...) {
+    sf::Font font;
+    font.loadFromFile("times_new_roman.ttf");
     std::cerr << "unknown exception detected:" << std::endl;
-    interface::handle_exception("unknown exception", tnr);
+    interface::handle_exception("unknown exception", font);
   }
 }
