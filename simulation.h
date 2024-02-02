@@ -6,15 +6,20 @@
 #include <vector>
 
 namespace sim {
-using Vec = std::array<double, 2>;
 
-struct Air_var {
+class Air_var {
   double p_{101'325};  // pression
   double t_{293.0};   // temperature
   double rho_{1.225}; // density
+  public:
+  
+  double get_p();
 
-  void set_state(double);
+  double get_rho();
 
+  double get_t();
+
+  void set_state(double altitude);
 };
 
 struct cost {
@@ -30,4 +35,3 @@ struct cost {
 
 };     // namespace sim
 #endif // SIMULATION_H
-

@@ -1,5 +1,3 @@
-#include "rocket.h"
-
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -8,11 +6,11 @@
 #include <string>
 
 #include "simulation.h"
-
+#include "rocket.h"
 
 //
-// asse x [1]
-// asse y [0]
+// asse x componente [1]
+// asse y componente [0]
 //
 
 namespace rocket {
@@ -48,7 +46,7 @@ Rocket::Rocket(std::string const& name, double mass_structure, double Up_Ar,
                 [](double value) mutable { assert(value > 0.); });
   std::for_each(m_liq_prop_.begin(), m_liq_prop_.end(),
                 [](double value) mutable { assert(value > 0.); });
-  eng_ = std::move(eng);
+                eng_=eng;
 }
 
 // funzioni Rocket
@@ -59,6 +57,7 @@ double Rocket::get_mass() const { return total_mass_; }
 
 void Rocket::mass_lost(double solid_lost, double liq_lost) {
   assert(liq_lost >= 0 && solid_lost >= 0);
+  //sottrazione carburante perso
   total_mass_ -= (liq_lost + solid_lost);
   m_liq_prop_[0] -= liq_lost;
   m_sol_prop_ -= solid_lost;
@@ -75,10 +74,12 @@ Vec const Rocket::get_velocity() const { return velocity_; }
 Vec const Rocket::get_pos() const { return pos_; }
 
 void Rocket::move(double time, Vec const& force) {
+  //equazioni moto uniformemente acelerato
   pos_[0] = pos_[0] + velocity_[0] * time +
             0.5 * (force[0] / total_mass_) * std::pow(time, 2);
   pos_[1] = pos_[1] + (velocity_[1]+sim::cost::earth_speed_) * time +
             0.5 * (force[1] / total_mass_) * std::pow(time, 2);
+  
   if (pos_[0] <= 0 && pos_[1] <= 0) {
     throw std::runtime_error("not enough thrust");
   }
@@ -92,6 +93,9 @@ void Rocket::change_vel(double time, Vec const& force) {
 void Rocket::set_state(std::string const& file_name, double orbital_h,
                        double time, bool is_orbiting,
                        std::streampos& file_pos) {
+  // cambia l'angolo, ridistribuisce la velocità in modo che sia
+  // tangente alla traiettoria, rimuove il carburante consumato 
+  // precedentemente e valuta la rimozione degli stadi
   double const old_theta{theta_};
   theta_ = improve_theta(file_name, theta_, pos_[0], orbital_h, file_pos);
   if ((pos_[0] > 20'000) && old_theta != 0) {
@@ -121,21 +125,21 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
     throw std::runtime_error(
         "error in the input distribution of the propellant");
   }
-  if (m_sol_cont_ == 0) {
+  if (m_sol_cont_ == 0) { //caso con stadio solido espulso
     int const len{static_cast<int>(m_liq_prop_.size())};
     assert(current_stage_ < len + 1 && current_stage_ >= 0);
-    if (m_liq_prop_[0] <= delta_ml) {
+    if (m_liq_prop_[0] <= delta_ml) { //se prevedo di bruciare più carburante di quello che rimane
       std::cout << "stage released"
                 << "\n";
-      current_stage_ -= 1;
-      total_mass_ -= m_liq_cont_[0] - m_liq_prop_[0];
-      m_liq_cont_.erase(m_liq_cont_.begin());
       m_liq_prop_[0]=0;
+      current_stage_ -= 1;
+      total_mass_ -= (m_liq_cont_[0] + m_liq_prop_[0]);
+      m_liq_cont_.erase(m_liq_cont_.begin());
       m_liq_prop_.erase(m_liq_prop_.begin());
       n_liq_eng_.erase(n_liq_eng_.begin());
       if (current_stage_ == 0) {
-        eng_->release();
-
+        eng_->release(); //se ho consumato tutto il carburante 
+                        // all'ultimo stadio stacco i motori
       }
     }
   } else {
@@ -145,7 +149,7 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
     assert(len + 1 == total_stage_);
     if (m_sol_prop_ <= delta_ms) {
       current_stage_ -= 1;
-      total_mass_ -= m_sol_cont_ - m_sol_prop_;
+      total_mass_ -= (m_sol_cont_ + m_sol_prop_);
       m_sol_cont_ = 0;
       m_sol_prop_ = 0;
       n_sol_eng_ = 0;
@@ -199,7 +203,8 @@ Vec const Base_engine::eng_force(eng_par const& par, bool is_orbiting) const {
   double const delta_m = Base_engine::delta_m(par.time, is_orbiting);
   if (!is_orbiting && !released_) {
     double const force{isp_ * delta_m * sim::cost::G_ * sim::cost::earth_mass_ /
-                       std::pow((sim::cost::earth_radius_ + par.pos), 2)};
+                       std::pow((sim::cost::earth_radius_ + par.pos), 2)}; 
+                       //isp * delta_m * g
     return {force * std::sin(par.theta), force * std::cos(par.theta)};
   } else {
     return {0., 0.};
@@ -212,6 +217,7 @@ void Base_engine::release() { released_ = true; }
 bool Base_engine::is_released() const { return released_; }
 
 double Base_engine::get_pression() const { return p_0_; }
+
 // Ad_engine
 
 // costruttori Ad_Engine
@@ -231,10 +237,11 @@ Ad_engine::Ad_engine(double burn_a, double nozzle_as, double t_0,
          grain_dim_ >= 0 && grain_rho_ >= 0 && burn_rate_a_ >= 0 &&
          burn_rate_n_ >= 0 && prop_mm_ >= 0);
 
-  double fac1 = burn_rate_a_ * grain_rho_ * grain_dim_ / nozzle_as_;
-  double exponent = sim::cost::gamma_ + 1 / (sim::cost::gamma_ - 1);
-  double fac2 = std::pow(2 / sim::cost::gamma_ + 1, exponent);
-  double fac3 = std::sqrt((sim::cost::gamma_ * fac2) / sim::cost::R_ * t_0_);
+  double const fac1 {burn_rate_a_ * grain_rho_ * grain_dim_ / nozzle_as_};
+  double const exponent {sim::cost::gamma_ + 1 / (sim::cost::gamma_ - 1)};
+  double const fac2 = {std::pow(2 / sim::cost::gamma_ + 1, exponent)};
+  double const fac3 {std::sqrt((sim::cost::gamma_ * fac2) / sim::cost::R_ * t_0_)};
+  //equazioni trovate online
   p_0_ = std::pow(fac1 * 2.2173e5 / fac3, 1 / (1 - burn_rate_n_));
 }
 Ad_engine::Ad_engine(double p_0, double burn_a, double nozzle_as, double t_0)
@@ -287,27 +294,34 @@ bool Ad_engine::is_released() const { return released_; }
 
 bool is_orbiting(double pos, double velocity) {
   assert(pos >= 0 && velocity >= 0);
+  //dice se il razzo sta orbitando o meno
   double const inf_speed{std::sqrt(sim::cost::G_ * sim::cost::earth_mass_ /
                                    (pos + sim::cost::earth_radius_))};
+                                   //energia cinetica + spinta rotazione terrrestre
   return ((velocity + sim::cost::earth_speed_) > inf_speed) ? true : false;
 }
 
 inline double centripetal(double total_mass, double altitude, double x_vel) {
+  //f=m v^2/r
   double const f_z{total_mass * std::pow(x_vel+sim::cost::earth_speed_, 2) /
                    (sim::cost::earth_radius_ + altitude)};
   return f_z;
 }
 
 inline double g_force(double altitude, double mass) {
+  //legge di newton
   double const force{sim::cost::earth_mass_ * sim::cost::G_ * mass /
                      (std::pow(sim::cost::earth_radius_ + altitude, 2))};
   return force;
 }
+
 inline Vec const drag(double rho, double altitude, double theta,
                       double upper_area, Vec const& velocity) {
-  if (altitude <= 51'000) {
-    double const speed2{std::pow(velocity[0], 2) + std::pow(velocity[1], 2)};
-    double drag{0.37 * rho * upper_area * speed2};
+  if (altitude <= 51'000) { //sopra atmosfera troppo rada
+    double const speed2{std::pow(velocity[0], 2) + std::pow(velocity[1], 2)}; 
+    //modulo quadro della velocità
+    double const drag{0.37 * rho * upper_area * speed2};
+    //presto attenzione alla direzione della velocità
     int direction{1};
     velocity[0] <= 0 ? direction = -1 : direction = 1;
     return {drag * std::sin(theta) * direction, drag * std::cos(theta)};
@@ -325,26 +339,28 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
   double altitude;
   double angle;
   pos = std::max(0., (pos * 170'000) / orbital_h - 1e7 / pos);
+  //rallento un po' la velocità a cui cambia l'angolo
   double old_ang;
   bool found{false};
   file.seekg(file_pos);
   while (std::getline(file, line) && !found) {
-    std::istringstream iss(line);
-    iss >> altitude >> angle;
-    if (altitude >= pos) {
+    std::istringstream iss(line); // estrae i valori 
+    iss >> altitude >> angle; //li attribuisce alle variabili
+    if (altitude >= pos) { //altitude=letta da file
       found = true;
-      double const delta1{altitude - pos};
-      double const delta2{old_altitude - pos};
-      if (std::abs(delta1) <= std::abs(delta2)) {
+      double const delta1{std::abs(altitude - pos)};
+      double const delta2{std::abs(old_altitude - pos)}; 
+      //calcolo se ero più vicino prima al valore o adesso
+      if (delta1 <= delta2) {
         return angle > theta ? theta : angle;
       } else {
         return old_ang > theta ? theta : old_ang;
       }
     }
     if (!found) {
-      old_altitude = altitude;
+      old_altitude = altitude; //old_atitude quella del ciclo prima
       old_ang = angle;
-      file_pos = file.tellg();
+      file_pos = file.tellg(); //sposto il segnalibro
     }
   }
   return 0.;
@@ -355,12 +371,12 @@ Vec const total_force(double rho, double theta, double total_mass, double pos,
   double const centrip{centripetal(total_mass, pos, velocity[1])};
   double const gra{g_force(pos, total_mass)};
   Vec const drag_f{drag(rho, pos, theta, upper_area, velocity)};
-  double const z{eng[0] + centrip - gra - drag_f[0]};
-  double const y{eng[1] - drag_f[1]};
-  if (y <= 0) {
-    return {z, 0};
+  double const y_force{eng[0] + centrip - gra - drag_f[0]};
+  double const x_force{eng[1] - drag_f[1]};
+  if (x_force <= 0) {
+    return {y_force, 0};
   } else {
-    return {z, y};
+    return {y_force, x_force};
   }
 }
 };  // namespace rocket

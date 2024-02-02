@@ -319,7 +319,7 @@ int main() {
       eng_force = rocket.thrust(delta_time, orbiting);
 
       Vec const force{rocket::total_force(
-          air.rho_, rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
+          air.get_rho(), rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
           rocket.get_up_ar(), rocket.get_velocity(), eng_force)};
 
       double const rocket_radius{rocket.get_pos()[0] +
@@ -349,7 +349,7 @@ int main() {
                     << rocket.get_velocity()[0] << "  "
                     << rocket.get_velocity()[1] << "  " << force[0] << "  "
                     << force[1] << '\n';
-      output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
+      output_air << air.get_t() << " " << air.get_p() << " " << air.get_rho() << '\n';
 
       // grafica
 
