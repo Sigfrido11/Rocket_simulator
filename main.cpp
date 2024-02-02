@@ -7,6 +7,11 @@
 #include "rocket.h"
 #include "simulation.h"
 
+//
+// asse x componente [1]
+// asse y componente [0]
+//
+
 int main() {
   rocket::Ad_engine ad_eng;
   rocket::Base_engine base_eng;
@@ -24,12 +29,11 @@ int main() {
     interface::base_eng_data base_eng_data;
     std::cout << "let's build the engine for your rocket"
               << "\n"
-              << "do you prefer an advance (a) rocket or base rocket (b)"
+              << "do you prefer an advance engine (a) or a base engine (b)"
               << "\n";
     std::cin >> ans_eng;
     switch (ans_eng) {
       case 'a':
-        rocket_data.eng_type = 'a';
         interface::select_ad_eng(ad_eng_data);
         if (ad_eng_data.type == 'm') {
           ad_eng =
@@ -43,7 +47,6 @@ int main() {
         }
         break;
       case 'b':
-        rocket_data.eng_type = 'a';
         interface::select_base_eng(base_eng_data);
 
         base_eng = rocket::Base_engine{base_eng_data.isp, base_eng_data.cm,
@@ -52,7 +55,7 @@ int main() {
 
       default:
         throw std::runtime_error(
-            "invalid value insert for rocket please restart ");
+            "invalid value inserted for rocket, please restart ");
         break;
     }
     if (ans_eng == 'a') {
@@ -61,7 +64,7 @@ int main() {
       eng = &base_eng;
     }
     char ans_rocket;
-    std::cout << "how many details do you want to insert for create your"
+    std::cout << "how many details do you want to insert to create your"
               << "\n"
               << "rocket (many (m), some (s), few (f))?"
               << "\n";
@@ -74,7 +77,7 @@ int main() {
         l_c_m.resize(rocket_data.stage_num);
         n_liq_eng.resize(rocket_data.stage_num);
         std::cout
-            << "how many engine has the liquid propellant for each stage: < 3"
+            << "how many engines does each liquid stage have: < 3"
             << "\n";
         std::cin >> ans;
         std::fill_n(l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);
@@ -89,7 +92,7 @@ int main() {
         l_c_m.resize(rocket_data.stage_num);
         n_liq_eng.resize(rocket_data.stage_num);
         std::cout
-            << "how many engine has the liquid propellant for each stage: < 3"
+            << "how many engines does each liquid stage have: < 3"
             << "\n";
         std::cin >> ans;
         std::fill_n(l_p_m.begin(), rocket_data.stage_num, rocket_data.s_p_m);
@@ -103,7 +106,7 @@ int main() {
         l_c_m.resize(rocket_data.stage_num);
         n_liq_eng.resize(rocket_data.stage_num);
         std::cout
-            << "how many engine has the liquid propellant for each stage: < 3"
+            << "how many engines does each liquid stage have: < 3"
             << "\n";
         std::cin >> ans;
         std::fill_n(l_p_m.begin(), rocket_data.stage_num, 400'000);
@@ -113,7 +116,7 @@ int main() {
 
       default:
         throw std::runtime_error(
-            "invalid value insert for rocket please restart ");
+            "invalid value inserted for rocket, please restart ");
         break;
     }
   }
@@ -316,15 +319,15 @@ int main() {
       eng_force = rocket.thrust(delta_time, orbiting);
 
       Vec const force{rocket::total_force(
-          air.rho_, rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
+          air.get_rho(), rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
           rocket.get_up_ar(), rocket.get_velocity(), eng_force)};
 
-      double const rocket_radiud{rocket.get_pos()[0] +
+      double const rocket_radius{rocket.get_pos()[0] +
                                  sim::cost::earth_radius_};
       double const angle_var{
           ((rocket.get_velocity()[1] + sim::cost::earth_speed_) * delta_time +
            0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) /
-          rocket_radiud};
+          rocket_radius};
       angle_total += angle_var;
 
       rocket.move(delta_time, force);
@@ -346,7 +349,7 @@ int main() {
                     << rocket.get_velocity()[0] << "  "
                     << rocket.get_velocity()[1] << "  " << force[0] << "  "
                     << force[1] << '\n';
-      output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
+      output_air << air.get_t() << " " << air.get_p() << " " << air.get_rho() << '\n';
 
       // grafica
 
@@ -387,18 +390,18 @@ int main() {
                           height / 4.f - 100.f);
         rocket2.setPosition(
             (width - 500.f) / 4 + 500.f -
-                100.f * rocket_radiud / sim::cost::earth_radius_ *
+                100.f * rocket_radius / sim::cost::earth_radius_ *
                     std::sin(angle_total),
-            height / 4.f - 100.f * rocket_radiud / sim::cost::earth_radius_ *
+            height / 4.f - 100.f * rocket_radius / sim::cost::earth_radius_ *
                                std::cos(angle_total));
       } else {
         earth.setScale(2.f / 1195.f, 2.f / 1193.f);
         earth.setPosition((width - 500.f) / 4 + 500.f - 1.f,
                           height / 4.f - 1.f);
         rocket2.setPosition((width - 500.f) / 4 + 500.f -
-                                1.f * rocket_radiud / sim::cost::earth_radius_ *
+                                1.f * rocket_radius / sim::cost::earth_radius_ *
                                     std::sin(rocket.get_theta()),
-                            height / 4.f - 1.f * rocket_radiud /
+                            height / 4.f - 1.f * rocket_radius /
                                                sim::cost::earth_radius_ *
                                                std::cos(angle_total));
       }
