@@ -107,7 +107,7 @@ void Rocket::set_state(std::string const& file_name, double orbital_h,
   double const ms{eng_->delta_m(time, is_orbiting) * n_sol_eng_};
   double const ml{eng_->delta_m(time, is_orbiting) * n_liq_eng_[0]};
   mass_lost(ms, ml);
-  if(current_stage_==0){
+  if(current_stage_!=0){
   stage_release(ms, ml);
   }
 }

@@ -436,7 +436,6 @@ int main() {
   } catch (...) {
     sf::Font font;
     font.loadFromFile("times_new_roman.ttf");
-    std::cerr << "unknown exception detected:" << std::endl;
     interface::handle_exception("unknown exception", font);
   }
 }
