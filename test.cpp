@@ -107,7 +107,7 @@ int main() {
             << "how many engine has the liquid propellant for each stage: < 3"
             << "\n";
         std::cin >> ans;
-        std::fill_n(l_p_m.begin(), rocket_data.stage_num, 100'000);
+        std::fill_n(l_p_m.begin(), rocket_data.stage_num, 400'000);
         std::fill_n(l_c_m.begin(), rocket_data.stage_num, 15'000);
         std::fill_n(n_liq_eng.begin(), rocket_data.stage_num, ans);
         break;
@@ -323,7 +323,7 @@ int main() {
       double const rocket_radius{rocket.get_pos()[0] +
                                  sim::cost::earth_radius_};
       double const angle_var{
-          (rocket.get_velocity()[1] * delta_time +
+          ((rocket.get_velocity()[1] + sim::cost::earth_speed_) * delta_time +
            0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) /
           rocket_radius};
       angle_total += angle_var;
@@ -332,12 +332,13 @@ int main() {
 
       rocket.change_vel(delta_time, force);
 
-      if (rocket.get_velocity()[0] >= 0. && rocket.get_velocity()[1] >= 0.) {
+      if ((rocket.get_velocity()[0] < 0. && eng_force != Vec({0, 0})) ||
+          rocket.get_velocity()[1] < 0.) {
         std::cout << "error in velocity";
         throw std::runtime_error("error in velocity");
       }
 
-      if (rocket.get_pos()[0] >= 0. && rocket.get_pos()[1] >= 0.) {
+      if (rocket.get_pos()[0] <= 0. || rocket.get_pos()[1] < 0.) {
         std::cout << "error in position";
         throw std::runtime_error("error in position");
       };
@@ -368,8 +369,10 @@ int main() {
 
       speed.setString(
           "Speed: " +
-          std::to_string(sqrt(std::pow(rocket.get_velocity()[0], 2) +
-                              std::pow(rocket.get_velocity()[1], 2))) +
+          std::to_string(
+              sqrt(std::pow(rocket.get_velocity()[0], 2) +
+                   std::pow(rocket.get_velocity()[1] + sim::cost::earth_speed_,
+                            2))) +
           " m/s");
 
       fuel_left.setString("Fuel left: " +
@@ -404,7 +407,7 @@ int main() {
                                                std::cos(angle_total));
       }
 
-      rocket3.setPosition(angle_total / 2 / M_PI * 700.f, 0.f);
+      rocket3.setPosition(angle_total / 2 / M_PI * 700.f, height / 4 * 3);
       sf::Vector2f const pos3{rocket3.getPosition()};
       if (pos3.x > width) {
         rocket3.setPosition(pos3.x - floor((pos3.x - 500.f) / (width - 500.f)) *

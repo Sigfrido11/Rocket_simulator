@@ -65,9 +65,6 @@ rocket_data create_complete_roc() {
   std::cout << "how many stages do you want usually 1 < x < 4"
             << "\n";
   std::cin >> rocket_data.stage_num;
-  std::cout << "what's the lateral area of your rocket (metres) ≈ 9300"
-            << "\n";
-  std::cin >> rocket_data.lat_ar;
   std::cout << "what's the upper area of your rocket (metres) ≈ 1000"
             << "\n";
   std::cin >> rocket_data.up_ar;
