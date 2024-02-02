@@ -134,15 +134,16 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       //se prevedo di bruciare più carburante di quello che rimane
       std::cout << "stage released"
                 << "\n";
-      m_liq_prop_[0]=0;
       current_stage_ -= 1;
       total_mass_ -= (m_liq_cont_[0] + m_liq_prop_[0]);
       m_liq_cont_.erase(m_liq_cont_.begin());
       m_liq_prop_.erase(m_liq_prop_.begin());
       n_liq_eng_.erase(n_liq_eng_.begin());
-      if (current_stage_ != 0) {
+      if (current_stage_ == 0) {
         eng_->release(); //se ho consumato tutto il carburante 
                         // all'ultimo stadio stacco i motori
+      m_liq_prop_.resize(1);
+      m_liq_prop_[0];
       }
     }
   } else {
