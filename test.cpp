@@ -349,7 +349,7 @@ int main() {
                     << force[1] << '\n';
       output_air << air.t_ << " " << air.p_ << " " << air.rho_ << '\n';
 
-      // grafica 
+      // grafica
 
       int const out_time_min{out_time / 60};
       int const out_time_sec{out_time - out_time_min * 60};
@@ -361,11 +361,8 @@ int main() {
 
       angle.setString("Angle: " + std::to_string(rocket.get_theta()) + " rad");
 
-      stage.setString(
-          "Stage: " +
-          std::to_string((rocket_data.stage_num + 1 - rocket.get_rem_stage()) %
-                         (rocket_data.stage_num + 1)) +
-          "/" + std::to_string(rocket_data.stage_num));
+      stage.setString("Stage: " + std::to_string(rocket.get_rem_stage()) + "/" +
+                      std::to_string(rocket_data.stage_num + 1));
 
       speed.setString(
           "Speed: " +
@@ -407,7 +404,8 @@ int main() {
                                                std::cos(angle_total));
       }
 
-      rocket3.setPosition(angle_total / 2/ M_PI * 700.f +750.f, height / 4 * 3);
+      rocket3.setPosition(angle_total / 2 / M_PI * 700.f + 750.f,
+                          height / 4 * 3);
       sf::Vector2f const pos3{rocket3.getPosition()};
       if (pos3.x > width) {
         rocket3.setPosition(pos3.x - floor((pos3.x - 500.f) / (width - 500.f)) *

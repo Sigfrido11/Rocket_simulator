@@ -62,7 +62,7 @@ rocket_data create_complete_roc() {
   std::cout << "give a name to your rocket"
             << "\n";
   std::cin >> rocket_data.name;
-  std::cout << "how many stages do you want usually 1 < x < 4"
+  std::cout << "how many liquid stages do you want (usually 1 < x < 4)"
             << "\n";
   std::cin >> rocket_data.stage_num;
   std::cout << "what's the upper area of your rocket (metres) ≈ 1000"
@@ -74,11 +74,11 @@ rocket_data create_complete_roc() {
   std::cout << "what's the mass of the conteiner of your rocket (kg) ≈ 15'000"
             << "\n";
   std::cin >> rocket_data.m_s_cont;
-  std::cout << "what's the propellant mass for each stadium of your rocket "
+  std::cout << "what's the propellant mass for each stage of your rocket "
             << "(kg) ≈ 100'000"
             << "\n";
   std::cin >> rocket_data.s_p_m;
-  std::cout << "how many engine has the solid stage: < 3 "
+  std::cout << "how many engines does the solid stage have: < 3 "
             << "\n";
   std::cin >> rocket_data.n_solid_eng;
   return rocket_data;
@@ -90,13 +90,13 @@ rocket_data create_med_roc() {
   std::cout << "give a name to your rocket"
             << "\n";
   std::cin >> rocket_data.name;
-  std::cout << "how many stages do you want usually 1 < x < 4"
+  std::cout << "how many liquid stages do you want (usually 1 < x < 4)"
             << "\n";
   std::cin >> rocket_data.stage_num;
-  std::cout << "what's the mass of the propellant of your rocket (kg) ≈ 100'000"
+  std::cout << "what's the propellant mass for each stage of your rocket (kg) ≈ 100'000"
             << "\n";
-  std::cin >> rocket_data.stage_num;
-  std::cout << "how many engine has the solid propellant: < 3 "
+  std::cin >> rocket_data.s_p_m;
+  std::cout << "how many engines does the solid stage have: < 3 "
             << "\n";
   std::cin >> rocket_data.n_solid_eng;
   return rocket_data;
@@ -107,10 +107,10 @@ rocket_data create_minim_roc() {
   std::cout << "give a name to your rocket"
             << "\n";
   std::cin >> rocket_data.name;
-  std::cout << "how many stages do you want 1 < x < 4"
+  std::cout << "how many liquid stages do you want 1 < x < 4"
             << "\n";
   std::cin >> rocket_data.stage_num;
-  std::cout << "how many engine has the solid propellant: < 3"
+  std::cout << "how many engine does the solid stage have: < 3"
             << "\n";
   std::cin >> rocket_data.n_solid_eng;
   return rocket_data;
