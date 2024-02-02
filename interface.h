@@ -14,7 +14,7 @@ struct rocket_data {
   std::string name{"my rocket"};
   double mass_structure {15'000};
   double up_ar{1000.};
-  double s_p_m{400'000};
+  double s_p_m{100'000};
   double m_s_cont{15'000};
   std::vector<double> l_p_m;
   std::vector<double> l_c_m;
