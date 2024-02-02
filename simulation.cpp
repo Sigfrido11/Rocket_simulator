@@ -3,9 +3,13 @@
 #include <cmath>
 #include <assert.h>
 
-namespace sim
-{ // sono stato costretto a fare così perchè entravano in
-  // conflitto le definizioni
+namespace sim { 
+  double Air_var::get_p(){return p_;};
+
+  double Air_var::get_rho(){return rho_;};
+
+  double Air_var::get_t(){return t_;};
+
 
   void Air_var::set_state(double altitude)
   {
