@@ -77,25 +77,25 @@ TEST_CASE("TESTING THE CALCS") {
   SUBCASE("simulation") {
     sim::Air_var air;
     air.set_state(3'000);
-    CHECK(air.p_ == doctest::Approx(99525.3 ));
-    CHECK(air.rho_ == doctest::Approx(1.29051 ));
-    CHECK(air.t_ == doctest::Approx(268.659));
+    CHECK(air.get_p() == doctest::Approx(99525.3 ));
+    CHECK(air.get_rho() == doctest::Approx(1.29051 ));
+    CHECK(air.get_t() == doctest::Approx(268.659));
     air.set_state(18'000);
-    CHECK(air.p_ == doctest::Approx(7'564.4));
-    CHECK(air.rho_ == doctest::Approx(0.121632));
-    CHECK(air.t_ == doctest::Approx(216.65));
+    CHECK(air.get_p() == doctest::Approx(7'564.4));
+    CHECK(air.get_rho() == doctest::Approx(0.121632));
+    CHECK(air.get_t() == doctest::Approx(216.65));
     air.set_state(25'000);
-    CHECK(air.p_ == doctest::Approx(7564.4));
-    CHECK(air.rho_ == doctest::Approx(0.121632));
-    CHECK(air.t_ == doctest::Approx(216.65));
+    CHECK(air.get_p() == doctest::Approx(7564.4));
+    CHECK(air.get_rho() == doctest::Approx(0.121632));
+    CHECK(air.get_t() == doctest::Approx(216.65));
     air.set_state(35'000);
-    CHECK(air.p_ == doctest::Approx(7564.4 ));
-    CHECK(air.rho_ == doctest::Approx(0.121632));
-    CHECK(air.t_ == doctest::Approx(216.65));
+    CHECK(air.get_p() == doctest::Approx(7564.4 ));
+    CHECK(air.get_rho() == doctest::Approx(0.121632));
+    CHECK(air.get_t() == doctest::Approx(216.65));
     air.set_state(48'000);
-    CHECK(air.p_ == doctest::Approx(7564.4));
-    CHECK(air.rho_ == doctest::Approx(0.121632));
-    CHECK(air.t_ == doctest::Approx(216.65));
+    CHECK(air.get_p() == doctest::Approx(7564.4));
+    CHECK(air.get_rho() == doctest::Approx(0.121632));
+    CHECK(air.get_t() == doctest::Approx(216.65));
   }
   SUBCASE("testing is_orbiting") {
     bool is_orbiting = rocket::is_orbiting(50, 1'000);
