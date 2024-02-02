@@ -1,7 +1,5 @@
 #ifndef ROCKET_H
 #define ROCKET_H
-#include "assert.h"
-#include "simulation.h"
 
 #include <algorithm>
 #include <cmath>
@@ -11,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include "assert.h"
+#include "simulation.h"
 
 namespace rocket {
 using Vec = std::array<double, 2>;
@@ -40,10 +40,10 @@ class Engine {
   };
 
   class Base_engine final : public Engine {
-    double isp_{250};  // per i solidi
+    double isp_{250};  // impulso specifico per tempo
     double cm_{4.};    // coefficiente perdita massa
-    double p_0_{5e6};
-    double burn_a_{200e-6};
+    double p_0_{5e6}; //pressione
+    double burn_a_{200e-6}; //area di combustione
     bool released_{false};
     
    public:
@@ -69,18 +69,20 @@ class Engine {
     virtual bool is_released() const override;
 
     virtual double get_pression() const override;
+
+    ~Base_engine() override = default;
   };
 
   class Ad_engine final : public Engine {
-    double p_0_{5e6};
-    double burn_a_{200e-6};
-    double nozzle_as_{221.0e-6};
-    double t_0_{1710.0};
-    double grain_rho_{1873};
-    double grain_dim_{0.02};
+    double p_0_{5e6};  //pressione
+    double burn_a_{200e-6}; //area di combustione
+    double nozzle_as_{221.0e-6}; //area beccuccio
+    double t_0_{1710.0}; //temperatura
+    double grain_rho_{1873}; //densità combustibile
+    double grain_dim_{0.02}; //dimensione dei grani
     double burn_rate_a_{0.01};
     double burn_rate_n_{0.02};
-    double prop_mm_{178};
+    double prop_mm_{178}; //massa molare combustibile
     bool released_{false};
    public:
     explicit Ad_engine(double burn_a, double nozzle_as, double t_0,
@@ -103,24 +105,18 @@ class Engine {
     virtual bool is_released() const override;
 
     virtual double get_pression() const override;
+
+    ~Ad_engine() override = default;
   };
 
 class Rocket {
-  // tutte le informazioni contenute in rocket
-  // cose da inizializzare
   std::string name_{"my_rocket"};
-  double upper_area_{80.};
-  double m_sol_cont_{15'000};
-  double m_sol_prop_{40'000.};
+  double upper_area_{80.}; //superficie superiore
+  double m_sol_cont_{15'000}; //massa contenitore carburante solido
+  double m_sol_prop_{40'000.}; // massa carburante solido
   std::vector<double> m_liq_prop_{15'000};  // massa carburante liquida
-  std::vector<double> m_liq_cont_{40'000};
+  std::vector<double> m_liq_cont_{40'000};  //massa contenitore carburante liquido
 
-  /* sarebbe difficile far cambiare tali valori in base all'angolo senza
-  compiere esperimenti diretti quindi per semplicità assumiamo che rimangano
-  costanti ma che cambi solo l'area esposta, dimmi se ti va bene anche se non
-  saprei che altro fare */
-
-  // cose di default
   double total_mass_{135'000};
   int total_stage_{1};  // numero degli stadi
   Vec velocity_{0., 0.};
@@ -167,7 +163,7 @@ class Rocket {
 
   void change_vel(double time, Vec const& force);
 
-  Vec const thrust(double time, bool is_orbiting) const;
+  Vec const thrust(double time, bool is_orbiting) const; //spinta motori
 };
 
 Vec const total_force(double rho, double theta, double total_mass, double pos,
@@ -184,9 +180,6 @@ double g_force(double altitude, double mass);
 
 Vec const drag(double rho, double altitude, double theta,
                       double upper_area, Vec const& velocity);
-
-double anti_g_turn(double gra, double centrip, double theta, bool is_orbiting,
-                   int stage);
-
+                      
 };  // namespace rocket
 #endif
