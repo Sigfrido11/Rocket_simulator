@@ -140,7 +140,7 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       m_liq_cont_.erase(m_liq_cont_.begin());
       m_liq_prop_.erase(m_liq_prop_.begin());
       n_liq_eng_.erase(n_liq_eng_.begin());
-      if (current_stage_ == 0) {
+      if (current_stage_ != 0) {
         eng_->release(); //se ho consumato tutto il carburante 
                         // all'ultimo stadio stacco i motori
       }
@@ -341,7 +341,7 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
   double old_altitude{0.};
   double altitude;
   double angle;
-  pos = std::max(0., (pos * 170'000) / orbital_h - 1e7 / pos);
+  pos = std::max(0., (pos * 170'000) / orbital_h - 5e5 / pos);
   //rallento un po' la velocità a cui cambia l'angolo
   double old_ang;
   bool found{false};

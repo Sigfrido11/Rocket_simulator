@@ -132,16 +132,16 @@ TEST_CASE("TESTING THE CALCS") {
     std::ifstream file(file_name);
     std::streampos file_pos;
     double thetha = rocket::improve_theta(file_name, 1.56, 7'000, 80'000, file_pos);
-    CHECK(thetha == doctest::Approx(1.01604));
+    CHECK(thetha == doctest::Approx(0.981608));
     std::chrono::high_resolution_clock clock;
     auto start = clock.now();
     thetha = rocket::improve_theta(file_name, 1.56, 35'500, 80'000, file_pos);
     auto dur1 = clock.now() - start;
-    CHECK(thetha == doctest::Approx(0.35123));
+    CHECK(thetha == doctest::Approx(0.348315));
     start = clock.now();
     thetha = rocket::improve_theta(file_name, 1.56, 77'500, 80'000, file_pos);
     auto dur2 = clock.now() - start;
-    CHECK(thetha == doctest::Approx(0.0373151));
+    CHECK(thetha == doctest::Approx(0.0372104));
     CHECK(dur1 < dur2);
   }
   SUBCASE("Total force") {
