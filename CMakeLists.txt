@@ -18,7 +18,7 @@ string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra")
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -fsanitize=address,undefined -fno-omit-frame-pointer")
 string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20")
 
-add_executable(rocket.t main.cpp rocket.cpp simulation.cpp interface.cpp)
+add_executable(rocket.t main.cpp rocket.cpp simulation.cpp interface.cpp vector_math.cpp)
 target_link_libraries(rocket.t sfml-graphics sfml-window sfml-system sfml-audio)
 # se il testing e' abilitato...
 #   per disabilitare il testing, passare -DBUILD_TESTING=OFF a cmake durante la fase di configurazione

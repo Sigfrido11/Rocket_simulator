@@ -2,24 +2,71 @@
 #define VECTOR_MATH_H
 
 #include <array>
+#include <cmath>
+#include <utility> // for std::pair
 
+/**
+ * Class representing a 2D vector.
+ *
+ * This class provides basic vector operations such as
+ * addition, subtraction, scalar multiplication/division,
+ * norm computation, normalization, and conversion to polar coordinates.
+ */
 // 2D vector alias
-using Vec = std::array<double, 2>;
 
+class Vec{
+    public:
+    double x; ///< x-component of the vector
+    double y; ///< y-component of the vector
+    
+    //constructor
+    Vec();
+    Vec(double x, double y);
+
+    /* -------------------------------------------------------------------------- */
+/*                         algebraic operation                         */
+/* -------------------------------------------------------------------------- */
 // Vector addition
-Vec operator+(Vec const& a, Vec const& b);
+Vec operator+(Vec const& other);
 
 // Vector subtraction
-Vec operator-(Vec const& a, Vec const& b);
+Vec operator-(Vec const& other);
 
 // Scalar multiplication
-Vec operator*(Vec const& v, double s);
-Vec operator*(double s, Vec const& v);
+Vec operator*(double s);
 
 // Scalar division
-Vec operator/(Vec const& v, double s);
+Vec operator/(double s);
+
+//Bigger than comparison
+bool operator>(double s);
+
+bool operator>=( double s);
+
+//Less than comparison 
+bool operator<(double s);
+
+bool operator<=(double s);
 
 // Compound assignment
-Vec& operator+=(Vec& a, Vec const& b);
+Vec& operator+=(Vec const& other);
+
+
+
+    /* -------------------------------------------------------------------------- */
+/*                         Usefull relation                         */
+/* -------------------------------------------------------------------------- */
+
+double norm();
+
+double norm2();
+
+Vec& unit_vect();
+
+Vec& get_polar();
+
+}
+
+
 
 #endif

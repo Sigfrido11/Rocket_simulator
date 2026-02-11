@@ -119,46 +119,115 @@ void Rocket::mass_lost(double solid_lost, double liq_lost)
     }
 }
 
-
-
 void Rocket::move(double time, Vec const& force) {
-  //equazioni moto uniformemente acelerato
-  pos_[0] = pos_[0] + velocity_[0] * time +
-            0.5 * (force[0] / total_mass_) * std::pow(time, 2);
-  pos_[1] = pos_[1] + (velocity_[1]+sim::cost::earth_speed_) * time +
-            0.5 * (force[1] / total_mass_) * std::pow(time, 2);
+  // Semi-implicit Euler position update:
+  // x(t+dt) = x(t) + v(t+dt) * dt
   
-  if (pos_[0] <= 0 && pos_[1] <= 0) {
+  pos_ = pos_+ velocity_ * time;
+  if (pos_ < 0) {
     throw std::runtime_error("not enough thrust");
   }
 }
 
 void Rocket::change_vel(double time, Vec const& force) {
-  velocity_[0] = velocity_[0] + (force[0] / total_mass_) * time;
-  velocity_[1] = velocity_[1] + (force[1] / total_mass_) * time;
+  //Equation of motion for uniformly accelerated motion
+  velocity_= velocity_ + (force/total_mass_) * time;
 }
 
-void Rocket::set_state(std::string const& file_name, double orbital_h,
-                       double time, bool is_orbiting,
-                       std::streampos& file_pos) {
-  // cambia l'angolo, ridistribuisce la velocità in modo che sia
-  // tangente alla traiettoria, rimuove il carburante consumato 
-  // precedentemente e valuta la rimozione degli stadi
-  double const old_theta{theta_};
-  theta_ = improve_theta(file_name, theta_, pos_[0], orbital_h, file_pos);
-  if ((pos_[0] > 20'000) && old_theta != 0) {
-    double const speed =
-        std::sqrt(std::pow(velocity_[0], 2) + std::pow(velocity_[0], 2));
-    velocity_[0] = speed * std::sin(theta_);
-    velocity_[1] = speed * std::cos(theta_);
-  }
-  double const ms{eng_->delta_m(time, is_orbiting) * n_sol_eng_};
-  double const ml{eng_->delta_m(time, is_orbiting) * n_liq_eng_[0]};
-  mass_lost(ms, ml);
-  if(current_stage_!=0){
-  stage_release(ms, ml);
-  }
+
+void Rocket::set_state(std::string const& file_name,
+                       double orbital_h,
+                       double time,
+                       bool is_orbiting,
+                       std::streampos& file_pos)
+{
+    // ============================================================
+    // 1. Update thrust angle (theta)
+    // ============================================================
+
+    // Store previous angle
+    const double old_theta{theta_};
+
+    // Improve flight angle based on guidance file
+    theta_ = improve_theta(file_name, theta_, pos_[0],
+                           orbital_h, file_pos);
+
+    // ============================================================
+    // 2. Re-orient velocity to be tangential to trajectory
+    // ============================================================
+
+    // Once above 20 km, align velocity with updated angle
+    if (pos_[0] > 20000.0 && std::abs(old_theta) > 1e-8)
+    {
+        // Compute current speed magnitude
+        const double speed =
+            std::sqrt(std::pow(velocity_[0],2) +
+                      std::pow(velocity_[1],2));
+
+        // Redistribute velocity components according to new angle
+        velocity_[0] = speed * std::sin(theta_);
+        velocity_[1] = speed * std::cos(theta_);
+    }
+
+    // ============================================================
+    // 3. Compute propellant mass loss
+    // ============================================================
+
+
+    if (!eng_)
+        throw std::runtime_error("Engine pointer is null");
+
+
+    //compute mass loss liquid prop
+    const double delta_mass = eng_->delta_m(time, is_orbiting);
+
+    //compute mass loss solid prop
+    const double ms = delta_mass * n_sol_eng_;
+
+    // Total propellant consumed during this timestep
+    const double delta_m = mdot * time;
+
+    double solid_lost = 0.0;
+    double liq_lost   = 0.0;
+
+    // Decide which stage is active
+    if (m_sol_prop_ > 0.0) {
+        solid_lost = std::min(delta_m, m_sol_prop_);
+    }
+    else if (!m_liq_prop_.empty()) {
+        liq_lost = std::min(delta_m, m_liq_prop_[0]);
+    }
+
+    // Apply mass loss
+    mass_lost(solid_lost, liq_lost);
+
+    // Handle stage separation if propellant is depleted
+    stage_release();
+
+
+    double ml = 0.0;
+    if (!n_liq_eng_.empty())
+        ml = delta_mass * n_liq_eng_.front();
+
+    // Update rocket mass
+    mass_lost(ms, ml);
+
+    // ============================================================
+    // 4. Check for stage separation
+    // ============================================================
+
+    if (current_stage_ != 0)
+        stage_release(ms, ml);
 }
+}
+
+    
+
+    
+
+
+
+
 
 
 
@@ -379,20 +448,75 @@ bool Ad_engine::is_released() const { return released_; }
   return force;
 }
 
- Vec const drag(double rho, double altitude, double theta,
-                      double upper_area, Vec const& velocity) {
-  if (altitude <= 51'000) { //sopra atmosfera troppo rada
-    double const speed2{std::pow(velocity[0], 2) + std::pow(velocity[1], 2)}; 
-    //modulo quadro della velocità
-    double const drag{0.37 * rho * upper_area * speed2};
-    //presto attenzione alla direzione della velocità
-    int direction{1};
-    velocity[0] <= 0 ? direction = -1 : direction = 1;
-    return {drag * std::sin(theta) * direction, drag * std::cos(theta)};
-  } else {
-    return {0., 0.};
-  }
+
+
+double const Cd_from_Mach(double M) {
+   // Realistic drag coefficient model for slender rockets as a function of Mach number.
+   // Inspired by experimental rocket/missile aerodynamics and NASA trends.
+   // Smooth and continuous (no discontinuities in Cd or its derivative).
+    // --- Baseline drag coefficients for different regimes ---
+    const double Cd_subsonic = 0.18;   // typical slender rocket Cd at low Mach
+    const double Cd_transonic_peak = 0.70; // drag divergence near Mach 1
+    const double Cd_supersonic = 0.30; // average supersonic Cd
+    const double Cd_hypersonic = 0.23; // slightly lower Cd at hypersonic speeds
+
+    // --- Smooth transition functions using tanh ---
+    // Transition from subsonic to transonic (around Mach 0.9 - 1.0)
+    double t1 = 0.5 * (1.0 + std::tanh((M - 0.90) / 0.08));
+
+    // Transition from transonic to supersonic (around Mach 1.2 - 1.5)
+    double t2 = 0.5 * (1.0 + std::tanh((M - 1.30) / 0.20));
+
+    // Transition from supersonic to hypersonic (around Mach 5)
+    double t3 = 0.5 * (1.0 + std::tanh((M - 5.00) / 1.00));
+
+    // --- Build Cd curve step by step ---
+    // Subsonic -> Transonic peak
+    double Cd_transonic = Cd_subsonic +
+        (Cd_transonic_peak - Cd_subsonic) * t1;
+
+    // Transonic -> Supersonic decay
+    double Cd_sup = Cd_transonic +
+        (Cd_supersonic - Cd_transonic_peak) * t2;
+
+    // Supersonic -> Hypersonic asymptote
+    double Cd_final = Cd_sup +
+        (Cd_hypersonic - Cd_supersonic) * t3;
+
+    return Cd_final;
 }
+
+Vec const drag(double rho, double altitude, double theta,
+               double upper_area, Vec const& velocity, double a) {
+
+    // If atmosphere is negligible, no drag
+    if (altitude > 51000.0) {
+        return {0.0, 0.0};
+    }
+
+
+    // Avoid division by zero at very low speed
+    if (v < 1e-6) {
+        return {0.0, 0.0};
+    }
+
+    // Compute Mach number using your speed of sound model
+    double M = velocity.norm() / a;
+
+    // Compute drag coefficient depending on Mach number
+    double Cd = Cd_from_Mach(M);
+
+    // Drag magnitude: Fd = 0.5 * rho * v^2 * Cd * A
+    double Fd = 0.5 * rho * v * v * Cd * upper_area;
+
+    // Drag force vector: opposite to velocity direction
+    double fx = -Fd * (velocity[0] / velocity.norm());
+    double fy = -Fd * (velocity[0] / velocity.norm());
+
+    // Remember: Vec = {y, x}
+    return {fy, fx};
+}
+
 
  double improve_theta(std::string const& name_f, double theta, double pos,
                             double orbital_h, std::streampos& file_pos) {

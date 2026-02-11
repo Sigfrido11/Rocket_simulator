@@ -6,6 +6,7 @@
 #include "interface.h"
 #include "rocket.h"
 #include "simulation.h"
+#include "vector_math.h"
 
 //
 // asse x componente [1]

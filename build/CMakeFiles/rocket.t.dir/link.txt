@@ -1,1 +1,1 @@
-/usr/bin/c++  -Wall -Wextra CMakeFiles/rocket.t.dir/main.cpp.o CMakeFiles/rocket.t.dir/rocket.cpp.o CMakeFiles/rocket.t.dir/simulation.cpp.o CMakeFiles/rocket.t.dir/interface.cpp.o -o rocket.t  -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio 
+/usr/bin/c++  -Wall -Wextra CMakeFiles/rocket.t.dir/main.cpp.o CMakeFiles/rocket.t.dir/rocket.cpp.o CMakeFiles/rocket.t.dir/simulation.cpp.o CMakeFiles/rocket.t.dir/interface.cpp.o CMakeFiles/rocket.t.dir/vector_math.cpp.o -o rocket.t  -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio 

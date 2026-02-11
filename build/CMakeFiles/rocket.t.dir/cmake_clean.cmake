@@ -7,6 +7,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/rocket.t.dir/rocket.cpp.o.d"
   "CMakeFiles/rocket.t.dir/simulation.cpp.o"
   "CMakeFiles/rocket.t.dir/simulation.cpp.o.d"
+  "CMakeFiles/rocket.t.dir/vector_math.cpp.o"
+  "CMakeFiles/rocket.t.dir/vector_math.cpp.o.d"
   "rocket.t"
   "rocket.t.pdb"
 )

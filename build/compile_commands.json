@@ -25,6 +25,12 @@
 },
 {
   "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/rocket.t.dir/vector_math.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/vector_math.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/vector_math.cpp",
+  "output": "CMakeFiles/rocket.t.dir/vector_math.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
   "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/rocket_test.t.dir/test_calc.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/test_calc.cpp",
   "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/test_calc.cpp",
   "output": "CMakeFiles/rocket_test.t.dir/test_calc.cpp.o"

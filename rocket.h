@@ -11,6 +11,7 @@
 
 #include "assert.h"
 #include "simulation.h"
+#include "vector_math.h"
 
 namespace rocket {
 using Vec = std::array<double, 2>;
@@ -207,11 +208,11 @@ std::vector<int> n_liq_eng_;
   void set_state(std::string const& file_name, double orbital_h, double time,
                        bool is_orbiting, std::streampos& file_pos);
 
-  void stage_release(double delta_ms, double delta_ml);  // solo il distacco dello stadio
+  void stage_release(double delta_ms, double delta_ml);  
 
   void change_vel(double time, Vec const& force);
 
-  Vec const thrust(double time, bool is_orbiting) const; //spinta motori
+  Vec const thrust(double time, bool is_orbiting) const; //engine thrust
 };
 
 
@@ -227,12 +228,17 @@ double improve_theta(std::string const& name_f, double theta, double pos,
 
 bool is_orbiting(double pos, double velocity);
 
+//forse dovremmo togliere la forza centripeta non è davvero fisica
 double centripetal(double total_mass, double altitude, double x_vel);
 
 double g_force(double altitude, double mass);
 
+double const Cd_from_Mach(double M);
+
 Vec const drag(double rho, double altitude, double theta,
                       double upper_area, Vec const& velocity);
+
+
                       
 };  // namespace rocket
 #endif

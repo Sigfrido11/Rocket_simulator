@@ -685,6 +685,30 @@ test_calc.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/test_calc.cpp.s
 .PHONY : test_calc.cpp.s
 
+vector_math.o: vector_math.cpp.o
+.PHONY : vector_math.o
+
+# target to build an object file
+vector_math.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/vector_math.cpp.o
+.PHONY : vector_math.cpp.o
+
+vector_math.i: vector_math.cpp.i
+.PHONY : vector_math.i
+
+# target to preprocess a source file
+vector_math.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/vector_math.cpp.i
+.PHONY : vector_math.cpp.i
+
+vector_math.s: vector_math.cpp.s
+.PHONY : vector_math.s
+
+# target to generate assembly for a file
+vector_math.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/vector_math.cpp.s
+.PHONY : vector_math.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -743,6 +767,9 @@ help:
 	@echo "... test_calc.o"
 	@echo "... test_calc.i"
 	@echo "... test_calc.s"
+	@echo "... vector_math.o"
+	@echo "... vector_math.i"
+	@echo "... vector_math.s"
 .PHONY : help
 
 

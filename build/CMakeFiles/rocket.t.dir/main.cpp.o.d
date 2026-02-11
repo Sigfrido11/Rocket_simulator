@@ -327,4 +327,6 @@ CMakeFiles/rocket.t.dir/main.cpp.o: \
  /usr/include/c++/13/bits/stl_numeric.h \
  /usr/include/c++/13/pstl/glue_numeric_defs.h /usr/include/assert.h \
  /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.h \
- /usr/include/c++/13/array
+ /usr/include/c++/13/array \
+ /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/vector_math.h \
+ /usr/include/c++/13/utility /usr/include/c++/13/bits/stl_relops.h
