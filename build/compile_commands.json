@@ -1,0 +1,62 @@
+[
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/rocket.t.dir/main.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/main.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/main.cpp",
+  "output": "CMakeFiles/rocket.t.dir/main.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/rocket.t.dir/rocket.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/rocket.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/rocket.cpp",
+  "output": "CMakeFiles/rocket.t.dir/rocket.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/rocket.t.dir/simulation.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp",
+  "output": "CMakeFiles/rocket.t.dir/simulation.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/rocket.t.dir/interface.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/interface.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/interface.cpp",
+  "output": "CMakeFiles/rocket.t.dir/interface.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/rocket_test.t.dir/test_calc.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/test_calc.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/test_calc.cpp",
+  "output": "CMakeFiles/rocket_test.t.dir/test_calc.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/rocket_test.t.dir/simulation.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp",
+  "output": "CMakeFiles/rocket_test.t.dir/simulation.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/rocket_test.t.dir/rocket.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/rocket.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/rocket.cpp",
+  "output": "CMakeFiles/rocket_test.t.dir/rocket.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/graph_test.t.dir/graph_test.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/graph_test.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/graph_test.cpp",
+  "output": "CMakeFiles/graph_test.t.dir/graph_test.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/graph_test.t.dir/simulation.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp",
+  "output": "CMakeFiles/graph_test.t.dir/simulation.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++    -Wall -Wextra -std=gnu++20 -o CMakeFiles/graph_test.t.dir/interface.cpp.o -c /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/interface.cpp",
+  "file": "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/interface.cpp",
+  "output": "CMakeFiles/graph_test.t.dir/interface.cpp.o"
+}
+]

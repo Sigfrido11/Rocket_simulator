@@ -110,23 +110,62 @@ class Engine {
   };
 
 class Rocket {
-  std::string name_{"my_rocket"};
-  double upper_area_{80.}; //superficie superiore
-  double m_sol_cont_{15'000}; //massa contenitore carburante solido
-  double m_sol_prop_{40'000.}; // massa carburante solido
-  std::vector<double> m_liq_prop_{15'000};  // massa carburante liquida
-  std::vector<double> m_liq_cont_{40'000};  //massa contenitore carburante liquido
+  // Rocket basic configuration and state parameters
 
-  double total_mass_{135'000};
-  int total_stage_{1};  // numero degli stadi
-  Vec velocity_{0., 0.};
-  Vec pos_{0., 0.};  // ora altitude diventa inutile ho già tutto nel pos_
-  int current_stage_{1};
-  double theta_{1.57079632};  // angolo inclinazione
+// Rocket name identifier
+std::string name_{"my_rocket"};
 
-  Engine* eng_;
-  int n_sol_eng_{1};
-  std::vector<int> n_liq_eng_;
+// Cross-sectional upper area of the rocket (m^2)
+double upper_area_{80.0};
+
+// Solid propulsion system parameters
+
+// Mass of the solid fuel container (kg)
+double m_sol_cont_{15000.0};
+
+// Mass of the solid propellant (kg)
+double m_sol_prop_{40000.0};
+
+// Liquid propulsion system parameters (per stage or per tank)
+
+// Mass of liquid propellant (kg)
+// Stored as a vector to support multi-stage rockets
+std::vector<double> m_liq_prop_{15000.0};
+
+// Mass of liquid fuel container/tank (kg)
+// Stored as a vector to support multi-stage rockets
+std::vector<double> m_liq_cont_{40000.0};
+
+// Total initial mass of the rocket (kg)
+double total_mass_{135000.0};
+
+// Total number of rocket stages
+int total_stage_{1};
+
+// Current velocity vector (m/s)
+Vec velocity_{0.0, 0.0};
+
+// Current position vector (m)
+// Altitude is implicitly represented by the vertical component of pos_
+Vec pos_{0.0, 0.0};
+
+// Index of the currently active stage
+int current_stage_{1};
+
+// Rocket inclination angle (radians)
+// Initialized to pi/2 ≈ 1.57079632 (vertical launch)
+double theta_{1.57079632};
+
+// Pointer to the engine currently associated with the rocket
+Engine* eng_;
+
+// Number of solid engines
+int n_sol_eng_{1};
+
+// Number of liquid engines per stage
+// Stored as a vector to support multi-stage configurations
+std::vector<int> n_liq_eng_;
+
  public:
   // costruttore con tutto
   explicit Rocket(std::string const& name, double mass_structure, double Up_Ar,
@@ -135,6 +174,10 @@ class Rocket {
                int n_solid_eng, std::vector<int> const& n_liq_eng);
 
   Rocket() = default;
+
+  /* -------------------------------------------------------------------------- */
+/*                                Rocket getters methods                              */
+/* -------------------------------------------------------------------------- */
 
   Vec const get_velocity() const;
 
@@ -156,6 +199,11 @@ class Rocket {
 
   double get_mass() const;
 
+/* -------------------------------------------------------------------------- */
+/*                               kinematics rocket                              */
+/* -------------------------------------------------------------------------- */
+
+
   void set_state(std::string const& file_name, double orbital_h, double time,
                        bool is_orbiting, std::streampos& file_pos);
 
@@ -165,6 +213,11 @@ class Rocket {
 
   Vec const thrust(double time, bool is_orbiting) const; //spinta motori
 };
+
+
+/* -------------------------------------------------------------------------- */
+/*                               Force computation                              */
+/* -------------------------------------------------------------------------- */
 
 Vec const total_force(double rho, double theta, double total_mass, double pos,
                       double upper_area, Vec const& velocity, Vec const& eng);

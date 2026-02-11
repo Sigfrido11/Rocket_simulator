@@ -7,17 +7,21 @@
 
 #include "simulation.h"
 #include "rocket.h"
+#include "vector_math.h"
 
 //
-// asse x componente [1]
-// asse y componente [0]
+// x axys component [1]
+// y axys component [0]
 //
 
 namespace rocket {
 class Rocket;
 using Vec = std::array<double, 2>;
 
-// costruttori di Rocket
+
+/* --------------------------------------------------------------------------*/
+/*                           costructor                              
+/* -------------------------------------------------------------------------- */
 
 Rocket::Rocket(std::string const& name, double mass_structure, double Up_Ar,
                double s_p_m, double m_s_cont, std::vector<double> const& l_p_m,
@@ -41,37 +45,81 @@ Rocket::Rocket(std::string const& name, double mass_structure, double Up_Ar,
   assert(upper_area_ > 0 && m_sol_cont_ > 0 && m_sol_prop_ > 0);
   current_stage_ = total_stage_;
   std::for_each(n_liq_eng.begin(), n_liq_eng.end(),
-                [](int value) { assert(value >= 0); });
+                [](int value) { if(value <=0){
+                  throw std::runtime_error("invalid value insterted");
+                }
+                });
   std::for_each(m_liq_cont_.begin(), m_liq_cont_.end(),
-                [](double value) mutable { assert(value > 0.); });
+                [](double value) { if(value <=0){
+                  throw std::runtime_error("invalid value insterted");
+                } });
   std::for_each(m_liq_prop_.begin(), m_liq_prop_.end(),
-                [](double value) mutable { assert(value > 0.); });
+                [](double value) { if(value <=0){
+                  throw std::runtime_error("invalid value insterted");
+                } });
                 eng_=eng;
 }
 
-// funzioni Rocket
+
+/* -------------------------------------------------------------------------- */
+/*                                Rocket getters methods                              */
+/* -------------------------------------------------------------------------- */
 
 double Rocket::get_theta() const { return theta_; }
 
 double Rocket::get_mass() const { return total_mass_; }
 
-void Rocket::mass_lost(double solid_lost, double liq_lost) {
-  assert(liq_lost >= 0 && solid_lost >= 0);
-  //sottrazione carburante perso
-  total_mass_ -= (liq_lost + solid_lost);
-  m_liq_prop_[0] -= liq_lost;
-  m_sol_prop_ -= solid_lost;
-  if (total_mass_ <= 0) {
-    std::cout
-        << "wrong input fuel distribution between liquid and solid stages";
-    throw std::runtime_error(
-        "wrong input fuel distribution");
-  }
-}
-
 Vec const Rocket::get_velocity() const { return velocity_; }
 
 Vec const Rocket::get_pos() const { return pos_; }
+
+int Rocket::get_rem_stage() const { return current_stage_; };
+
+double Rocket::get_fuel_left() const { 
+  if(current_stage_==0){
+    return 0;
+  } else{
+  return (m_liq_prop_[0] + m_sol_prop_); 
+  }}
+
+double Rocket::get_up_ar() const { return upper_area_; }
+
+
+/* -------------------------------------------------------------------------- */
+/*                               kinematics rocket                              */
+/* -------------------------------------------------------------------------- */
+
+
+void Rocket::mass_lost(double solid_lost, double liq_lost)
+{
+    // Sanity checks (runtime-safe)
+    if (solid_lost < 0.0 || liq_lost < 0.0) {
+        throw std::invalid_argument("Negative propellant mass loss");
+    }
+
+    // Check availability BEFORE subtracting
+    if (solid_lost > m_sol_prop_) {
+        throw std::invalid_argument("Solid propellant exhausted");
+    }
+
+    if (!m_liq_prop_.empty() && liq_lost > m_liq_prop_[0]) {
+        throw std::runtime_error("Liquid propellant exhausted");
+    }
+
+    // Apply mass loss
+    m_sol_prop_ -= solid_lost;
+    if (!m_liq_prop_.empty()) {
+        m_liq_prop_[0] -= liq_lost;
+    }
+
+    total_mass_ -= (solid_lost + liq_lost);
+
+    if (total_mass_ <= 0.0) {
+        throw std::runtime_error("Rocket mass became non-positive");
+    }
+}
+
+
 
 void Rocket::move(double time, Vec const& force) {
   //equazioni moto uniformemente acelerato
@@ -112,14 +160,7 @@ void Rocket::set_state(std::string const& file_name, double orbital_h,
   }
 }
 
-int Rocket::get_rem_stage() const { return current_stage_; };
 
-double Rocket::get_fuel_left() const { 
-  if(current_stage_==0){
-    return 0;
-  } else{
-  return (m_liq_prop_[0] + m_sol_prop_); 
-  }}
 
 void Rocket::stage_release(double delta_ms, double delta_ml) {
   if (m_liq_prop_[0] < 0) {
@@ -129,7 +170,9 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
   }
   if (m_sol_cont_ == 0) { //caso con stadio solido espulso
     int const len{static_cast<int>(m_liq_prop_.size())};
-    assert(current_stage_ < len + 1 && current_stage_ >= 0);
+    if(!(current_stage_ < len + 1 && current_stage_ >= 0)){
+      throw std::runtime_error("error in stage release");
+    }
     if (m_liq_prop_[0] <= delta_ml) { 
       //se prevedo di bruciare più carburante di quello che rimane
       std::cout << "stage released"
@@ -150,7 +193,9 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
     assert(current_stage_ != 0);
     assert(m_liq_prop_[0] != 0);
     int const len{static_cast<int>(m_liq_prop_.size())};
-    assert(len + 1 == total_stage_);
+    if(!(len + 1 == total_stage_)){
+      throw std::runtime_error("error in stage menagement");
+    }
     if (m_sol_prop_ <= delta_ms) {
       current_stage_ -= 1;
       total_mass_ -= (m_sol_cont_ + m_sol_prop_);
@@ -163,7 +208,6 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
   }
 }
 
-double Rocket::get_up_ar() const { return upper_area_; }
 
 Vec const Rocket::thrust(double time, bool is_orbiting) const {
   Vec engs;
@@ -183,6 +227,10 @@ Vec const Rocket::thrust(double time, bool is_orbiting) const {
   double const y{engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0]};
   return {z, y};
 }
+
+
+
+
 
 // funzioni di engine
 
@@ -296,7 +344,19 @@ bool Ad_engine::is_released() const { return released_; }
 
 // funzioni del namespace
 
-bool is_orbiting(double pos, double velocity) {
+
+
+
+
+
+/* -------------------------------------------------------------------------- */
+/*                               Force computation                              */
+/* -------------------------------------------------------------------------- */
+
+
+
+
+ bool is_orbiting(double pos, double velocity) {
   assert(pos >= 0 && velocity >= 0);
   //dice se il razzo sta orbitando o meno
   double const inf_speed{std::sqrt(sim::cost::G_ * sim::cost::earth_mass_ /
@@ -305,21 +365,21 @@ bool is_orbiting(double pos, double velocity) {
   return ((velocity + sim::cost::earth_speed_) > inf_speed) ? true : false;
 }
 
-inline double centripetal(double total_mass, double altitude, double x_vel) {
+ double centripetal(double total_mass, double altitude, double x_vel) {
   //f=m v^2/r
   double const f_z{total_mass * std::pow(x_vel+sim::cost::earth_speed_, 2) /
                    (sim::cost::earth_radius_ + altitude)};
   return f_z;
 }
 
-inline double g_force(double altitude, double mass) {
+ double g_force(double altitude, double mass) {
   //legge di newton
   double const force{sim::cost::earth_mass_ * sim::cost::G_ * mass /
                      (std::pow(sim::cost::earth_radius_ + altitude, 2))};
   return force;
 }
 
-inline Vec const drag(double rho, double altitude, double theta,
+ Vec const drag(double rho, double altitude, double theta,
                       double upper_area, Vec const& velocity) {
   if (altitude <= 51'000) { //sopra atmosfera troppo rada
     double const speed2{std::pow(velocity[0], 2) + std::pow(velocity[1], 2)}; 
@@ -334,7 +394,7 @@ inline Vec const drag(double rho, double altitude, double theta,
   }
 }
 
-inline double improve_theta(std::string const& name_f, double theta, double pos,
+ double improve_theta(std::string const& name_f, double theta, double pos,
                             double orbital_h, std::streampos& file_pos) {
   std::ifstream file(name_f);
   assert(file.is_open());
@@ -344,7 +404,7 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
   double angle;
   pos = std::max(0., (pos * 170'000) / orbital_h - 5e5 / pos);
   //rallento un po' la velocità a cui cambia l'angolo
-  double old_ang;
+  double old_ang{2.};
   bool found{false};
   file.seekg(file_pos);
   while (std::getline(file, line) && !found) {
@@ -370,7 +430,7 @@ inline double improve_theta(std::string const& name_f, double theta, double pos,
   return 0.;
 }
 
-Vec const total_force(double rho, double theta, double total_mass, double pos,
+ Vec const total_force(double rho, double theta, double total_mass, double pos,
                       double upper_area, Vec const& velocity, Vec const& eng) {
   double const centrip{centripetal(total_mass, pos, velocity[1])};
   double const gra{g_force(pos, total_mass)};

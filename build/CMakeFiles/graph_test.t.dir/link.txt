@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -Wextra CMakeFiles/graph_test.t.dir/graph_test.cpp.o CMakeFiles/graph_test.t.dir/simulation.cpp.o CMakeFiles/graph_test.t.dir/interface.cpp.o -o graph_test.t  -lsfml-graphics -lsfml-window -lsfml-system 

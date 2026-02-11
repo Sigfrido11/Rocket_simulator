@@ -13,9 +13,10 @@
 //
 
 int main() {
+  
+  interface::rocket_data rocket_data;
   rocket::Ad_engine ad_eng;
   rocket::Base_engine base_eng;
-  interface::rocket_data rocket_data;
   rocket::Engine *eng;
   std::vector<double> l_p_m;
   std::vector<double> l_c_m;
@@ -24,7 +25,6 @@ int main() {
   try {
   {  // aggiungo uno scope in modo da cancellare poi tutte le
     // variabili che non servono
-
     interface::ad_eng_data ad_eng_data;
     interface::base_eng_data base_eng_data;
     std::cout << "let's build the engine for your rocket"
