@@ -121,7 +121,6 @@ int main() {
     }
   }
 
-  using Vec = std::array<double, 2>;
   std::string file_name = "theta_data.txt";
   std::ofstream output_rocket("output_rocket.txt");
   std::streampos start_pos;

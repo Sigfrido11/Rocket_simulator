@@ -22,6 +22,26 @@ Vec Vec::operator*(double s) {
     return Vec(x * s, y * s);
 }
 
+Vec Vec::operator*(int s) {
+    return Vec(x * s, y * s);
+}
+
+
+   // Accesso in lettura/scrittura
+    double& operator[](std::size_t i) {
+        if (i == 0) return x;
+        else if (i == 1) return y;
+        else throw std::out_of_range("Vec index must be 0 or 1");
+    }
+
+    // Accesso in sola lettura (const)
+    double operator[](std::size_t i) const {
+        if (i == 0) return x;
+        else if (i == 1) return y;
+        else throw std::out_of_range("Vec index must be 0 or 1");
+    }
+};
+
 // Scalar division
 Vec Vec::operator/(double s) {
     return Vec(x / s, y / s);

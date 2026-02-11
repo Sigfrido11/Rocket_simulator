@@ -16,8 +16,6 @@
 
 namespace rocket {
 class Rocket;
-using Vec = std::array<double, 2>;
-
 
 /* --------------------------------------------------------------------------*/
 /*                           costructor                              
@@ -494,9 +492,9 @@ Vec const drag(double rho, double altitude, double theta,
         return {0.0, 0.0};
     }
 
-
+  
     // Avoid division by zero at very low speed
-    if (v < 1e-6) {
+    if (velocity.norm() < 1e-6) {
         return {0.0, 0.0};
     }
 
@@ -507,7 +505,7 @@ Vec const drag(double rho, double altitude, double theta,
     double Cd = Cd_from_Mach(M);
 
     // Drag magnitude: Fd = 0.5 * rho * v^2 * Cd * A
-    double Fd = 0.5 * rho * v * v * Cd * upper_area;
+    double Fd = 0.5 * rho * std::pow(velocity.norm(),2) * Cd * upper_area;
 
     // Drag force vector: opposite to velocity direction
     double fx = -Fd * (velocity[0] / velocity.norm());

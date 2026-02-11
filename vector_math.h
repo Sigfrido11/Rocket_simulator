@@ -35,8 +35,14 @@ Vec operator-(Vec const& other);
 // Scalar multiplication
 Vec operator*(double s);
 
+Vec Vec::operator*(int s);
+
 // Scalar division
 Vec operator/(double s);
+
+double& operator[](std::size_t i);
+
+double operator[](std::size_t i) const;
 
 //Bigger than comparison
 bool operator>(double s);
@@ -65,7 +71,7 @@ Vec& unit_vect();
 
 Vec& get_polar();
 
-}
+};
 
 
 

@@ -14,9 +14,8 @@
 #include "vector_math.h"
 
 namespace rocket {
-using Vec = std::array<double, 2>;
 
-struct eng_par{
+ struct eng_par{
   double theta;
   double time;
   double pos; 
@@ -233,7 +232,7 @@ double centripetal(double total_mass, double altitude, double x_vel);
 
 double g_force(double altitude, double mass);
 
-double const Cd_from_Mach(double M);
+double Cd_from_Mach(double M);
 
 Vec const drag(double rho, double altitude, double theta,
                       double upper_area, Vec const& velocity);
