@@ -56,7 +56,7 @@ int main() {
 
       default:
         throw std::runtime_error(
-            "invalid value inserted, please restart ");
+            "inval id value inserted, please restart ");
         break;
     }
     if (ans_eng == 'a') {
@@ -121,7 +121,7 @@ int main() {
     }
   }
 
-  std::string file_name = "assets/input_data/theta_data.txt";
+  std::string file_name = "assets/theta_data.txt";
   std::ofstream output_rocket("assets/output_rocket.txt");
   std::streampos start_pos;
   std::ofstream output_air("assets/output_air.txt");
@@ -134,6 +134,65 @@ int main() {
   std::cout << "rocket output is ok" << '\n';
   std::cout << "also air output is ok" << '\n';
   }
+  double isp{250};  // impulso specifico per tempo
+  double cm{4.};    // coefficiente perdita massa
+  double p0{5e6}; //pressione
+  double burn_a{200e-6}; //area di combustione
+
+  base_eng = rocket::Base_engine{isp, cm,p0, burn_a};
+
+  // Rocket name identifier
+std::string name_{"my_rocket"};
+
+// Cross-sectional upper area of the rocket (m^2)
+double upper_area_{80.0};
+
+// Solid propulsion system parameters
+
+// Mass of the solid fuel container (kg)
+double m_sol_cont_{15000.0};
+
+// Mass of the solid propellant (kg)
+double m_sol_prop_{40000.0};
+
+// Liquid propulsion system parameters (per stage or per tank)
+
+// Mass of liquid propellant (kg)
+// Stored as a vector to support multi-stage rockets
+std::vector<double> m_liq_prop_{15000.0};
+
+// Mass of liquid fuel container/tank (kg)
+// Stored as a vector to support multi-stage rockets
+std::vector<double> m_liq_cont_{40000.0};
+
+// Total initial mass of the rocket (kg)
+double total_mass_{135000.0};
+
+// Total number of rocket stages
+int total_stage_{1};
+
+// Current velocity vector (m/s) (r/psi)
+Vec velocity_{0.0, 0.0};
+
+// Current position vector (m) (r,psi)
+Vec pos_{sim::cost::earth_radius_, 0.0};
+
+// Index of the currently active stage
+int current_stage_{1};
+
+// Rocket inclination angle (radians)
+// Initialized to pi/2 ≈ 1.57079632 (vertical launch)
+double theta_{1.57079632};
+
+// Pointer to the engine currently associated with the rocket
+Engine* eng_;
+
+// Number of solid engines
+int n_sol_eng_{1};
+
+// Number of liquid engines per stage
+// Stored as a vector to support multi-stage configurations
+std::vector<int> n_liq_eng_;
   rocket::Rocket rocket{rocket_data.name,
                         rocket_data.mass_structure,
                         rocket_data.up_ar,
@@ -331,19 +390,13 @@ int main() {
 
       rocket.move(delta_time, force);
 
-      if (rocket.get_velocity()[0] < 0.) {
-        std::cout << "error in velocity ";
-        std::cout << rocket.get_velocity()[0];
-        
+      if ((rocket.get_velocity()[0] < 0. && eng_force != Vec({0, 0})) ||
+          rocket.get_velocity()[1] < 0.) {
+        std::cout << "error in velocity";
         throw std::runtime_error("error in velocity");
       }
 
-      if (eng_force != Vec({0, 0})){
-        std::cout << "error in thrust";
-        throw std::runtime_error("error in thrust");
-      }
-
-      if (rocket.get_pos()[0] <= 0.) {
+      if (rocket.get_pos()[0] <= 0. || rocket.get_pos()[1] < 0.) {
         std::cout << "error in position";
         throw std::runtime_error("error in position");
       };

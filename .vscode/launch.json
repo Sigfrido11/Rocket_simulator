@@ -1,7 +1,26 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": []
+    "configurations": [
+        {
+            "name": "Debug Rocket (CMake)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/rocket.t",   // path al tuo eseguibile generato
+            "args": [
+                "b", "f", "300", "1.5", "f", "3", "3", "3", "70000"
+            ],                                      // eventuali argomenti da passare al main
+            "stopAtEntry": true,                             // ferma all'ingresso di main
+            "cwd": "${workspaceFolder}",                     // working directory
+            "environment": [],
+            "externalConsole": true,                         // permette input/output via terminale esterno
+            "MIMode": "lldb",                                // se vuoi usare gdb cambia in "gdb"
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
 }
