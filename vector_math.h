@@ -35,7 +35,7 @@ Vec operator-(Vec const& other);
 // Scalar multiplication
 Vec operator*(double s);
 
-Vec Vec::operator*(int s);
+Vec operator*(int s);
 
 // Scalar division
 Vec operator/(double s);
@@ -53,6 +53,8 @@ bool operator>=( double s);
 bool operator<(double s);
 
 bool operator<=(double s);
+
+bool operator!=(Vec const& other);
 
 // Compound assignment
 Vec& operator+=(Vec const& other);

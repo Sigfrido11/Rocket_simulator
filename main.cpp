@@ -311,20 +311,18 @@ int main() {
       }
 
       bool const orbiting{
-          rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity()[1])};
+          rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity());
 
       rocket.set_state(file_name, orbital_h, delta_time, orbiting, start_pos);
 
-      air.set_state(rocket.get_pos()[0]);
+      air.set_state(rocket.get_pos()[0]-sim::cost::earth_radius_);
 
       eng_force = rocket.thrust(delta_time, orbiting);
 
       Vec const force{rocket::total_force(
-          air.get_rho(), rocket.get_theta(), rocket.get_mass(), rocket.get_pos()[0],
-          rocket.get_up_ar(), rocket.get_velocity(), eng_force)};
+          air.get_rho(), rocket.get_mass(), rocket.get_pos()[0]-sim::cost::earth_radius_,
+          rocket.get_up_ar(), rocket.get_velocity(), eng_force, air.get_speed_sound()};
 
-      double const rocket_radius{rocket.get_pos()[0] +
-                                 sim::cost::earth_radius_};
       double const angle_var{
           ((rocket.get_velocity()[1] + sim::cost::earth_speed_) * delta_time +
            0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) /
@@ -332,8 +330,6 @@ int main() {
       angle_total += angle_var;
 
       rocket.move(delta_time, force);
-
-      rocket.change_vel(delta_time, force);
 
       if ((rocket.get_velocity()[0] < 0. && eng_force != Vec({0, 0})) ||
           rocket.get_velocity()[1] < 0.) {

@@ -194,8 +194,6 @@ std::vector<int> n_liq_eng_;
 
   double get_fuel_left() const;
 
-  double get_lat_ar() const;
-
   double get_mass() const;
 
   double get_altitude() const;
@@ -220,20 +218,18 @@ std::vector<int> n_liq_eng_;
 /*                               Force computation                              */
 /* -------------------------------------------------------------------------- */
 
-Vec const total_force(double rho, double theta, double total_mass, double pos,
-                      double upper_area, Vec const& velocity, Vec const& eng);
+Vec const total_force(double rho, double theta, double total_mass, double altitude,
+                      double upper_area, Vec const& velocity, Vec const& eng, double a);
+
 
 double improve_theta(std::string const& name_f, double theta, double pos,
                             double orbital_h, std::streampos& file_pos);
 
-bool is_orbiting(double pos, double velocity);
-
-//forse dovremmo togliere la forza centripeta non è davvero fisica
-double centripetal(double total_mass, double altitude, double x_vel);
+bool is_orbiting(double r, Vec velocity);
 
 Vec const g_force(double altitude, double mass);
 
-double Cd_from_Mach(double M);
+double const Cd_from_Mach(double M);
 
 Vec const drag(double rho, double altitude, double theta,
                       double upper_area, Vec const& velocity);

@@ -9,6 +9,9 @@
 #include "rocket.h"
 #include "vector_math.h"
 
+
+namespace rocket {
+class Rocket;
 //
 // angular component [1]
 // radial module component [0]
@@ -41,16 +44,16 @@ Rocket::Rocket(std::string const& name, double mass_structure, double Up_Ar,
   current_stage_ = total_stage_;
   std::for_each(n_liq_eng.begin(), n_liq_eng.end(),
                 [](int value) { if(value <=0){
-                  throw std::runtime_error("invalid value insterted");
+                  throw std::runtime_error("invalid value inserted");
                 }
                 });
   std::for_each(m_liq_cont_.begin(), m_liq_cont_.end(),
                 [](double value) { if(value <=0){
-                  throw std::runtime_error("invalid value insterted");
+                  throw std::runtime_error("invalid value inserted");
                 } });
   std::for_each(m_liq_prop_.begin(), m_liq_prop_.end(),
                 [](double value) { if(value <=0){
-                  throw std::runtime_error("invalid value insterted");
+                  throw std::runtime_error("invalid value inserted");
                 } });
                 eng_=eng;
 }
@@ -68,7 +71,7 @@ Vec const Rocket::get_velocity() const { return velocity_; }
 
 Vec const Rocket::get_pos() const { return pos_; }
 
-int Rocket::get_rem_stage() const { return current_stage_; };
+int Rocket::get_rem_stage() const { return current_stage_; }
 
 double Rocket::get_fuel_left() const { 
   if(current_stage_==0){
@@ -584,18 +587,18 @@ bool Ad_engine::is_released() const { return released_; }
 
 
 
-bool is_circular_equatorial_orbit(double r,
-                                  double vr,
-                                  double omega)
+bool is_orbiting(double r, Vec velocity)
 {
     assert(r > 0);
+
+    double const vr= velocity[0];
+    double const omega = velocity[1];
 
     // Earth constants
     const double mu = sim::cost::G_ * sim::cost::earth_mass_;
 
     // Tangential velocity (including Earth's rotation)
-    const double vt =
-        r * omega + sim::cost::earth_speed_;
+    const double vt = omega + sim::cost::earth_speed_;
 
     // Circular orbital speed at radius r
     const double v_circ = std::sqrt(mu / r);
@@ -673,21 +676,16 @@ double const Cd_from_Mach(double M) {
     return Cd_final;
 }
 
-Vec const drag(double rho, double altitude, double theta,
+Vec const drag(double rho, double altitude,
                double upper_area, Vec const& velocity, double a) {
 
     // If atmosphere is negligible, no drag
     if (altitude > 51000.0) {
         return {0.0, 0.0};
     }
-
-  
-    
-
     // Extract polar velocity components
     double vr    = velocity[0];      // radial velocity
-    double r = altitude + sim::cost::earth_radius_;
-    double vpsi = velocity[1] * r; // angular velocity
+    double vpsi = velocity[1]; // angular velocity
       // Total speed magnitude  
     double v = std::sqrt(vr*vr + vpsi*vpsi);
 
@@ -711,10 +709,10 @@ Vec const drag(double rho, double altitude, double theta,
     return {fr, fpsi};
 }
 
- Vec const total_force(double rho, double theta, double total_mass, double altitude,
+ Vec const total_force(double rho, double total_mass, double altitude,
                       double upper_area, Vec const& velocity, Vec const& eng, double a) {
   Vec const gra{g_force(altitude + sim::cost::earth_radius_, total_mass, velocity[0])};
-  Vec const drag_f{drag(rho, altitude, theta, upper_area, velocity, a)};
+  Vec const drag_f{drag(rho, altitude, upper_area, velocity, a)};
   //pay attention is altitude
   double const r_force{eng[0]  + gra[0] + drag_f[0]};
   double const psi_force{eng[1] + gra[1] + drag_f[1]};
@@ -728,6 +726,7 @@ Vec const drag(double rho, double altitude, double theta,
 
 
     
+#endif // ROCKET_H
 
     
 

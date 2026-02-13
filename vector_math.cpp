@@ -38,10 +38,16 @@ Vec Vec::operator*(int s) {
     double operator[](std::size_t i) const {
         if (i == 0) return x;
         else if (i == 1) return y;
-        else throw std::out_of_range("Vec index must be 0 or 1");
-    }
-};
+        else throw std::runtime_error("Vec index must be 0 or 1");
+    };
 
+bool operator!=(Vec const& other){
+    return (x != other.x && y != other.y);
+}
+
+bool operator==(Vec const& other){
+    return (x == other.x && y == other.y);
+}
 // Scalar division
 Vec Vec::operator/(double s) {
     return Vec(x / s, y / s);
