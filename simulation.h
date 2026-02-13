@@ -35,6 +35,7 @@ struct cost {
   static constexpr double earth_mass_{5.9726e24};
   static constexpr double earth_speed_{6.0048e3};
   static constexpr double gamma_{1.4};
+  static constexpr double earth_angular_speed_{7.2921159e-5}; // rad/s
 };
 
 };     // namespace sim

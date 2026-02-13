@@ -121,10 +121,10 @@ int main() {
     }
   }
 
-  std::string file_name = "theta_data.txt";
-  std::ofstream output_rocket("output_rocket.txt");
+  std::string file_name = "assets/theta_data.txt";
+  std::ofstream output_rocket("assets/output_rocket.txt");
   std::streampos start_pos;
-  std::ofstream output_air("output_air.txt");
+  std::ofstream output_air("assets/output_air.txt");
   output_rocket << "posizione y-x   velocità y-x    forza y-x" << '\n';
   output_air << "temp    pres    rho" << '\n';
   if (!output_rocket.is_open() or !output_air.is_open()) {

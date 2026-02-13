@@ -10,12 +10,9 @@
 #include "vector_math.h"
 
 //
-// x axys component [1]
-// y axys component [0]
+// angular component [1]
+// radial module component [0]
 //
-
-namespace rocket {
-class Rocket;
 
 /* --------------------------------------------------------------------------*/
 /*                           costructor                              
@@ -82,15 +79,11 @@ double Rocket::get_fuel_left() const {
 
 double Rocket::get_up_ar() const { return upper_area_; }
 
-
-/* -------------------------------------------------------------------------- */
-/*                               kinematics rocket                              */
-/* -------------------------------------------------------------------------- */
-
+double get_altitude() const {return pos_[0]*std::sin(pos_[1];)}
 
 void Rocket::mass_lost(double solid_lost, double liq_lost)
 {
-    // Sanity checks (runtime-safe)
+    // Sanity checks 
     if (solid_lost < 0.0 || liq_lost < 0.0) {
         throw std::invalid_argument("Negative propellant mass loss");
     }
@@ -117,21 +110,106 @@ void Rocket::mass_lost(double solid_lost, double liq_lost)
     }
 }
 
-void Rocket::move(double time, Vec const& force) {
-  // Semi-implicit Euler position update:
-  // x(t+dt) = x(t) + v(t+dt) * dt
-  
-  pos_ = pos_+ velocity_ * time;
-  if (pos_ < 0) {
-    throw std::runtime_error("not enough thrust");
+/* -------------------------------------------------------------------------- */
+/*                               kinematics rocket                              */
+/* -------------------------------------------------------------------------- */
+
+
+
+
+
+void Rocket::change_vel(double dt, Vec const& force) {
+
+  // Current state in polar coordinates
+  double r     = pos_[0];       // radial position
+  double psi   = pos_[y];       // angular position (not directly used here)
+  double vr    = velocity_[0];  // radial velocity
+  double omega = velocity_[1];  // angular velocity (dψ/dt)
+
+  if (r <= 1e-8) {
+    throw std::runtime_error("Radius too small (singularity at r=0)");
+  }
+
+  // Total external force components (already includes gravity, drag, thrust, etc.)
+  double Fr   = force[0];   // radial force component
+  double Fpsi = force[1];   // tangential force component
+
+  // ----- Polar coordinate accelerations -----
+  // These extra terms appear because we are in a rotating coordinate system.
+
+  // Radial acceleration:
+  // ar = r*omega^2 + Fr/m
+  double ar =
+      r * omega * omega
+      + Fr / total_mass_;
+
+  // Angular acceleration:
+  // domega/dt = (1/r)*(Fpsi/m - 2*vr*omega)
+  double aomega =
+      (1.0 / r) *
+      (Fpsi / total_mass_ - 2.0 * vr * omega);
+
+  // ----- Semi-implicit (symplectic) Euler velocity update -----
+  // v(t+dt) = v(t) + a(t)*dt
+
+  velocity_[0] += ar * dt;
+  velocity_[1] += aomega * dt;
+}
+
+
+void Rocket::move(double dt, Vec const& force) {
+
+  change_vel(dt, force);
+  // Updated velocities
+  double vr    = velocity_[0];
+  double omega = velocity_[1];
+
+  // ----- Position update -----
+  // r(t+dt)   = r(t)   + vr(t+dt) * dt
+  // psi(t+dt) = psi(t) + omega(t+dt) * dt
+
+  pos_[0] += vr * dt;
+  pos_[1] += omega * dt;
+
+  // Prevent negative radius (impact or numerical instability)
+  if (pos_.[0] <= 0.0) {
+    throw std::runtime_error("Rocket reached r <= 0 (impact or instability)");
   }
 }
 
-void Rocket::change_vel(double time, Vec const& force) {
-  //Equation of motion for uniformly accelerated motion
-  velocity_= velocity_ + (force/total_mass_) * time;
-}
+/* -------------------------------------------------------------------------- */
+/*                               stage menagement                              */
+/* -------------------------------------------------------------------------- */
 
+
+void Rocket::mass_lost(double solid_lost, double liq_lost)
+{
+    // Sanity checks 
+    if (solid_lost < 0.0 || liq_lost < 0.0) {
+        throw std::invalid_argument("Negative propellant mass loss");
+    }
+
+    // Check availability BEFORE subtracting
+    if (solid_lost > m_sol_prop_) {
+        throw std::invalid_argument("Solid propellant exhausted");
+    }
+
+    if (!m_liq_prop_.empty() && liq_lost > m_liq_prop_[0]) {
+        throw std::runtime_error("Liquid propellant exhausted");
+    }
+
+    // Apply mass loss
+    m_sol_prop_ -= solid_lost;
+    if (!m_liq_prop_.empty()) {
+        m_liq_prop_[0] -= liq_lost;
+    }
+
+    total_mass_ -= (solid_lost + liq_lost);
+
+    if (total_mass_ <= 0.0) {
+        throw std::runtime_error("Rocket mass became non-positive");
+    }
+}
 
 void Rocket::set_state(std::string const& file_name,
                        double orbital_h,
@@ -158,9 +236,7 @@ void Rocket::set_state(std::string const& file_name,
     if (pos_[0] > 20000.0 && std::abs(old_theta) > 1e-8)
     {
         // Compute current speed magnitude
-        const double speed =
-            std::sqrt(std::pow(velocity_[0],2) +
-                      std::pow(velocity_[1],2));
+        const double speed = velocity[0];
 
         // Redistribute velocity components according to new angle
         velocity_[0] = speed * std::sin(theta_);
@@ -176,104 +252,229 @@ void Rocket::set_state(std::string const& file_name,
         throw std::runtime_error("Engine pointer is null");
 
 
-    //compute mass loss liquid prop
+    //compute mass loss
     const double delta_mass = eng_->delta_m(time, is_orbiting);
 
-    //compute mass loss solid prop
-    const double ms = delta_mass * n_sol_eng_;
+    solid_burn = delta_mass * n_sol_eng_;
 
-    // Total propellant consumed during this timestep
-    const double delta_m = mdot * time;
+    liquid_burn = delta_mass * n_liq_eng_.front();
 
-    double solid_lost = 0.0;
-    double liq_lost   = 0.0;
-
-    // Decide which stage is active
-    if (m_sol_prop_ > 0.0) {
-        solid_lost = std::min(delta_m, m_sol_prop_);
-    }
-    else if (!m_liq_prop_.empty()) {
-        liq_lost = std::min(delta_m, m_liq_prop_[0]);
-    }
 
     // Apply mass loss
     mass_lost(solid_lost, liq_lost);
-
-    // Handle stage separation if propellant is depleted
-    stage_release();
-
-
-    double ml = 0.0;
-    if (!n_liq_eng_.empty())
-        ml = delta_mass * n_liq_eng_.front();
-
-    // Update rocket mass
-    mass_lost(ms, ml);
 
     // ============================================================
     // 4. Check for stage separation
     // ============================================================
 
-    if (current_stage_ != 0)
+    if (current_stage_ != 0){
         stage_release(ms, ml);
+    }
+
 }
-}
-
-    
-
-    
-
-
-
-
 
 
 
 void Rocket::stage_release(double delta_ms, double delta_ml) {
+
+  // ------------------------------------------------------------
+  // Safety check:
+  // If the first liquid propellant mass is negative,
+  // it means something went wrong in mass bookkeeping.
+  // ------------------------------------------------------------
   if (m_liq_prop_[0] < 0) {
     std::cout << "error in the input distribution of the propellant" << '\n';
     throw std::runtime_error(
         "error in the input distribution of the propellant");
   }
-  if (m_sol_cont_ == 0) { //caso con stadio solido espulso
+
+  // ------------------------------------------------------------
+  // CASE 1:
+  // Solid stage has already been released
+  // (m_sol_cont_ == 0 means solid container mass is zero,
+  // so the solid booster is no longer present)
+  // ------------------------------------------------------------
+  if (m_sol_cont_ == 0) {
+
+    // Number of remaining liquid stages
     int const len{static_cast<int>(m_liq_prop_.size())};
+
+    // Check that current_stage_ index is consistent
     if(!(current_stage_ < len + 1 && current_stage_ >= 0)){
       throw std::runtime_error("error in stage release");
     }
-    if (m_liq_prop_[0] <= delta_ml) { 
-      //se prevedo di bruciare più carburante di quello che rimane
-      std::cout << "stage released"
-                << "\n";
+
+    // ------------------------------------------------------------
+    // If the remaining liquid propellant is less than or equal
+    // to the amount that is about to be burned (delta_ml),
+    // then this stage is considered depleted.
+    // ------------------------------------------------------------
+    if (m_liq_prop_[0] <= delta_ml) {
+
+      std::cout << "stage released" << "\n";
+
+      // Decrease stage counter
       current_stage_ -= 1;
+
+      // Remove empty tank mass and remaining propellant
+      // from total rocket mass
       total_mass_ -= (m_liq_cont_[0] + m_liq_prop_[0]);
+
+      // Physically remove first liquid stage from vectors
       m_liq_cont_.erase(m_liq_cont_.begin());
       m_liq_prop_.erase(m_liq_prop_.begin());
       n_liq_eng_.erase(n_liq_eng_.begin());
+
+      // --------------------------------------------------------
+      // If no more stages remain
+      // --------------------------------------------------------
       if (current_stage_ == 0) {
-        eng_->release(); //se ho consumato tutto il carburante 
-                        // all'ultimo stadio stacco i motori
-      m_liq_prop_.resize(1);
-      m_liq_prop_[0];
+
+        // Release engines (final shutdown)
+        eng_->release();
+
+        // Resize liquid prop vector to size 1
+        // (This line does not modify content meaningfully,
+        // but ensures vector is not empty)
+        m_liq_prop_.resize(1);
+
+        // Access first element (has no effect)
+        m_liq_prop_[0];
       }
     }
-  } else {
+  }
+
+  // ------------------------------------------------------------
+  // CASE 2:
+  // Solid stage is still present
+  // ------------------------------------------------------------
+  else {
+
+    // Ensure there is at least one stage active
     assert(current_stage_ != 0);
+
+    // Ensure liquid propellant exists
     assert(m_liq_prop_[0] != 0);
+
     int const len{static_cast<int>(m_liq_prop_.size())};
+
+    // Consistency check:
+    // Number of liquid stages + 1 (solid stage)
+    // must match total_stage_
     if(!(len + 1 == total_stage_)){
       throw std::runtime_error("error in stage menagement");
     }
+
+    // ------------------------------------------------------------
+    // If remaining solid propellant is less than or equal
+    // to the amount that is about to be burned (delta_ms),
+    // then solid stage is depleted.
+    // ------------------------------------------------------------
     if (m_sol_prop_ <= delta_ms) {
+
+      // Decrease stage counter
       current_stage_ -= 1;
+
+      // Remove solid container + remaining solid propellant
+      // from total mass
       total_mass_ -= (m_sol_cont_ + m_sol_prop_);
+
+      // Reset solid stage values
       m_sol_cont_ = 0;
       m_sol_prop_ = 0;
       n_sol_eng_ = 0;
-      std::cout << "stage released"
-                << "\n";
+
+      std::cout << "stage released" << "\n";
     }
   }
 }
+
+
+
+double improve_theta(std::string const& name_f, double theta, double pos,
+                            double orbital_h, std::streampos& file_pos) {
+  // Open the input file whose name is provided
+  std::ifstream file(name_f);
+  
+  // Ensure the file has been opened correctly
+  assert(file.is_open());
+  
+  // Variable used to store each line read from the file
+  std::string line;
+  
+  // Stores the altitude value from the previous iteration (initialized to 0)
+  double old_altitude{0.};
+  
+  // Current altitude read from file
+  double altitude;
+  
+  // Current angle read from file
+  double angle;
+  
+  // Rescale and adjust the position value.
+  // First: scale pos proportionally to orbital height.
+  // Second: subtract a correction term (500,000 / pos).
+  // Finally: ensure pos is not negative.
+  pos = std::max(0., (pos * 170'000) / orbital_h - 5e5 / pos);
+  
+  // Slightly slow down the rate at which the angle changes
+  // (initial previous angle set to 2)
+  double old_ang{2.};
+  
+  // Flag used to stop the search once the correct altitude is found
+  bool found{false};
+  
+  // Move the file read position to the previously stored position
+  file.seekg(file_pos);
+  
+  // Read the file line by line until the desired altitude is found
+  while (std::getline(file, line) && !found) {
+    
+    // Create a string stream to extract numerical values from the line
+    std::istringstream iss(line);
+    
+    // Extract altitude and angle from the current line
+    iss >> altitude >> angle;
+    
+    // Check if the current altitude is greater than or equal to the target position
+    if (altitude >= pos) {
+      found = true;
+      
+      // Compute distance between current altitude and target position
+      double const delta1{std::abs(altitude - pos)};
+      
+      // Compute distance between previous altitude and target position
+      double const delta2{std::abs(old_altitude - pos)}; 
+      
+      // Determine which altitude (current or previous) is closer to pos
+      if (delta1 <= delta2) {
+        // Return the smaller value between the new angle and theta
+        // (prevents angle from exceeding theta)
+        return angle > theta ? theta : angle;
+      } else {
+        // Return the smaller value between the previous angle and theta
+        return old_ang > theta ? theta : old_ang;
+      }
+    }
+    
+    // If not yet found, update previous values for next iteration
+    if (!found) {
+      old_altitude = altitude;     // Store current altitude as previous
+      old_ang = angle;             // Store current angle as previous
+      file_pos = file.tellg();     // Update file position marker
+    }
+  }
+  
+  // If no suitable altitude was found, return 0
+  return 0.;
+}
+
+
+
+/* -------------------------------------------------------------------------- */
+/*                               thrust                           */
+/* -------------------------------------------------------------------------- */
+
 
 
 Vec const Rocket::thrust(double time, bool is_orbiting) const {
@@ -294,8 +495,6 @@ Vec const Rocket::thrust(double time, bool is_orbiting) const {
   double const y{engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0]};
   return {z, y};
 }
-
-
 
 
 
@@ -414,36 +613,55 @@ bool Ad_engine::is_released() const { return released_; }
 
 
 
+bool is_circular_equatorial_orbit(double r,
+                                  double vr,
+                                  double omega)
+{
+    assert(r > 0);
 
+    // Earth constants
+    const double mu = sim::cost::G_ * sim::cost::earth_mass_;
 
-/* -------------------------------------------------------------------------- */
-/*                               Force computation                              */
-/* -------------------------------------------------------------------------- */
+    // Tangential velocity (including Earth's rotation)
+    const double vt =
+        r * omega + sim::cost::earth_speed_;
 
+    // Circular orbital speed at radius r
+    const double v_circ = std::sqrt(mu / r);
 
+    // Numerical tolerances
+    const double eps_vr = 1e2;    // radial velocity tolerance (m/s)
+    const double eps_vt = 1e2;    // tangential speed tolerance (m/s)
 
+    // Conditions for circular equatorial orbit
+    bool radial_ok = std::abs(vr) < eps_vr;
+    bool tangential_ok = std::abs(vt - v_circ) < eps_vt;
 
- bool is_orbiting(double pos, double velocity) {
-  assert(pos >= 0 && velocity >= 0);
-  //dice se il razzo sta orbitando o meno
-  double const inf_speed{std::sqrt(sim::cost::G_ * sim::cost::earth_mass_ /
-                                   (pos + sim::cost::earth_radius_))};
-                                   //energia cinetica + spinta rotazione terrrestre
-  return ((velocity + sim::cost::earth_speed_) > inf_speed) ? true : false;
+    return radial_ok && tangential_ok;
 }
 
- double centripetal(double total_mass, double altitude, double x_vel) {
-  //f=m v^2/r
-  double const f_z{total_mass * std::pow(x_vel+sim::cost::earth_speed_, 2) /
-                   (sim::cost::earth_radius_ + altitude)};
-  return f_z;
-}
+  
 
- double g_force(double altitude, double mass) {
-  //legge di newton
-  double const force{sim::cost::earth_mass_ * sim::cost::G_ * mass /
-                     (std::pow(sim::cost::earth_radius_ + altitude, 2))};
-  return force;
+ Vec const g_force(double altitude, double mass) {
+  const double mu =
+        sim::cost::G_ * sim::cost::earth_mass_;
+
+    const double Omega =
+        sim::cost::earth_angular_speed_;
+
+    // Gravitational force
+    double Fg = - mu * total_mass / (r * r);
+
+    // Centrifugal force
+    double Fcent = total_mass * Omega * Omega * r;
+
+    // Coriolis force (tangential only)
+    double Fcoriolis = -2.0 * total_mass * Omega * vr;
+
+    double Fr   = Fg + Fcent;
+    double Fpsi = Fcoriolis;
+
+    return {Fr, Fpsi};
 }
 
 
@@ -494,75 +712,52 @@ Vec const drag(double rho, double altitude, double theta,
 
   
     // Avoid division by zero at very low speed
-    if (velocity.norm() < 1e-6) {
+    if (velocity[0] < 1e-6) {
         return {0.0, 0.0};
     }
 
+    // Extract polar velocity components
+    double vr    = velocity[0];      // radial velocity
+    double omega = velocity[1];      // angular velocity
+      // Total speed magnitude
+    double v = std::sqrt(vr*vr + vpsi*vpsi);
+
     // Compute Mach number using your speed of sound model
-    double M = velocity.norm() / a;
+    double M = velocity[0] / a;
 
     // Compute drag coefficient depending on Mach number
     double Cd = Cd_from_Mach(M);
 
     // Drag magnitude: Fd = 0.5 * rho * v^2 * Cd * A
-    double Fd = 0.5 * rho * std::pow(velocity.norm(),2) * Cd * upper_area;
+    double Fd = 0.5 * rho * v* v * Cd * upper_area;
 
-    // Drag force vector: opposite to velocity direction
-    double fx = -Fd * (velocity[0] / velocity.norm());
-    double fy = -Fd * (velocity[0] / velocity.norm());
+    double Fr   = -Fd * (vr / v);
+    double Fpsi = -Fd * (vpsi / v);
 
-    // Remember: Vec = {y, x}
-    return {fy, fx};
-}
-
-
- double improve_theta(std::string const& name_f, double theta, double pos,
-                            double orbital_h, std::streampos& file_pos) {
-  std::ifstream file(name_f);
-  assert(file.is_open());
-  std::string line;
-  double old_altitude{0.};
-  double altitude;
-  double angle;
-  pos = std::max(0., (pos * 170'000) / orbital_h - 5e5 / pos);
-  //rallento un po' la velocità a cui cambia l'angolo
-  double old_ang{2.};
-  bool found{false};
-  file.seekg(file_pos);
-  while (std::getline(file, line) && !found) {
-    std::istringstream iss(line); // estrae i valori 
-    iss >> altitude >> angle; //li attribuisce alle variabili
-    if (altitude >= pos) { //altitude=letta da file
-      found = true;
-      double const delta1{std::abs(altitude - pos)};
-      double const delta2{std::abs(old_altitude - pos)}; 
-      //calcolo se ero più vicino prima al valore o adesso
-      if (delta1 <= delta2) {
-        return angle > theta ? theta : angle;
-      } else {
-        return old_ang > theta ? theta : old_ang;
-      }
-    }
-    if (!found) {
-      old_altitude = altitude; //old_atitude quella del ciclo prima
-      old_ang = angle;
-      file_pos = file.tellg(); //sposto il segnalibro
-    }
-  }
-  return 0.;
+    return {fr, fpsi};
 }
 
  Vec const total_force(double rho, double theta, double total_mass, double pos,
                       double upper_area, Vec const& velocity, Vec const& eng) {
-  double const centrip{centripetal(total_mass, pos, velocity[1])};
-  double const gra{g_force(pos, total_mass)};
+  Vec const gra{g_force(pos, total_mass)};
   Vec const drag_f{drag(rho, pos, theta, upper_area, velocity)};
-  double const y_force{eng[0] + centrip - gra - drag_f[0]};
-  double const x_force{eng[1] - drag_f[1]};
+  double const r_force{eng[0]  + gra[1] + drag_f[0]};
+  double const x_force{eng[1] + gra[2] + drag_f[1]};
   if (x_force <= 0) {
     return {y_force, 0};
   } else {
     return {y_force, x_force};
   }
 }
-};  // namespace rocket
+
+}
+
+    
+
+    
+
+
+
+
+
+

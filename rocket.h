@@ -142,11 +142,10 @@ double total_mass_{135000.0};
 // Total number of rocket stages
 int total_stage_{1};
 
-// Current velocity vector (m/s)
+// Current velocity vector (m/s) (r/psi)
 Vec velocity_{0.0, 0.0};
 
-// Current position vector (m)
-// Altitude is implicitly represented by the vertical component of pos_
+// Current position vector (m) (r,psi)
 Vec pos_{0.0, 0.0};
 
 // Index of the currently active stage
@@ -199,6 +198,8 @@ std::vector<int> n_liq_eng_;
 
   double get_mass() const;
 
+  double get_altitude() const;
+
 /* -------------------------------------------------------------------------- */
 /*                               kinematics rocket                              */
 /* -------------------------------------------------------------------------- */
@@ -230,7 +231,7 @@ bool is_orbiting(double pos, double velocity);
 //forse dovremmo togliere la forza centripeta non è davvero fisica
 double centripetal(double total_mass, double altitude, double x_vel);
 
-double g_force(double altitude, double mass);
+Vec const g_force(double altitude, double mass);
 
 double Cd_from_Mach(double M);
 

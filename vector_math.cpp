@@ -27,14 +27,14 @@ Vec Vec::operator*(int s) {
 }
 
 
-   // Accesso in lettura/scrittura
+   // Read7write access
     double& operator[](std::size_t i) {
         if (i == 0) return x;
         else if (i == 1) return y;
         else throw std::out_of_range("Vec index must be 0 or 1");
     }
 
-    // Accesso in sola lettura (const)
+    // only read access
     double operator[](std::size_t i) const {
         if (i == 0) return x;
         else if (i == 1) return y;
