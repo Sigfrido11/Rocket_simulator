@@ -348,6 +348,8 @@ int main() {
                     << force[1] << '\n';
       output_air << air.get_t() << " " << air.get_p() << " " << air.get_rho() << '\n';
 
+      double altitude_rocket =  rocket.get_pos()[0] * std::sin(rocket.get_pos()[1]);
+
       // grafica
 
       int const out_time_min{out_time / 60};
@@ -376,29 +378,29 @@ int main() {
 
       rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * M_PI));
       outer_atm.setPosition(0.f,
-                            rocket.get_pos()[0] + (height * 3 / 4) - 100'000);
-      ground.setPosition(0.f, rocket.get_pos()[0] + (height * 3 / 4));
+                            altitude_rocket + (height * 3 / 4) - 100'000);
+      ground.setPosition(0.f, altitude_rocket + (height * 3 / 4));
       inner_atm.setPosition(0.f,
-                            rocket.get_pos()[0] + (height * 3 / 4) - 51'000);
+                            altitude_rocket + (height * 3 / 4) - 51'000);
 
-      if (rocket.get_pos()[0] / sim::cost::earth_radius_ * 100.f < 50.f) {
+      if (altitude_rocket / sim::cost::earth_radius_ * 100.f < 50.f) {
         earth.setScale(200.f / 1195.f, 200.f / 1193.f);
         earth.setPosition((width - 500.f) / 4 + 500.f - 100.f,
                           height / 4.f - 100.f);
         rocket2.setPosition(
             (width - 500.f) / 4 + 500.f -
-                100.f * rocket.get_pos()[0]/ sim::cost::earth_radius_ *
+                100.f * altitude_rocket/ sim::cost::earth_radius_ *
                     std::sin(angle_total),
-            height / 4.f - 100.f * rocket.get_pos()[0] / sim::cost::earth_radius_ *
+            height / 4.f - 100.f * altitude_rocket / sim::cost::earth_radius_ *
                                std::cos(angle_total));
       } else {
         earth.setScale(2.f / 1195.f, 2.f / 1193.f);
         earth.setPosition((width - 500.f) / 4 + 500.f - 1.f,
                           height / 4.f - 1.f);
         rocket2.setPosition((width - 500.f) / 4 + 500.f -
-                                1.f * rocket.get_pos()[0] / sim::cost::earth_radius_ *
+                                1.f * altitude_rocket / sim::cost::earth_radius_ *
                                     std::sin(rocket.get_theta()),
-                            height / 4.f - 1.f * rocket.get_pos()[0] /
+                            height / 4.f - 1.f * altitude_rocket /
                                                sim::cost::earth_radius_ *
                                                std::cos(angle_total));
       }
