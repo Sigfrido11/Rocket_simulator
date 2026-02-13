@@ -2,18 +2,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Rocket (CMake)",
+            "name": "Debug Rocket",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/rocket.t",   // path al tuo eseguibile generato
-            "args": [
-                "b", "f", "300", "1.5", "f", "3", "3", "3", "70000"
-            ],                                      // eventuali argomenti da passare al main
-            "stopAtEntry": true,                             // ferma all'ingresso di main
-            "cwd": "${workspaceFolder}",                     // working directory
+            "program": "${workspaceFolder}/build/rocket.t",
+            "args": [],               
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,                         // permette input/output via terminale esterno
-            "MIMode": "lldb",                                // se vuoi usare gdb cambia in "gdb"
+            "externalConsole": true,
+            "MIMode": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",

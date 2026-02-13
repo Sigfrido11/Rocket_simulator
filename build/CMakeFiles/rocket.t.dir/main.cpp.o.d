@@ -158,7 +158,6 @@ CMakeFiles/rocket.t.dir/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
  /usr/include/c++/13/bits/fstream.tcc /usr/include/c++/13/iostream \
- /usr/include/c++/13/sstream /usr/include/c++/13/bits/sstream.tcc \
  /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/interface.h \
  /usr/include/SFML/Audio.hpp /usr/include/SFML/System.hpp \
  /usr/include/SFML/Config.hpp /usr/include/SFML/System/Clock.hpp \
