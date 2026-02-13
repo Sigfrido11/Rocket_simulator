@@ -1,5 +1,6 @@
 #include "vector_math.h"
 #include <cmath>
+#include <stdexcept> 
 
 // Constructors
 Vec::Vec() : x(0.0), y(0.0) {}
@@ -28,45 +29,47 @@ Vec Vec::operator*(int s) {
 
 
    // Read7write access
-    double& operator[](std::size_t i) {
+    double& Vec::operator[](std::size_t i) {
         if (i == 0) return x;
         else if (i == 1) return y;
         else throw std::out_of_range("Vec index must be 0 or 1");
     }
 
     // only read access
-    double operator[](std::size_t i) const {
+    double Vec::operator[](std::size_t i) const {
         if (i == 0) return x;
         else if (i == 1) return y;
         else throw std::runtime_error("Vec index must be 0 or 1");
     };
 
-bool operator!=(Vec const& other){
-    return (x != other.x && y != other.y);
+bool Vec::operator!=( Vec const& other) const {
+    return (x != other.x || y != other.y);
 }
 
-bool operator==(Vec const& other){
+bool Vec::operator==( Vec const& other) const {
     return (x == other.x && y == other.y);
 }
+
+
 // Scalar division
 Vec Vec::operator/(double s) {
     return Vec(x / s, y / s);
 }
 
 // Comparisons (based on vector norm)
-bool Vec::operator>(double s) {
+bool Vec::operator>(double s) const {
     return this->norm() > s;
 }
 
-bool Vec::operator>=(double s) {
+bool Vec::operator>=(double s) const {
     return this->norm() >= s;
 }
 
-bool Vec::operator<(double s) {
+bool Vec::operator<(double s) const {
     return this->norm() < s;
 }
 
-bool Vec::operator<=(double s) {
+bool Vec::operator<=(double s) const {
     return this->norm() <= s;
 }
 
@@ -80,30 +83,13 @@ Vec& Vec::operator+=(Vec const& other) {
 /* ------------------------- Useful relations ------------------------- */
 
 // Norm (magnitude)
-double Vec::norm() {
+double Vec::norm()const {
     return std::sqrt(x*x + y*y);
 }
 
 // Norm squared
-double Vec::norm2() {
+double Vec::norm2()const {
     return x*x + y*y;
 }
 
-// Convert to unit vector
-Vec& Vec::unit_vect() {
-    double n = this->norm();
-    if(n != 0.0) {
-        x /= n;
-        y /= n;
-    }
-    return *this;
-}
 
-// Convert to polar coordinates (x = r, y = theta)
-Vec& Vec::get_polar() {
-    double r = this->norm();
-    double theta = std::atan2(y, x);
-    x = r;
-    y = theta;
-    return *this;
-}

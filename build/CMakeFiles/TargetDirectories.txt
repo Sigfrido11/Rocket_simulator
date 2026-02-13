@@ -27,7 +27,6 @@
 /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles/ContinuousMemCheck.dir
 /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles/ContinuousSubmit.dir
 /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles/rocket.t.dir
-/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles/rocket_test.t.dir
 /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles/graph_test.t.dir
 /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles/test.dir
 /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles/edit_cache.dir

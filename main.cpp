@@ -160,7 +160,7 @@ int main() {
   window.setFramerateLimit(5);
 
   sf::Texture texture1;
-  if (!texture1.loadFromFile("rocket.png")) {
+  if (!texture1.loadFromFile("assets/img/rocket.png")) {
     std::cout << "error in loading rocket.png";
     throw std::runtime_error("error in loading rocket.png");
   }
@@ -183,7 +183,7 @@ int main() {
   ground.setPosition(0.f, height / 4.f * 3.f);
 
   sf::Texture texture2;
-  if (!texture2.loadFromFile("earth.jpeg")) {
+  if (!texture2.loadFromFile("assets/img/earth.jpeg")) {
     std::cout << "error in loading earth.jpeg";
     throw std::runtime_error("error in loading earth.jpeg");
   }
@@ -200,7 +200,7 @@ int main() {
   float angle_total{};
 
   sf::Texture texture3;
-  if (!texture3.loadFromFile("map.jpg")) {
+  if (!texture3.loadFromFile("assets/img/map.jpg")) {
     std::cout << "error in loading map.jpg";
     throw std::runtime_error("error in loading map.jpg");
   }
@@ -215,7 +215,7 @@ int main() {
   rocket3.setPosition(750.f, height / 4 * 3);
 
   sf::Font tnr;
-  if (!tnr.loadFromFile("times_new_roman.ttf")) {
+  if (!tnr.loadFromFile("assets/font/times_new_roman.ttf")) {
     std::cout << "error in loading the font";
     throw std::runtime_error("error in loading the font");
   }
@@ -311,7 +311,7 @@ int main() {
       }
 
       bool const orbiting{
-          rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity());
+          rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity())};
 
       rocket.set_state(file_name, orbital_h, delta_time, orbiting, start_pos);
 
@@ -321,12 +321,12 @@ int main() {
 
       Vec const force{rocket::total_force(
           air.get_rho(), rocket.get_mass(), rocket.get_pos()[0]-sim::cost::earth_radius_,
-          rocket.get_up_ar(), rocket.get_velocity(), eng_force, air.get_speed_sound()};
+          rocket.get_up_ar(), rocket.get_velocity(), eng_force, air.get_speed_sound())};
 
       double const angle_var{
           ((rocket.get_velocity()[1] + sim::cost::earth_speed_) * delta_time +
            0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) /
-          rocket_radius};
+          rocket.get_pos()[0]};
       angle_total += angle_var;
 
       rocket.move(delta_time, force);
@@ -387,18 +387,18 @@ int main() {
                           height / 4.f - 100.f);
         rocket2.setPosition(
             (width - 500.f) / 4 + 500.f -
-                100.f * rocket_radius / sim::cost::earth_radius_ *
+                100.f * rocket.get_pos()[0]/ sim::cost::earth_radius_ *
                     std::sin(angle_total),
-            height / 4.f - 100.f * rocket_radius / sim::cost::earth_radius_ *
+            height / 4.f - 100.f * rocket.get_pos()[0] / sim::cost::earth_radius_ *
                                std::cos(angle_total));
       } else {
         earth.setScale(2.f / 1195.f, 2.f / 1193.f);
         earth.setPosition((width - 500.f) / 4 + 500.f - 1.f,
                           height / 4.f - 1.f);
         rocket2.setPosition((width - 500.f) / 4 + 500.f -
-                                1.f * rocket_radius / sim::cost::earth_radius_ *
+                                1.f * rocket.get_pos()[0] / sim::cost::earth_radius_ *
                                     std::sin(rocket.get_theta()),
-                            height / 4.f - 1.f * rocket_radius /
+                            height / 4.f - 1.f * rocket.get_pos()[0] /
                                                sim::cost::earth_radius_ *
                                                std::cos(angle_total));
       }

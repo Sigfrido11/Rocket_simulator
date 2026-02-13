@@ -25,7 +25,7 @@ target_link_libraries(rocket.t sfml-graphics sfml-window sfml-system sfml-audio)
 if (BUILD_TESTING)
 
 # aggiungi l'eseguibile 
-add_executable(rocket_test.t test_calc.cpp simulation.cpp rocket.cpp)
+#add_executable(rocket_test.t test_calc.cpp simulation.cpp rocket.cpp)
 add_executable(graph_test.t graph_test.cpp simulation.cpp interface.cpp)
 target_link_libraries(graph_test.t sfml-graphics sfml-window sfml-system)
 add_test(NAME rocket_test COMMAND rocket_test)

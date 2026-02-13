@@ -504,19 +504,6 @@ rocket.t/fast:
 .PHONY : rocket.t/fast
 
 #=============================================================================
-# Target rules for targets named rocket_test.t
-
-# Build rule for target.
-rocket_test.t: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 rocket_test.t
-.PHONY : rocket_test.t
-
-# fast build rule for target.
-rocket_test.t/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/build
-.PHONY : rocket_test.t/fast
-
-#=============================================================================
 # Target rules for targets named graph_test.t
 
 # Build rule for target.
@@ -610,7 +597,6 @@ rocket.o: rocket.cpp.o
 # target to build an object file
 rocket.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/rocket.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/rocket.cpp.o
 .PHONY : rocket.cpp.o
 
 rocket.i: rocket.cpp.i
@@ -619,7 +605,6 @@ rocket.i: rocket.cpp.i
 # target to preprocess a source file
 rocket.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/rocket.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/rocket.cpp.i
 .PHONY : rocket.cpp.i
 
 rocket.s: rocket.cpp.s
@@ -628,7 +613,6 @@ rocket.s: rocket.cpp.s
 # target to generate assembly for a file
 rocket.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/rocket.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/rocket.cpp.s
 .PHONY : rocket.cpp.s
 
 simulation.o: simulation.cpp.o
@@ -637,7 +621,6 @@ simulation.o: simulation.cpp.o
 # target to build an object file
 simulation.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/simulation.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/simulation.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph_test.t.dir/build.make CMakeFiles/graph_test.t.dir/simulation.cpp.o
 .PHONY : simulation.cpp.o
 
@@ -647,7 +630,6 @@ simulation.i: simulation.cpp.i
 # target to preprocess a source file
 simulation.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/simulation.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/simulation.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph_test.t.dir/build.make CMakeFiles/graph_test.t.dir/simulation.cpp.i
 .PHONY : simulation.cpp.i
 
@@ -657,33 +639,8 @@ simulation.s: simulation.cpp.s
 # target to generate assembly for a file
 simulation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/simulation.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/simulation.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph_test.t.dir/build.make CMakeFiles/graph_test.t.dir/simulation.cpp.s
 .PHONY : simulation.cpp.s
-
-test_calc.o: test_calc.cpp.o
-.PHONY : test_calc.o
-
-# target to build an object file
-test_calc.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/test_calc.cpp.o
-.PHONY : test_calc.cpp.o
-
-test_calc.i: test_calc.cpp.i
-.PHONY : test_calc.i
-
-# target to preprocess a source file
-test_calc.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/test_calc.cpp.i
-.PHONY : test_calc.cpp.i
-
-test_calc.s: test_calc.cpp.s
-.PHONY : test_calc.s
-
-# target to generate assembly for a file
-test_calc.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/test_calc.cpp.s
-.PHONY : test_calc.cpp.s
 
 vector_math.o: vector_math.cpp.o
 .PHONY : vector_math.o
@@ -748,7 +705,6 @@ help:
 	@echo "... NightlyUpdate"
 	@echo "... graph_test.t"
 	@echo "... rocket.t"
-	@echo "... rocket_test.t"
 	@echo "... graph_test.o"
 	@echo "... graph_test.i"
 	@echo "... graph_test.s"
@@ -764,9 +720,6 @@ help:
 	@echo "... simulation.o"
 	@echo "... simulation.i"
 	@echo "... simulation.s"
-	@echo "... test_calc.o"
-	@echo "... test_calc.i"
-	@echo "... test_calc.s"
 	@echo "... vector_math.o"
 	@echo "... vector_math.i"
 	@echo "... vector_math.s"

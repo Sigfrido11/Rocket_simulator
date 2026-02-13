@@ -78,6 +78,5 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/ContinuousMemCheck.dir/DependInfo.cmake"
   "CMakeFiles/ContinuousSubmit.dir/DependInfo.cmake"
   "CMakeFiles/rocket.t.dir/DependInfo.cmake"
-  "CMakeFiles/rocket_test.t.dir/DependInfo.cmake"
   "CMakeFiles/graph_test.t.dir/DependInfo.cmake"
   )

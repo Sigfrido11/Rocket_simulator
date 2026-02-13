@@ -16,7 +16,7 @@ int main() {
   window.setFramerateLimit(5);
 
   sf::Texture texture1;
-  if (!texture1.loadFromFile("rocket.png")) {
+  if (!texture1.loadFromFile("assets/img/rocket.png")) {
     return -1;
   }
   sf::Sprite rocket1;
@@ -38,7 +38,7 @@ int main() {
   ground.setPosition(0.f, height / 4.f * 3.f);
 
   sf::Texture texture2;
-  if (!texture2.loadFromFile("earth.jpeg")) {
+  if (!texture2.loadFromFile("assets/img/earth.jpeg")) {
     return -1;
   }
   sf::Sprite earth;
@@ -54,7 +54,7 @@ int main() {
   float angle_total{};
 
   sf::Texture texture3;
-  if (!texture3.loadFromFile("map.jpg")) {
+  if (!texture3.loadFromFile("assets/img/map.jpg")) {
     return -1;
   }
   sf::Sprite map;
@@ -68,7 +68,7 @@ int main() {
   rocket3.setPosition(750.f, height / 4 * 3);
 
   sf::Font tnr;
-  if (!tnr.loadFromFile("times_new_roman.ttf")) {
+  if (!tnr.loadFromFile("assets/font/times_new_roman.ttf")) {
     return -1;
   }
 

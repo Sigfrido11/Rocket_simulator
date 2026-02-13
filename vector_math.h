@@ -45,19 +45,21 @@ double& operator[](std::size_t i);
 double operator[](std::size_t i) const;
 
 //Bigger than comparison
-bool operator>(double s);
+bool operator>(double s) const;
 
-bool operator>=( double s);
+bool operator>=( double s) const;
 
 //Less than comparison 
-bool operator<(double s);
+bool operator<(double s) const;
 
-bool operator<=(double s);
+bool operator<=(double s) const;
 
-bool operator!=(Vec const& other);
+bool operator!=( Vec const& other) const;
+
+bool operator==(Vec const& other) const;
 
 // Compound assignment
-Vec& operator+=(Vec const& other);
+Vec& operator+=( Vec const& other);
 
 
 
@@ -65,13 +67,10 @@ Vec& operator+=(Vec const& other);
 /*                         Usefull relation                         */
 /* -------------------------------------------------------------------------- */
 
-double norm();
+double norm() const;
 
-double norm2();
+double norm2() const;
 
-Vec& unit_vect();
-
-Vec& get_polar();
 
 };
 

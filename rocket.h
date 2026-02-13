@@ -218,7 +218,7 @@ std::vector<int> n_liq_eng_;
 /*                               Force computation                              */
 /* -------------------------------------------------------------------------- */
 
-Vec const total_force(double rho, double theta, double total_mass, double altitude,
+Vec const total_force(double rho, double total_mass, double altitude,
                       double upper_area, Vec const& velocity, Vec const& eng, double a);
 
 
@@ -229,7 +229,7 @@ bool is_orbiting(double r, Vec velocity);
 
 Vec const g_force(double altitude, double mass);
 
-double const Cd_from_Mach(double M);
+double Cd_from_Mach(double M);
 
 Vec const drag(double rho, double altitude, double theta,
                       double upper_area, Vec const& velocity);

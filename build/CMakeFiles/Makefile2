@@ -64,7 +64,6 @@ CMAKE_BINARY_DIR = /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_a
 
 # The main recursive "all" target.
 all: CMakeFiles/rocket.t.dir/all
-all: CMakeFiles/rocket_test.t.dir/all
 all: CMakeFiles/graph_test.t.dir/all
 .PHONY : all
 
@@ -102,7 +101,6 @@ clean: CMakeFiles/ContinuousCoverage.dir/clean
 clean: CMakeFiles/ContinuousMemCheck.dir/clean
 clean: CMakeFiles/ContinuousSubmit.dir/clean
 clean: CMakeFiles/rocket.t.dir/clean
-clean: CMakeFiles/rocket_test.t.dir/clean
 clean: CMakeFiles/graph_test.t.dir/clean
 .PHONY : clean
 
@@ -859,32 +857,6 @@ rocket.t: CMakeFiles/rocket.t.dir/rule
 CMakeFiles/rocket.t.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/clean
 .PHONY : CMakeFiles/rocket.t.dir/clean
-
-#=============================================================================
-# Target rules for target CMakeFiles/rocket_test.t.dir
-
-# All Build rule for target.
-CMakeFiles/rocket_test.t.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles --progress-num=11,12,13,14 "Built target rocket_test.t"
-.PHONY : CMakeFiles/rocket_test.t.dir/all
-
-# Build rule for subdir invocation for target.
-CMakeFiles/rocket_test.t.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles 4
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/rocket_test.t.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/CMakeFiles 0
-.PHONY : CMakeFiles/rocket_test.t.dir/rule
-
-# Convenience name for target.
-rocket_test.t: CMakeFiles/rocket_test.t.dir/rule
-.PHONY : rocket_test.t
-
-# clean rule for target.
-CMakeFiles/rocket_test.t.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket_test.t.dir/build.make CMakeFiles/rocket_test.t.dir/clean
-.PHONY : CMakeFiles/rocket_test.t.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/graph_test.t.dir

@@ -311,9 +311,6 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
         // (This line does not modify content meaningfully,
         // but ensures vector is not empty)
         m_liq_prop_.resize(1);
-
-        // Access first element (has no effect)
-        m_liq_prop_[0];
       }
     }
   }
@@ -640,7 +637,7 @@ bool is_orbiting(double r, Vec velocity)
 
 
 
-double const Cd_from_Mach(double M) {
+double Cd_from_Mach(double M) {
    // Realistic drag coefficient model for slender rockets as a function of Mach number.
    // Inspired by experimental rocket/missile aerodynamics and NASA trends.
    // Smooth and continuous (no discontinuities in Cd or its derivative).
@@ -722,13 +719,11 @@ Vec const drag(double rho, double altitude,
     return {r_force, psi_force};
   }
 }
-
+}
 
 
     
-#endif // ROCKET_H
 
-    
 
 
 
