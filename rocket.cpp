@@ -79,36 +79,7 @@ double Rocket::get_fuel_left() const {
 
 double Rocket::get_up_ar() const { return upper_area_; }
 
-double get_altitude() const {return pos_[0]*std::sin(pos_[1];)}
-
-void Rocket::mass_lost(double solid_lost, double liq_lost)
-{
-    // Sanity checks 
-    if (solid_lost < 0.0 || liq_lost < 0.0) {
-        throw std::invalid_argument("Negative propellant mass loss");
-    }
-
-    // Check availability BEFORE subtracting
-    if (solid_lost > m_sol_prop_) {
-        throw std::invalid_argument("Solid propellant exhausted");
-    }
-
-    if (!m_liq_prop_.empty() && liq_lost > m_liq_prop_[0]) {
-        throw std::runtime_error("Liquid propellant exhausted");
-    }
-
-    // Apply mass loss
-    m_sol_prop_ -= solid_lost;
-    if (!m_liq_prop_.empty()) {
-        m_liq_prop_[0] -= liq_lost;
-    }
-
-    total_mass_ -= (solid_lost + liq_lost);
-
-    if (total_mass_ <= 0.0) {
-        throw std::runtime_error("Rocket mass became non-positive");
-    }
-}
+double Rocket::get_altitude() const {return pos_[0] - sim::cost::earth_radius_;}
 
 /* -------------------------------------------------------------------------- */
 /*                               kinematics rocket                              */
@@ -122,7 +93,7 @@ void Rocket::change_vel(double dt, Vec const& force) {
 
   // Current state in polar coordinates
   double r     = pos_[0];       // radial position
-  double psi   = pos_[y];       // angular position (not directly used here)
+  double psi   = pos_[1];       // angular position (not directly used here)
   double vr    = velocity_[0];  // radial velocity
   double omega = velocity_[1];  // angular velocity (dψ/dt)
 
@@ -172,7 +143,7 @@ void Rocket::move(double dt, Vec const& force) {
   pos_[1] += omega * dt;
 
   // Prevent negative radius (impact or numerical instability)
-  if (pos_.[0] <= 0.0) {
+  if (pos_[0] <= 0.0) {
     throw std::runtime_error("Rocket reached r <= 0 (impact or instability)");
   }
 }
@@ -236,7 +207,7 @@ void Rocket::set_state(std::string const& file_name,
     if (pos_[0] > 20000.0 && std::abs(old_theta) > 1e-8)
     {
         // Compute current speed magnitude
-        const double speed = velocity[0];
+        const double speed = velocity_[0];
 
         // Redistribute velocity components according to new angle
         velocity_[0] = speed * std::sin(theta_);
@@ -255,20 +226,20 @@ void Rocket::set_state(std::string const& file_name,
     //compute mass loss
     const double delta_mass = eng_->delta_m(time, is_orbiting);
 
-    solid_burn = delta_mass * n_sol_eng_;
+    double const solid_burn = delta_mass * n_sol_eng_;
 
-    liquid_burn = delta_mass * n_liq_eng_.front();
+    double const liquid_burn = delta_mass * n_liq_eng_.front();
 
 
     // Apply mass loss
-    mass_lost(solid_lost, liq_lost);
+    mass_lost(solid_burn, liquid_burn);
 
     // ============================================================
     // 4. Check for stage separation
     // ============================================================
 
     if (current_stage_ != 0){
-        stage_release(ms, ml);
+        stage_release(solid_burn, liquid_burn);
     }
 
 }
@@ -642,7 +613,7 @@ bool is_circular_equatorial_orbit(double r,
 
   
 
- Vec const g_force(double altitude, double mass) {
+ Vec const g_force(double r, double mass, double vr) {
   const double mu =
         sim::cost::G_ * sim::cost::earth_mass_;
 
@@ -650,13 +621,13 @@ bool is_circular_equatorial_orbit(double r,
         sim::cost::earth_angular_speed_;
 
     // Gravitational force
-    double Fg = - mu * total_mass / (r * r);
+    double Fg = - mu * mass / (r * r);
 
     // Centrifugal force
-    double Fcent = total_mass * Omega * Omega * r;
+    double Fcent = mass * Omega * Omega * r;
 
     // Coriolis force (tangential only)
-    double Fcoriolis = -2.0 * total_mass * Omega * vr;
+    double Fcoriolis = -2.0 * mass * Omega * vr;
 
     double Fr   = Fg + Fcent;
     double Fpsi = Fcoriolis;
@@ -711,46 +682,50 @@ Vec const drag(double rho, double altitude, double theta,
     }
 
   
-    // Avoid division by zero at very low speed
-    if (velocity[0] < 1e-6) {
-        return {0.0, 0.0};
-    }
+    
 
     // Extract polar velocity components
     double vr    = velocity[0];      // radial velocity
-    double omega = velocity[1];      // angular velocity
-      // Total speed magnitude
+    double r = altitude + sim::cost::earth_radius_;
+    double vpsi = velocity[1] * r; // angular velocity
+      // Total speed magnitude  
     double v = std::sqrt(vr*vr + vpsi*vpsi);
 
+    // Avoid division by zero at very low speed
+    if (v < 1e-6) {
+        return {0.0, 0.0};
+    }
+
     // Compute Mach number using your speed of sound model
-    double M = velocity[0] / a;
+    double M = v / a;
 
     // Compute drag coefficient depending on Mach number
     double Cd = Cd_from_Mach(M);
 
     // Drag magnitude: Fd = 0.5 * rho * v^2 * Cd * A
-    double Fd = 0.5 * rho * v* v * Cd * upper_area;
+    double fd = 0.5 * rho * v* v * Cd * upper_area;
 
-    double Fr   = -Fd * (vr / v);
-    double Fpsi = -Fd * (vpsi / v);
+    double fr   = -fd * (vr / v);
+    double fpsi = -fd * (vpsi / v);
 
     return {fr, fpsi};
 }
 
- Vec const total_force(double rho, double theta, double total_mass, double pos,
-                      double upper_area, Vec const& velocity, Vec const& eng) {
-  Vec const gra{g_force(pos, total_mass)};
-  Vec const drag_f{drag(rho, pos, theta, upper_area, velocity)};
-  double const r_force{eng[0]  + gra[1] + drag_f[0]};
-  double const x_force{eng[1] + gra[2] + drag_f[1]};
-  if (x_force <= 0) {
-    return {y_force, 0};
+ Vec const total_force(double rho, double theta, double total_mass, double altitude,
+                      double upper_area, Vec const& velocity, Vec const& eng, double a) {
+  Vec const gra{g_force(altitude + sim::cost::earth_radius_, total_mass, velocity[0])};
+  Vec const drag_f{drag(rho, altitude, theta, upper_area, velocity, a)};
+  //pay attention is altitude
+  double const r_force{eng[0]  + gra[0] + drag_f[0]};
+  double const psi_force{eng[1] + gra[1] + drag_f[1]};
+  if (r_force <= 0) {
+    return {r_force, 0};
   } else {
-    return {y_force, x_force};
+    return {r_force, psi_force};
   }
 }
 
-}
+
 
     
 

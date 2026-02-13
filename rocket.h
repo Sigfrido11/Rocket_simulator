@@ -146,7 +146,7 @@ int total_stage_{1};
 Vec velocity_{0.0, 0.0};
 
 // Current position vector (m) (r,psi)
-Vec pos_{0.0, 0.0};
+Vec pos_{sim::cost::earth_radius_, 0.0};
 
 // Index of the currently active stage
 int current_stage_{1};
