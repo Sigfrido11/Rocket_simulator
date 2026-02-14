@@ -24,7 +24,7 @@ class Rocket;
 
 Rocket::Rocket(std::string const& name, double mass_structure, double Up_Ar,
                double s_p_m, double m_s_cont, std::vector<double> const& l_p_m,
-               std::vector<double> const& l_c_m, Engine* eng, int n_solid_eng,
+               std::vector<double> const& l_c_m, engine::Engine* engs, engine::Engine* engl, int n_solid_eng,
                std::vector<int> const& n_liq_eng)
     : name_{name},
       upper_area_{Up_Ar},
@@ -56,8 +56,8 @@ Rocket::Rocket(std::string const& name, double mass_structure, double Up_Ar,
                 [](double value) { if(value <=0){
                   throw std::runtime_error("invalid value inserted");
                 } });
-                engl_=eng;
-                engl_=eng;
+                engl_=engl;
+                engs_=engs;
 }
 
 
@@ -99,8 +99,8 @@ void Rocket::change_vel(double dt, Vec const& force) {
   // Current state in polar coordinates
   double r     = pos_[0];       // radial position
   double psi   = pos_[1];       // angular position (not directly used here)
-  double vr    = velocity_[0];  // radial velocity
-  double omega = velocity_[1];  // angular velocity (dψ/dt)
+  double vr = velocity_[0];  // radial velocity [m/s]
+  double vt = velocity_[1];  // tangential velocity [m/s]
 
   if (r <= 1e-8) {
     throw std::runtime_error("Radius too small (singularity at r=0)");
@@ -113,23 +113,17 @@ void Rocket::change_vel(double dt, Vec const& force) {
   // ----- Polar coordinate accelerations -----
   // These extra terms appear because we are in a rotating coordinate system.
 
-  // Radial acceleration:
-  // ar = r*omega^2 + Fr/m
-  double ar =
-      r * omega * omega
-      + Fr / total_mass_;
-
-  // Angular acceleration:
-  // domega/dt = (1/r)*(Fpsi/m - 2*vr*omega)
-  double aomega =
-      (1.0 / r) *
-      (Fpsi / total_mass_ - 2.0 * vr * omega);
+  // Polar dynamics using linear components (vr, vt):
+  // d(vr)/dt = Fr/m + vt^2/r
+  // d(vt)/dt = Fpsi/m - (vr*vt)/r
+  double ar = Fr / total_mass_ + (vt * vt) / r;
+  double at = Fpsi / total_mass_ - (vr * vt) / r;
 
   // ----- Semi-implicit (symplectic) Euler velocity update -----
   // v(t+dt) = v(t) + a(t)*dt
 
   velocity_[0] += ar * dt;
-  velocity_[1] += aomega * dt;
+  velocity_[1] += at * dt;
 }
 
 
@@ -137,15 +131,16 @@ void Rocket::move(double dt, Vec const& force) {
 
   change_vel(dt, force);
   // Updated velocities
-  double vr    = velocity_[0];
-  double omega = velocity_[1];
+  double vr = velocity_[0];
+  double vt = velocity_[1];
 
   // ----- Position update -----
   // r(t+dt)   = r(t)   + vr(t+dt) * dt
-  // psi(t+dt) = psi(t) + omega(t+dt) * dt
+  // psi(t+dt) = psi(t) + (vt/r)(t+dt) * dt
 
   pos_[0] += vr * dt;
-  pos_[1] += omega * dt;
+  double const r_for_angle = std::max(pos_[0], 1e-8);
+  pos_[1] += (vt / r_for_angle) * dt;
 
   // Prevent negative radius (impact or numerical instability)
   if (pos_[0] <= 0.0) {
@@ -209,10 +204,10 @@ void Rocket::set_state(std::string const& file_name,
     // ============================================================
 
     // Once above 20 km, align velocity with updated angle
-    if (pos_[0] > 20000.0 && std::abs(old_theta) > 1e-8)
+    if (pos_[0]-sim::cost::earth_radius_ > 20000.0 && std::abs(old_theta) > 1e-8)
     {
         // Compute current speed magnitude
-        const double speed = velocity_[0];
+        const double speed = std::sqrt(velocity_[0]*velocity_[0]+ velocity_[1]*velocity_[1]);
 
         // Redistribute velocity components according to new angle
         velocity_[0] = speed * std::sin(theta_);
@@ -224,16 +219,14 @@ void Rocket::set_state(std::string const& file_name,
     // ============================================================
 
 
-    if (!eng_)
+    if (!engs_ || !engl_)
         throw std::runtime_error("Engine pointer is null");
 
 
     //compute mass loss
-    const double delta_mass = eng_->delta_m(time, is_orbiting);
+    double const solid_burn = engs_->delta_m(time, is_orbiting) * n_sol_eng_;
 
-    double const solid_burn = delta_mass * n_sol_eng_;
-
-    double const liquid_burn = delta_mass * n_liq_eng_.front();
+    double const liquid_burn = engl_->delta_m(time, is_orbiting) * n_liq_eng_.front();
 
 
     // Apply mass loss
@@ -307,7 +300,7 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       if (current_stage_ == 0) {
 
         // Release engines (final shutdown)
-        eng_->release();
+        engl_->release();
 
         // Resize liquid prop vector to size 1
         // (This line does not modify content meaningfully,
@@ -356,6 +349,7 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
       m_sol_cont_ = 0;
       m_sol_prop_ = 0;
       n_sol_eng_ = 0;
+      engs_->release();
 
       std::cout << "stage released" << "\n";
     }
@@ -450,23 +444,13 @@ double improve_theta(std::string const& name_f, double theta, double pos,
 
 
 
-Vec const Rocket::thrust(double time, bool is_orbiting) const {
-  Vec engs;
-  Vec engl;
-  eng_par par{theta_, time, pos_[0]};
-  if (eng_->is_ad_eng()) {
-    engs = eng_->eng_force(par, is_orbiting);
-  } else {
-    engs = eng_->eng_force(par, is_orbiting);
-  }
-  if (eng_->is_ad_eng()) {
-    engl = eng_->eng_force(par, is_orbiting);
-  } else {
-    engl = eng_->eng_force(par, is_orbiting);
-  }
-  double const z{engs[0] * n_sol_eng_ + engl[0] * n_liq_eng_[0]};
-  double const y{engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0]};
-  return {z, y};
+Vec const Rocket::thrust(double time, double pe, double pa, bool is_orbiting) const {
+  Vec engs = engs_->eng_force(pa,pe,theta_, is_orbiting);
+  Vec engl = engl_->eng_force(pa,pe,theta_, is_orbiting);
+  
+  double const fr{engs[0] * n_sol_eng_ + engl[0] * n_liq_eng_[0]};
+  double const fpsi{engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0]};
+  return {fr, fpsi};
 }
 
 
@@ -474,14 +458,14 @@ bool is_orbiting(double r, Vec velocity)
 {
     assert(r > 0);
 
-    double const vr= velocity[0];
-    double const omega = velocity[1];
+    double const vr = velocity[0];
+    double const vt_rel = velocity[1];
 
     // Earth constants
     const double mu = sim::cost::G_ * sim::cost::earth_mass_;
 
-    // Tangential velocity (including Earth's rotation)
-    const double vt = omega + sim::cost::earth_speed_;
+    // Inertial tangential velocity: relative tangential speed + frame speed.
+    const double vt = vt_rel + sim::cost::earth_angular_speed_ * r;
 
     // Circular orbital speed at radius r
     const double v_circ = std::sqrt(mu / r);
@@ -499,7 +483,7 @@ bool is_orbiting(double r, Vec velocity)
 
   
 
- Vec const g_force(double r, double mass, double vr) {
+ Vec g_force(double r, double mass, double vr) {
   const double mu =
         sim::cost::G_ * sim::cost::earth_mass_;
 
@@ -559,7 +543,7 @@ double Cd_from_Mach(double M) {
     return Cd_final;
 }
 
-Vec const drag(double rho, double altitude,
+Vec drag(double rho, double altitude,
                double upper_area, Vec const& velocity, double a) {
 
     // If atmosphere is negligible, no drag
@@ -599,7 +583,7 @@ Vec const drag(double rho, double altitude,
   //pay attention is altitude
   double const r_force{eng[0]  + gra[0] + drag_f[0]};
   double const psi_force{eng[1] + gra[1] + drag_f[1]};
-  if (r_force <= 0) {
+  if (psi_force <= 0) {
     return {r_force, 0};
   } else {
     return {r_force, psi_force};
@@ -609,7 +593,6 @@ Vec const drag(double rho, double altitude,
 
 
     
-
 
 
 

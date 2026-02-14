@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <stdexcept>
 
 namespace engine {
 
@@ -11,11 +12,11 @@ namespace engine {
 // BASE ENGINE IMPLEMENTATION
 // ============================================================================
 
-Base_engine::Base_engine(double isp, double cm, double p0)
-    : isp_{isp}, cm_{cm}, p_0_{p0}
+Base_engine::Base_engine(double isp, double cm, double p0, double burn_a)
+    : isp_{isp}, cm_{cm}, p_0_{p0}, burn_a_{burn_a}
 {
     // Basic physical validation
-    assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0);
+    assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0 && burn_a_ >= 0);
 }
 
 // Computes mass depletion assuming constant mass flow coefficient.
@@ -34,7 +35,7 @@ double Base_engine::delta_m(double dt, bool is_orbiting) const {
 }
 
 
-Vec const Base_engine::eng_force(e,
+Vec Base_engine::eng_force(double pa, double pe, double theta,
                                  bool is_orbiting) const {
 
     if (is_orbiting || released_) {
@@ -49,8 +50,8 @@ Vec const Base_engine::eng_force(e,
     // theta = pitch angle from local horizontal
     // r̂ = radial direction
     // ψ̂ = tangential direction
-    double F_r   = thrust * std::sin(par.theta);
-    double F_psi = thrust * std::cos(par.theta);
+    double F_r   = thrust * std::sin(theta);
+    double F_psi = thrust * std::cos(theta);
 
     return {F_r, F_psi};
 }
@@ -61,6 +62,10 @@ void Base_engine::release() {
 }
 
 bool Base_engine::is_ad_eng() const {
+    return false;
+}
+
+bool Base_engine::is_liquid() const {
     return false;
 }
 
@@ -98,6 +103,9 @@ double Ad_sol_engine::mass_flow_rate() const {
 // Computes the exhaust velocity using isentropic expansion [m/s]
 // Formula: v_e = sqrt( 2 * gamma / (gamma-1) * R_spec * T_c * (1 - (p_e/p_c)^((gamma-1)/gamma)) )
 double Ad_sol_engine::exhaust_velocity(double p_e) const {
+    if(p_e > p_c_){
+        throw std::runtime_error("pe > pc");
+    }
     const double R_univ = 8314.5; // Universal gas constant [J/(kmol*K)]
     double R_spec = R_univ / M_;   // Specific gas constant [J/(kg*K)]
     double term = 1.0 - std::pow(p_e / p_c_, (gamma_ - 1.0) / gamma_);
@@ -107,6 +115,26 @@ double Ad_sol_engine::exhaust_velocity(double p_e) const {
 // ------------------------
 // Public interface methods
 // ------------------------
+
+Ad_sol_engine::Ad_sol_engine(double p_c,
+                             double T_c,
+                             double A_b,
+                             double A_t,
+                             double rho_p,
+                             double a,
+                             double n,
+                             double M)
+    : p_c_{p_c},
+      T_c_{T_c},
+      A_b_{A_b},
+      A_t_{A_t},
+      rho_p_{rho_p},
+      a_{a},
+      n_{n},
+      M_{M} {
+    assert(p_c_ > 0 && T_c_ > 0 && A_b_ > 0 && A_t_ > 0 && rho_p_ > 0 &&
+           a_ > 0 && n_ > 0 && M_ > 0);
+}
 
 // Returns the change in mass of propellant over a timestep [kg]
 // If the engine is orbiting, combustion may differ (optional extension)
@@ -121,21 +149,21 @@ double Ad_sol_engine::delta_m(double time, bool is_orbiting) const {
 
 // Computes engine thrust [N]
 // eng_par contains any required parameters like external pressure
-Vec Ad_sol_engine::eng_force(double pa, double pe, bool is_orbiting) const {
+Vec Ad_sol_engine::eng_force(double pa, double pe, double theta, bool is_orbiting) const {
     // No propellant consumption if orbiting or engine released
     if (is_orbiting || released_) {
         return {0.0,0.0};
     }
     // Compute exhaust velocity
-    double v_e = exhaust_velocity(par.p_e); 
+    double v_e = exhaust_velocity(pe); 
 
     // Mass flow rate
     double m_dot = mass_flow_rate();
 
     // Ideal thrust formula: F = m_dot * v_e + (p_e - p_a) * A_e
-    double thrust = m_dot * v_e + (par.p_e - par.p_a) * A_e_;
-    double F_r   = thrust * std::sin(par.theta);
-    double F_psi = thrust * std::cos(par.theta);
+    double thrust = m_dot * v_e + (pe - pa) * A_e_;
+    double F_r   = thrust * std::sin(theta);
+    double F_psi = thrust * std::cos(theta);
 
     return {F_r, F_psi};
 
@@ -149,6 +177,10 @@ void Ad_sol_engine::release() {
 // Returns true if this is an advanced solid engine
 bool Ad_sol_engine::is_ad_eng() const {
     return true;
+}
+
+bool Ad_sol_engine::is_liquid() const {
+    return liquid_;
 }
 
 // Returns true if the engine has been released
@@ -167,6 +199,11 @@ double Ad_sol_engine::get_pression() const {
 // ADVANCED LIQUID ENGINE IMPLEMENTATION
 // ============================================================================
 
+Ad_liquid_engine::Ad_liquid_engine(double p_c, double T_c, double A_t, double A_e)
+    : p_c_{p_c}, T_c_{T_c}, A_t_{A_t}, A_e_{A_e} {
+    assert(p_c_ > 0 && T_c_ > 0 && A_t_ > 0 && A_e_ > 0);
+}
+
 // Mass flow from characteristic velocity formulation
 double Ad_liquid_engine::mass_flow_rate() const {
     return (p_c_ * A_t_) / c_star_;
@@ -175,6 +212,9 @@ double Ad_liquid_engine::mass_flow_rate() const {
 // Isentropic exhaust velocity
 double Ad_liquid_engine::exhaust_velocity(double p_e) const {
 
+    if(p_e > p_c_){
+        throw std::runtime_error("pe > pc");
+    }
     double term = 1.0 - std::pow(p_e / p_c_,
                     (gamma_ - 1.0) / gamma_);
 
@@ -183,12 +223,12 @@ double Ad_liquid_engine::exhaust_velocity(double p_e) const {
 }
 
 // Thrust including pressure term
-double Ad_liquid_engine::thrust(double p_e, double p_a) const {
+double Ad_liquid_engine::thrust(double pa, double pe) const {
 
     double mdot = mass_flow_rate();
-    double v_e  = exhaust_velocity(p_e);
+    double v_e  = exhaust_velocity(pe);
 
-    return mdot * v_e + (p_e - p_a) * A_e_;
+    return mdot * v_e + (pe - pa) * A_e_;
 }
 
 // Mass depletion during burn
@@ -200,20 +240,18 @@ double Ad_liquid_engine::delta_m(double time, bool is_orbiting) const {
 }
 
 // Force vector aligned with thrust direction
-Vec Ad_liquid_engine::eng_force(double pe, double pa,
+Vec Ad_liquid_engine::eng_force(double pa, double pe, double theta,
                                 bool is_orbiting) const {
     
     if (is_orbiting || released_) {
         return {0.0,0.0};
     }
 
-    double thrust = thrust(pe,pa);
-    double F_r   = thrust * std::sin(par.theta);
-    double F_psi = thrust * std::cos(par.theta);
+    double F_r   = thrust(pa,pe) * std::sin(theta);
+    double F_psi = thrust(pa,pe) * std::cos(theta);
 
     return {F_r, F_psi};
 
-    return par.direction * F;
 }
 
 void Ad_liquid_engine::release() {
@@ -222,6 +260,10 @@ void Ad_liquid_engine::release() {
 
 bool Ad_liquid_engine::is_ad_eng() const {
     return true;
+}
+
+bool Ad_liquid_engine::is_liquid() const {
+    return liquid_;
 }
 
 bool Ad_liquid_engine::is_released() const {
@@ -233,6 +275,3 @@ double Ad_liquid_engine::get_pression() const {
 }
 
 } // namespace engine
-
-
-

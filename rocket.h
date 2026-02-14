@@ -63,9 +63,9 @@ int current_stage_{1};
 double theta_{1.57079632};
 
 // Pointer to the engine currently associated with the rocket
-Engine* engs_;
+engine::Engine* engs_;
 
-Engine* engl_;
+engine::Engine* engl_;
 
 // Number of solid engines
 int n_sol_eng_{1};
@@ -78,7 +78,7 @@ std::vector<int> n_liq_eng_;
   // costruttore con tutto
   explicit Rocket(std::string const& name, double mass_structure, double Up_Ar,
                double s_p_m, double m_s_cont, std::vector<double> const& l_p_m,
-               std::vector<double> const& l_c_m, Engine* eng,
+               std::vector<double> const& l_c_m, engine::Engine* engs, engine::Engine* engl,
                int n_solid_eng, std::vector<int> const& n_liq_eng);
 
   Rocket() = default;
@@ -119,7 +119,7 @@ std::vector<int> n_liq_eng_;
 
   void change_vel(double time, Vec const& force);
 
-  Vec const thrust(double time, bool is_orbiting) const; //engine thrust
+  Vec const thrust(double time, double pe, double pa, bool is_orbiting) const; //engine thrust
 };
 
 
@@ -136,12 +136,12 @@ double improve_theta(std::string const& name_f, double theta, double pos,
 
 bool is_orbiting(double r, Vec velocity);
 
-Vec const g_force(double altitude, double mass);
+Vec g_force(double r, double mass, double vr);
 
 double Cd_from_Mach(double M);
 
-Vec const drag(double rho, double altitude, double theta,
-                      double upper_area, Vec const& velocity);
+Vec drag(double rho, double altitude,
+               double upper_area, Vec const& velocity, double a);
 
 
                       

@@ -6,10 +6,10 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/rocket.t",
-            "args": [],               
+            "preLaunchTask": "build rocket",
+            "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [],
             "externalConsole": true,
             "MIMode": "gdb",
             "setupCommands": [

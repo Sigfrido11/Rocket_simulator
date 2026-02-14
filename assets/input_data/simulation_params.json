@@ -1,0 +1,66 @@
+{
+  "input_mode": "json",
+  "orbit_altitude_m": 200000.0,
+  "rocket": {
+    "name": "my_rocket",
+    "detail_level": "many",
+    "stage_num": 2,
+    "mass_structure_kg": 15000.0,
+    "upper_area_m2": 1000.0,
+    "solid_propellant_mass_kg": 100000.0,
+    "solid_container_mass_kg": 15000.0,
+    "solid_engine_count": 1,
+    "liquid_propellant_masses_kg": 100000.0,
+    "liquid_container_masses_kg": [
+      15000.0,
+      15000.0
+    ],
+    "liquid_engines_per_stage": [
+      3,
+      3
+    ]
+  },
+  "engine": {
+    "family": "base",
+    "detail_level": "many",
+    "base": {
+      "isp_s": 350.0,
+      "cm": 2.5,
+      "chamber_pressure_pa": 8000000.0,
+      "burn_area_m2": 0.0002
+    },
+    "advanced_solid": {
+      "burn_area_m2": 2.2,
+      "nozzle_throat_area_m2": 2.2,
+      "chamber_temperature_k": 3200.0,
+      "grain_dimension_m": 0.02,
+      "grain_density_kg_m3": 1873.0,
+      "burn_rate_a": 0.01,
+      "burn_rate_n": 0.02,
+      "propellant_molar_mass_g_mol": 178.0
+    },
+    "advanced_liquid": {
+      "chamber_pressure_pa": 8000000.0,
+      "burn_area_m2": 2.2,
+      "nozzle_throat_area_m2": 2.2,
+      "chamber_temperature_k": 3200.0
+    }
+  },
+  "allowed_values": {
+    "rocket_detail_level": [
+      "many",
+      "some",
+      "few"
+    ],
+    "engine_detail_level": [
+      "many",
+      "some",
+      "few"
+    ],
+    "engine_family": [
+      "base",
+      "advanced_solid",
+      "advanced_liquid"
+    ]
+  }
+}
