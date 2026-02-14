@@ -12,102 +12,9 @@
 #include "assert.h"
 #include "simulation.h"
 #include "vector_math.h"
+#include "engine.h"
 
 namespace rocket {
-
- struct eng_par{
-  double theta;
-  double time;
-  double pos; 
-};
-
-class Engine {
-   public:
-    virtual double delta_m(double time, bool is_orbiting) const = 0;
-
-    virtual Vec const eng_force(eng_par const& par,
-                                       bool is_orbiting) const = 0;
-
-    virtual void release() = 0;
-
-    virtual bool is_ad_eng() const = 0;
-
-    virtual bool is_released() const = 0;
-
-    virtual double get_pression() const = 0;
-
-    virtual ~Engine() = default;
-  };
-
-  class Base_engine final : public Engine {
-    double isp_{250};  // impulso specifico per tempo
-    double cm_{4.};    // coefficiente perdita massa
-    double p_0_{5e6}; //pressione
-    double burn_a_{200e-6}; //area di combustione
-    bool released_{false};
-    
-   public:
-    explicit Base_engine(double isp, double cm, double p0,
-                                 double burn_a);
-
-    explicit Base_engine(double isp, double cm, double p0)
-        : isp_{isp}, cm_{cm}, p_0_{p0} {
-      assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0);
-    }
-
-    Base_engine() = default;
-
-    double delta_m(double time, bool is_orbiting) const override;
-
-    void release() override;
-
-    Vec const eng_force(eng_par const& par,
-                                       bool is_orbiting) const override;
-
-    virtual bool is_ad_eng() const override;
-
-    virtual bool is_released() const override;
-
-    virtual double get_pression() const override;
-
-    ~Base_engine() override = default;
-  };
-
-  class Ad_engine final : public Engine {
-    double p_0_{5e6};  //pressione
-    double burn_a_{200e-6}; //area di combustione
-    double nozzle_as_{221.0e-6}; //area beccuccio
-    double t_0_{1710.0}; //temperatura
-    double grain_rho_{1873}; //densità combustibile
-    double grain_dim_{0.02}; //dimensione dei grani
-    double burn_rate_a_{0.01};
-    double burn_rate_n_{0.02};
-    double prop_mm_{178}; //massa molare combustibile
-    bool released_{false};
-   public:
-    explicit Ad_engine(double burn_a, double nozzle_as, double t_0,
-                             double grain_dim, double grain_rho, double a_coef,
-                             double burn_rate_n, double prop_mm);
-
-    explicit Ad_engine(double p_0, double burn_a, double nozzle_as, double t_0);
-
-    explicit Ad_engine() = default;
-
-    double delta_m(double time, bool is_orbiting) const override;
-
-    void release() override;
-
-    Vec const eng_force(eng_par const& par,
-                                       bool is_orbiting) const override;
-
-    virtual bool is_ad_eng() const override;
-
-    virtual bool is_released() const override;
-
-    virtual double get_pression() const override;
-
-    ~Ad_engine() override = default;
-  };
 
 class Rocket {
   // Rocket basic configuration and state parameters
@@ -121,10 +28,10 @@ double upper_area_{80.0};
 // Solid propulsion system parameters
 
 // Mass of the solid fuel container (kg)
-double m_sol_cont_{15000.0};
+double m_sol_cont_{8000.0};
 
 // Mass of the solid propellant (kg)
-double m_sol_prop_{40000.0};
+double m_sol_prop_{60000.0};
 
 // Liquid propulsion system parameters (per stage or per tank)
 
@@ -137,7 +44,7 @@ std::vector<double> m_liq_prop_{15000.0};
 std::vector<double> m_liq_cont_{40000.0};
 
 // Total initial mass of the rocket (kg)
-double total_mass_{135000.0};
+double total_mass_{68000.0};
 
 // Total number of rocket stages
 int total_stage_{1};
@@ -156,7 +63,9 @@ int current_stage_{1};
 double theta_{1.57079632};
 
 // Pointer to the engine currently associated with the rocket
-Engine* eng_;
+Engine* engs_;
+
+Engine* engl_;
 
 // Number of solid engines
 int n_sol_eng_{1};

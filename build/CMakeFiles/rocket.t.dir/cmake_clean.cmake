@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/rocket.t.dir/engine.cpp.o"
+  "CMakeFiles/rocket.t.dir/engine.cpp.o.d"
   "CMakeFiles/rocket.t.dir/interface.cpp.o"
   "CMakeFiles/rocket.t.dir/interface.cpp.o.d"
   "CMakeFiles/rocket.t.dir/main.cpp.o"

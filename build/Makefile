@@ -516,6 +516,30 @@ graph_test.t/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph_test.t.dir/build.make CMakeFiles/graph_test.t.dir/build
 .PHONY : graph_test.t/fast
 
+engine.o: engine.cpp.o
+.PHONY : engine.o
+
+# target to build an object file
+engine.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/engine.cpp.o
+.PHONY : engine.cpp.o
+
+engine.i: engine.cpp.i
+.PHONY : engine.i
+
+# target to preprocess a source file
+engine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/engine.cpp.i
+.PHONY : engine.cpp.i
+
+engine.s: engine.cpp.s
+.PHONY : engine.s
+
+# target to generate assembly for a file
+engine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/engine.cpp.s
+.PHONY : engine.cpp.s
+
 graph_test.o: graph_test.cpp.o
 .PHONY : graph_test.o
 
@@ -705,6 +729,9 @@ help:
 	@echo "... NightlyUpdate"
 	@echo "... graph_test.t"
 	@echo "... rocket.t"
+	@echo "... engine.o"
+	@echo "... engine.i"
+	@echo "... engine.s"
 	@echo "... graph_test.o"
 	@echo "... graph_test.i"
 	@echo "... graph_test.s"

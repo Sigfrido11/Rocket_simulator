@@ -8,6 +8,7 @@
 #include "simulation.h"
 #include "rocket.h"
 #include "vector_math.h"
+#include "engine.h"
 
 
 namespace rocket {
@@ -55,7 +56,8 @@ Rocket::Rocket(std::string const& name, double mass_structure, double Up_Ar,
                 [](double value) { if(value <=0){
                   throw std::runtime_error("invalid value inserted");
                 } });
-                eng_=eng;
+                engl_=eng;
+                engl_=eng;
 }
 
 
@@ -466,122 +468,6 @@ Vec const Rocket::thrust(double time, bool is_orbiting) const {
   double const y{engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0]};
   return {z, y};
 }
-
-
-
-// funzioni di engine
-
-// costruttori di Base_engine
-
-Base_engine::Base_engine(double isp, double cm, double p0, double burn_a)
-    : isp_{isp}, cm_{cm}, p_0_{p0}, burn_a_{burn_a} {
-  assert(isp_ >= 0 && cm_ >= 0 && p_0_ >= 0 && burn_a_ >= 0);
-}
-
-// funzioni Base_engine
-
-double Base_engine::delta_m(double time, bool is_orbiting) const {
-  if (!is_orbiting && !released_) {
-    return p_0_ * burn_a_ * time * cm_;
-  } else {
-    return 0.;
-  }
-}
-
-Vec const Base_engine::eng_force(eng_par const& par, bool is_orbiting) const {
-  double const delta_m = Base_engine::delta_m(par.time, is_orbiting);
-  if (!is_orbiting && !released_) {
-    double const force{isp_ * delta_m * sim::cost::G_ * sim::cost::earth_mass_ /
-                       std::pow((sim::cost::earth_radius_ + par.pos), 2)}; 
-                       //isp * delta_m * g
-    return {force * std::sin(par.theta), force * std::cos(par.theta)};
-  } else {
-    return {0., 0.};
-  }
-}
-bool Base_engine::is_ad_eng() const { return false; }
-
-void Base_engine::release() { released_ = true; }
-
-bool Base_engine::is_released() const { return released_; }
-
-double Base_engine::get_pression() const { return p_0_; }
-
-// Ad_engine
-
-// costruttori Ad_Engine
-
-Ad_engine::Ad_engine(double burn_a, double nozzle_as, double t_0,
-                     double grain_dim, double grain_rho, double a_coef,
-                     double burn_rate_n, double prop_mm)
-    : burn_a_{burn_a},
-      nozzle_as_{nozzle_as},
-      t_0_{t_0},
-      grain_rho_{grain_rho},
-      grain_dim_{grain_dim},
-      burn_rate_a_{a_coef},
-      burn_rate_n_{burn_rate_n},
-      prop_mm_{prop_mm} {
-  assert(p_0_ >= 0 && burn_a_ >= 0 && nozzle_as_ >= 0 && t_0_ >= 0 &&
-         grain_dim_ >= 0 && grain_rho_ >= 0 && burn_rate_a_ >= 0 &&
-         burn_rate_n_ >= 0 && prop_mm_ >= 0);
-
-  double const fac1 {burn_rate_a_ * grain_rho_ * grain_dim_ / nozzle_as_};
-  double const exponent {sim::cost::gamma_ + 1 / (sim::cost::gamma_ - 1)};
-  double const fac2 = {std::pow(2 / sim::cost::gamma_ + 1, exponent)};
-  double const fac3 {std::sqrt((sim::cost::gamma_ * fac2) / sim::cost::R_ * t_0_)};
-  //equazioni trovate online
-  p_0_ = std::pow(fac1 * 2.2173e5 / fac3, 1 / (1 - burn_rate_n_));
-}
-Ad_engine::Ad_engine(double p_0, double burn_a, double nozzle_as, double t_0)
-    : p_0_{p_0}, burn_a_{burn_a}, nozzle_as_{nozzle_as}, t_0_{t_0} {
-  assert(p_0_ >= 0 && burn_a_ >= 0 && nozzle_as_ >= 0 && t_0_ >= 0);
-}
-
-bool Ad_engine::is_ad_eng() const { return true; }
-
-Vec const Ad_engine::eng_force(eng_par const& par, bool is_orbiting) const {
-  if (!is_orbiting && !released_) {
-    double const fac1{nozzle_as_ * p_0_};
-    double const fac2{
-        (2 * std::pow(sim::cost::gamma_, 2) / (sim::cost::gamma_ - 1))};
-    double const fac3{2 / (sim::cost::gamma_ - 1)};
-    double const exp{(sim::cost::gamma_ + 1) / (sim::cost::gamma_ - 1)};
-    double const fac4{1 -
-                      std::pow((sim::cost::sea_pression_ / p_0_),
-                               (sim::cost::gamma_ - 1 / sim::cost::gamma_))};
-    double const force{
-        fac1 * std::sqrt(fac2 * std::pow(fac3, exp) * fac4 * 2.2173e-5)};
-    return {force * std::sin(par.theta), force * std::cos(par.theta)};
-  } else {
-    return {0., 0.};
-  }
-}
-
-double Ad_engine::delta_m(double time, bool is_orbiting) const {
-  if (!is_orbiting && !released_) {
-    double const fac1{p_0_ * nozzle_as_};
-    double const fac2{
-        std::sqrt(sim::cost::gamma_ * prop_mm_ / (sim::cost::R_ * t_0_))};
-    double const fac3{2 / (sim::cost::gamma_ + 1)};
-    double const fac4{(sim::cost::gamma_ + 1) / (2 * (sim::cost::gamma_ - 1))};
-    double const mass{fac1 * fac2 * std::pow(fac3, fac4) * time * 2.2173e-2};
-    assert(mass >= 0.);
-    return mass;
-  } else {
-    return 0.;
-  }
-}
-
-double Ad_engine::get_pression() const { return p_0_; }
-
-void Ad_engine::release() { released_ = true; }
-
-bool Ad_engine::is_released() const { return released_; }
-
-// funzioni del namespace
-
-
 
 
 bool is_orbiting(double r, Vec velocity)
