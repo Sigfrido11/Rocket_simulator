@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <numbers>
 
 
 #include <stdio.h>
@@ -7,6 +8,10 @@
 #include "rocket.h"
 #include "simulation.h"
 #include "vector_math.h"
+
+namespace {
+constexpr double kPi = std::numbers::pi_v<double>;
+}  // namespace
 
 //
 // asse x componente [1]
@@ -435,7 +440,7 @@ std::vector<int> n_liq_eng_;
       fuel_left.setString("Fuel left: " +
                           std::to_string(rocket.get_fuel_left()));
 
-      rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * M_PI));
+      rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * kPi));
       outer_atm.setPosition(0.f,
                             altitude_rocket + (height * 3 / 4) - 100'000);
       ground.setPosition(0.f, altitude_rocket + (height * 3 / 4));
@@ -464,7 +469,7 @@ std::vector<int> n_liq_eng_;
                                                std::cos(angle_total));
       }
 
-      rocket3.setPosition(angle_total / 2 / M_PI * 700.f + 750.f,
+      rocket3.setPosition(angle_total / 2 / kPi * 700.f + 750.f,
                           height / 4 * 3);
       sf::Vector2f const pos3{rocket3.getPosition()};
       if (pos3.x > width) {

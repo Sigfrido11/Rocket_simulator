@@ -1,33 +1,99 @@
 cmake_minimum_required(VERSION 3.16)
-project(rocket VERSION 0.1.0)
+project(rocket VERSION 0.1.0 LANGUAGES CXX)
 
 # abilita il supporto per i test, tra cui l'opzione BUILD_TESTING usata sotto
 include(CTest)
+include(FetchContent)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # richiedi l'uso di C++17, senza estensioni non-standard offerte dal compilatore usato 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# abilita warning
-string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra")
+option(ROCKET_ENABLE_SANITIZERS "Enable ASAN/UBSAN in Debug builds (non-MSVC)" ON)
+option(ROCKET_FETCH_SFML "Fetch SFML automatically if not found on the system" ON)
 
-# abilita l'address sanitizer e l'undefined-behaviour sanitizer in debug mode
-string(APPEND CMAKE_CXX_FLAGS_DEBUG " -fsanitize=address,undefined -fno-omit-frame-pointer")
-string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20")
+set(SFML_COMPONENTS graphics window system audio)
+find_package(SFML 2.5 COMPONENTS ${SFML_COMPONENTS} QUIET)
+
+if (NOT SFML_FOUND AND ROCKET_FETCH_SFML)
+  message(STATUS "SFML not found, downloading it with FetchContent")
+  FetchContent_Declare(
+    sfml
+    GIT_REPOSITORY https://github.com/SFML/SFML.git
+    GIT_TAG 2.6.2
+    GIT_SHALLOW TRUE
+  )
+  set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
+  set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(sfml)
+endif ()
+
+if (NOT SFML_FOUND AND NOT TARGET sfml-graphics AND NOT TARGET SFML::Graphics)
+  message(FATAL_ERROR "SFML not found. Install SFML or configure with -DROCKET_FETCH_SFML=ON")
+endif ()
+
+function(rocket_apply_common_settings target_name)
+  if (MSVC)
+    target_compile_options(${target_name} PRIVATE /W4)
+  else ()
+    target_compile_options(${target_name} PRIVATE -Wall -Wextra -Wpedantic)
+  endif ()
+
+  if (ROCKET_ENABLE_SANITIZERS AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(
+      ${target_name}
+      PRIVATE
+      $<$<CONFIG:Debug>:-fsanitize=address,undefined>
+      $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+    )
+    target_link_options(
+      ${target_name}
+      PRIVATE
+      $<$<CONFIG:Debug>:-fsanitize=address,undefined>
+      $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+    )
+  endif ()
+
+  target_compile_definitions(
+    ${target_name}
+    PRIVATE
+    ROCKET_ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets"
+  )
+
+  if (MSVC)
+    set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  endif ()
+endfunction()
+
+function(rocket_link_sfml target_name enable_audio)
+  if (TARGET SFML::Graphics)
+    target_link_libraries(${target_name} PRIVATE SFML::Graphics SFML::Window SFML::System)
+    if (${enable_audio})
+      target_link_libraries(${target_name} PRIVATE SFML::Audio)
+    endif ()
+  else ()
+    target_link_libraries(${target_name} PRIVATE sfml-graphics sfml-window sfml-system)
+    if (${enable_audio})
+      target_link_libraries(${target_name} PRIVATE sfml-audio)
+    endif ()
+  endif ()
+endfunction()
 
 add_executable(rocket.t main.cpp rocket.cpp simulation.cpp interface.cpp vector_math.cpp engine.cpp)
-target_link_libraries(rocket.t sfml-graphics sfml-window sfml-system sfml-audio)
+rocket_apply_common_settings(rocket.t)
+rocket_link_sfml(rocket.t TRUE)
 # se il testing e' abilitato...
 #   per disabilitare il testing, passare -DBUILD_TESTING=OFF a cmake durante la fase di configurazione
 if (BUILD_TESTING)
 
 # aggiungi l'eseguibile 
-#add_executable(rocket_test.t test_calc.cpp simulation.cpp rocket.cpp)
 add_executable(graph_test.t graph_test.cpp simulation.cpp interface.cpp)
-target_link_libraries(graph_test.t sfml-graphics sfml-window sfml-system)
-add_test(NAME rocket_test COMMAND rocket_test)
+rocket_apply_common_settings(graph_test.t)
+rocket_link_sfml(graph_test.t FALSE)
+add_test(NAME graph_test COMMAND graph_test.t)
 
 endif()

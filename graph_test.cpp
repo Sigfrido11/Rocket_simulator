@@ -1,11 +1,26 @@
 #include <stdio.h>
 
 #include <cassert>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <numbers>
+#include <string_view>
 
 #include "interface.h"
 #include "simulation.h"
+
+#ifndef ROCKET_ASSETS_DIR
+#define ROCKET_ASSETS_DIR "assets"
+#endif
+
+namespace {
+std::string asset_path(std::string_view relative_path) {
+  return (std::filesystem::path(ROCKET_ASSETS_DIR) / relative_path).string();
+}
+
+constexpr double kPi = std::numbers::pi_v<double>;
+}  // namespace
 
 int main() {
   float const width{1200.f};
@@ -16,7 +31,7 @@ int main() {
   window.setFramerateLimit(5);
 
   sf::Texture texture1;
-  if (!texture1.loadFromFile("assets/img/rocket.png")) {
+  if (!texture1.loadFromFile(asset_path("img/rocket.png"))) {
     return -1;
   }
   sf::Sprite rocket1;
@@ -38,7 +53,7 @@ int main() {
   ground.setPosition(0.f, height / 4.f * 3.f);
 
   sf::Texture texture2;
-  if (!texture2.loadFromFile("assets/img/earth.jpeg")) {
+  if (!texture2.loadFromFile(asset_path("img/earth.jpeg"))) {
     return -1;
   }
   sf::Sprite earth;
@@ -54,7 +69,7 @@ int main() {
   float angle_total{};
 
   sf::Texture texture3;
-  if (!texture3.loadFromFile("assets/img/map.jpg")) {
+  if (!texture3.loadFromFile(asset_path("img/map.jpg"))) {
     return -1;
   }
   sf::Sprite map;
@@ -68,7 +83,7 @@ int main() {
   rocket3.setPosition(750.f, height / 4 * 3);
 
   sf::Font tnr;
-  if (!tnr.loadFromFile("assets/font/times_new_roman.ttf")) {
+  if (!tnr.loadFromFile(asset_path("font/times_new_roman.ttf"))) {
     return -1;
   }
 
@@ -143,7 +158,7 @@ int main() {
 
     angle.setString("Angle: " + std::to_string(rotation) + " rad");
 
-    rocket1.setRotation(90 - rotation * 360 / (2 * M_PI));
+    rocket1.setRotation(90 - rotation * 360 / (2 * kPi));
     outer_atm.setPosition(0.f, y + (height * 3 / 4) - 100'000);
     ground.setPosition(0.f, y + (height * 3 / 4));
     inner_atm.setPosition(0.f, y + (height * 3 / 4) - 51'000);
@@ -171,7 +186,7 @@ int main() {
                                              std::cos(polar_angle));
     }
 
-    rocket3.setPosition(polar_angle / 2 / M_PI * 700.f + 750.f, height / 4 * 3);
+    rocket3.setPosition(polar_angle / 2 / kPi * 700.f + 750.f, height / 4 * 3);
     sf::Vector2f const pos3{rocket3.getPosition()};
     if (pos3.x > width) {
       rocket3.setPosition(

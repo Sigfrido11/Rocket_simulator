@@ -56,7 +56,7 @@ void create_ad_eng_all(ad_eng_data& eng_data);
 
 void create_ad_eng_med(ad_eng_data& eng_data);
 
-void create_ad_eng_minim(rocket_data& eng_data);
+void create_ad_eng_minim(ad_eng_data& eng_data);
 
 void create_base_eng_minim(base_eng_data& eng_data);
 

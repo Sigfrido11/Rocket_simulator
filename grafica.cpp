@@ -1,9 +1,14 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <numbers>
 #include <stdio.h>
 #include "interface.h"
 #include "simulation.h"
+
+namespace {
+constexpr double kPi = std::numbers::pi_v<double>;
+}  // namespace
 
 int main() {
   float const width{1200.f};
@@ -138,9 +143,9 @@ int main() {
 
     altitude.setString("Altitude: " + std::to_string(y) + " m");
 
-    angle.setString("Angle: " + std::to_string(a * 360 / (2 * M_PI)) + "°");
+    angle.setString("Angle: " + std::to_string(a * 360 / (2 * kPi)) + "°");
 
-    rocket1.setRotation(90 - a * 360 / (2 * M_PI));
+    rocket1.setRotation(90 - a * 360 / (2 * kPi));
     outer_atm.setPosition(0.f, y + (height * 3 / 4) - 100'000);
     ground.setPosition(0.f, y + (height * 3 / 4));
     inner_atm.setPosition(0.f, y + (height * 3 / 4) - 51'000);
@@ -166,7 +171,7 @@ int main() {
                               10.f * rocket_distance / sim::cost::earth_radius_ *
                                   std::cos(angle_total));
     }
-    rocket3.move(angle_var / 2 / M_PI * 700.f, 0.f);
+    rocket3.move(angle_var / 2 / kPi * 700.f, 0.f);
     sf::Vector2f const pos3{rocket3.getPosition()};
     if (pos3.x > width) {
       rocket3.setPosition(pos3.x - (width - 500.f), pos3.y);

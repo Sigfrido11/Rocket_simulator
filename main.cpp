@@ -1,8 +1,11 @@
 #include <fstream>
 #include <iostream>
+#include <filesystem>
+#include <numbers>
 #include <regex>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <stdio.h>
@@ -12,12 +15,21 @@
 #include "engine.h"
 #include "vector_math.h"
 
+#ifndef ROCKET_ASSETS_DIR
+#define ROCKET_ASSETS_DIR "assets"
+#endif
+
 //
 // radial component [0]
 // angular component [1]
 //
 
 namespace {
+std::string asset_path(std::string_view relative_path) {
+  return (std::filesystem::path(ROCKET_ASSETS_DIR) / relative_path).string();
+}
+
+constexpr double kPi = std::numbers::pi_v<double>;
 
 std::string read_text_file(std::string const& path) {
   std::ifstream in(path);
@@ -188,8 +200,8 @@ int main() {
       throw std::runtime_error("invalid engine family, use 'a' or 'b'");
     }
 
-    std::string file_name = "assets/input_data/theta_data.txt";
-    std::string const params_file = "assets/input_data/simulation_params.json";
+    std::string file_name = asset_path("input_data/theta_data.txt");
+    std::string const params_file = asset_path("input_data/simulation_params.json");
     std::string const params_text = read_text_file(params_file);
 
     std::string const rocket_obj = extract_object(params_text, "rocket");
@@ -255,9 +267,9 @@ int main() {
     double orbital_h;
     std::cin >> orbital_h;
 
-    std::ofstream output_rocket("assets/output_rocket.txt");
+    std::ofstream output_rocket(asset_path("output_rocket.txt"));
     std::streampos start_pos;
-    std::ofstream output_air("assets/output_air.txt");
+    std::ofstream output_air(asset_path("output_air.txt"));
     output_rocket << "posizione y-x   velocità y-x    forza y-x" << '\n';
     output_air << "temp    pres    rho" << '\n';
     if (!output_rocket.is_open() or !output_air.is_open()) {
@@ -288,7 +300,7 @@ int main() {
   window.setFramerateLimit(5);
 
   sf::Texture texture1;
-  if (!texture1.loadFromFile("assets/img/rocket.png")) {
+  if (!texture1.loadFromFile(asset_path("img/rocket.png"))) {
     std::cout << "error in loading rocket.png";
     throw std::runtime_error("error in loading rocket.png");
   }
@@ -311,7 +323,7 @@ int main() {
   ground.setPosition(0.f, height / 4.f * 3.f);
 
   sf::Texture texture2;
-  if (!texture2.loadFromFile("assets/img/earth.jpeg")) {
+  if (!texture2.loadFromFile(asset_path("img/earth.jpeg"))) {
     std::cout << "error in loading earth.jpeg";
     throw std::runtime_error("error in loading earth.jpeg");
   }
@@ -328,7 +340,7 @@ int main() {
   float angle_total{};
 
   sf::Texture texture3;
-  if (!texture3.loadFromFile("assets/img/map.jpg")) {
+  if (!texture3.loadFromFile(asset_path("img/map.jpg"))) {
     std::cout << "error in loading map.jpg";
     throw std::runtime_error("error in loading map.jpg");
   }
@@ -343,7 +355,7 @@ int main() {
   rocket3.setPosition(750.f, height / 4 * 3);
 
   sf::Font tnr;
-  if (!tnr.loadFromFile("assets/font/times_new_roman.ttf")) {
+  if (!tnr.loadFromFile(asset_path("font/times_new_roman.ttf"))) {
     std::cout << "error in loading the font";
     throw std::runtime_error("error in loading the font");
   }
@@ -403,7 +415,7 @@ int main() {
   std::vector<sf::Vertex *> vertices{line, line1, line2};
 
   sf::SoundBuffer buffer;
-  if (!buffer.loadFromFile("assets/music/launch.wav")) {
+  if (!buffer.loadFromFile(asset_path("music/launch.wav"))) {
     std::cout << "error in loading the countdown audio ";
     throw std::runtime_error("error in loading the countdown audio");
   }
@@ -416,7 +428,7 @@ int main() {
   interface::run_countdown(countdown, drawables, vertices, window);
 
   sf::Music music;
-  if (!music.openFromFile("assets/music/background_music.wav")) {
+  if (!music.openFromFile(asset_path("music/background_music.wav"))) {
     std::cout << "error in loading the background music";
     throw std::runtime_error("error in loading the background music");
   }
@@ -511,7 +523,7 @@ int main() {
       fuel_left.setString("Fuel left: " +
                           std::to_string(rocket.get_fuel_left()));
 
-      rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * M_PI));
+      rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * kPi));
       outer_atm.setPosition(0.f,
                             altitude_rocket + (height * 3 / 4) - 100'000);
       ground.setPosition(0.f, altitude_rocket + (height * 3 / 4));
@@ -540,7 +552,7 @@ int main() {
                                                std::cos(angle_total));
       }
 
-      rocket3.setPosition(angle_total / 2 / M_PI * 700.f + 750.f,
+      rocket3.setPosition(angle_total / 2 / kPi * 700.f + 750.f,
                           height / 4 * 3);
       sf::Vector2f const pos3{rocket3.getPosition()};
       if (pos3.x > width) {
@@ -563,12 +575,12 @@ int main() {
     }
   } catch (const std::exception &e) {
     sf::Font font;
-    font.loadFromFile("assets/font/times_new_roman.ttf");
+    font.loadFromFile(asset_path("font/times_new_roman.ttf"));
     interface::handle_exception(e.what(), font);
 
   } catch (...) {
     sf::Font font;
-    font.loadFromFile("assets/font/times_new_roman.ttf");
+    font.loadFromFile(asset_path("font/times_new_roman.ttf"));
     interface::handle_exception("unknown exception", font);
   }
 }
