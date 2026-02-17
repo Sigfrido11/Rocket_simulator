@@ -32,8 +32,8 @@ struct base_eng_data {
 };
 
 struct ad_eng_data {
-  double burn_a{200e-6};
-  double nozzle_as{221e-6};
+  double burn_a{200e-2};
+  double nozzle_as{221e-2};
   double t_0{1710};
   double grain_dim{0.02};
   double grain_rho{1873};
