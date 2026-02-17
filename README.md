@@ -41,6 +41,22 @@ What you get on disk:
   - Advanced liquid: c* / nozzle model with chamber pressure control.
 - Kinematics: simple Euler integration at fixed timestep (1 s default).
 
+### 1.2 Simulation flow (high level)
+```
+load config JSON
+select engine family (base / advanced)
+init rocket state (stages, masses, geometry)
+loop over time:
+  sample atmosphere at current altitude
+  compute thrust (solid + liquid stages as needed)
+  compute drag, gravity, centripetal contributions
+  sum forces, update velocity (semi-implicit), update position
+  update angles/attitude proxy for rendering
+  handle staging and fuel bookkeeping
+  log outputs, refresh SFML scene
+end
+```
+
 ---
 
 ## 2. Core Files and Structure
@@ -55,6 +71,13 @@ What you get on disk:
   - atmospheric model and physical constants.
 - `vector_math.h`, `vector_math.cpp`
   - vector helpers used by force/kinematic calculations.
+
+**Architecture snapshot**
+- Data inputs: `simulation_params.json`, `theta_data.txt`.
+- Physics core: `rocket.cpp`, `engine.cpp`, `simulation.cpp`.
+- Presentation: `main.cpp`, `graph_test.cpp`, SFML assets.
+- Utilities: `interface.*` (UI helpers), `vector_math.*`.
+- Outputs: `assets/output_rocket.txt`, `assets/output_air.txt`.
 
 ### Interface and Runtime
 
@@ -316,6 +339,34 @@ This section documents the concrete engineering issues addressed during developm
 ### 9.14 Engine model diversity
 - **Problem:** Solid and liquid advanced models require different state and equations but share interfaces.  
   **Fix:** Interface in `engine.h` plus separate `Ad_sol_engine` / `Ad_liquid_engine` implementations; both expose consistent methods so `rocket.cpp` can stay generic while still using model-specific thermodynamics.
+
+### 9.15 Time-step stability vs performance
+- **Problem:** A 1 s step risks instability during high-acceleration segments; reducing dt hurts performance.  
+  **Fix:** Semi-implicit ordering plus guardrails on state validity; documented dt trade-offs and kept logs to validate drift. Future work: adaptive step or RK2 where needed.
+
+### 9.16 Asset and audio latency
+- **Problem:** Audio/texture loading on the fly caused hitches in older builds.  
+  **Fix:** All assets are loaded before the countdown; failure aborts early with clear errors to avoid mid-sim stalls.
+
+### 9.17 I/O determinism
+- **Problem:** Output files had been opened in working directory, breaking determinism under IDEs.  
+  **Fix:** Outputs now live under `assets/`, and asset path resolution is centralized, giving deterministic locations and names.
+
+### 9.18 Parameter validation and safety rails
+- **Problem:** User-provided JSON could silently accept nonsensical values (negative masses, zero stages).  
+  **Fix:** Added numeric regex extraction with explicit error messages, stage-size normalization, and runtime checks in `rocket.cpp` to fail fast on invalid physical states.
+
+### 9.19 Coordinate consistency with rendering
+- **Problem:** Mixing polar (physics) and Cartesian (UI) frames led to visual drift.  
+  **Fix:** Physics stays in physical coordinates; only at render time are values mapped to screen coordinates, ensuring calculations remain frame-consistent.
+
+### 9.20 Drag correctness at high altitude
+- **Problem:** Drag should vanish smoothly as density drops; earlier versions clipped abruptly.  
+  **Fix:** Atmospheric sampler returns continuous density; drag uses that density directly, eliminating discontinuities near 50–100 km.
+
+### 9.21 Staging edge cases under zero thrust
+- **Problem:** Dropping a stage without residual thrust caused divisions by zero and negative fuel.  
+  **Fix:** Staging now checks thrust availability and mass before detaching; zero-thrust conditions raise controlled exceptions with guidance.
 
 ---
 
