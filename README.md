@@ -295,6 +295,28 @@ This section documents the concrete engineering issues addressed during developm
 - **Problem:** Without clear logs, users could not tell when asset or audio loading failed.  
   **Fix:** Console messages for each critical load, plus on-screen error window via SFML in exception paths.
 
+### 9.10 Atmospheric reconstruction and drag
+- **Problem:** Need a realistic-enough atmosphere without external tables.  
+  **Fix:** Implemented a layered ISA-style profile in `simulation.cpp` that returns `T/P/ρ` deterministically for any altitude, enabling reproducible runs across platforms.
+- **Problem:** Drag must honor local density and direction in the correct frame.  
+  **Fix:** Drag uses the velocity vector in the simulation frame, the frontal area, and dynamic pressure derived from the atmospheric sample; unit handling was validated against analytical spot checks.
+
+### 9.11 Force aggregation and reference frames
+- **Problem:** Mixing radial/tangential components with screen-space visuals risked frame errors.  
+  **Fix:** `rocket.cpp` keeps forces in physical coordinates, aggregates thrust, gravity, centripetal, and drag before projection; rendering-only values are derived afterward to avoid cross-contamination.
+
+### 9.12 Staging robustness
+- **Problem:** Stage separation could leave the vehicle with zero thrust or negative mass.  
+  **Fix:** Added guards to prevent stage drop when propellant is still required, and assertions on mass/fuel non-negativity; thrust requests fail fast if stages are inconsistent.
+
+### 9.13 Integrator choice (semi-implicit/symplectic-like step)
+- **Problem:** Pure explicit Euler caused noticeable energy drift at larger timesteps.  
+  **Fix:** Adopted a semi-implicit update order (force → velocity → position) in `rocket.cpp`, which behaves like a simple symplectic integrator for this system, improving stability without complexity.
+
+### 9.14 Engine model diversity
+- **Problem:** Solid and liquid advanced models require different state and equations but share interfaces.  
+  **Fix:** Interface in `engine.h` plus separate `Ad_sol_engine` / `Ad_liquid_engine` implementations; both expose consistent methods so `rocket.cpp` can stay generic while still using model-specific thermodynamics.
+
 ---
 
 ## 10. Troubleshooting
