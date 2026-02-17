@@ -12,21 +12,34 @@ The project is prepared for Linux, macOS, and Windows builds through CMake.
 
 ## 1. What This Program Does
 
-This simulator models a multistage launch vehicle from lift-off to orbital insertion.
-At each simulation step it computes:
-- atmospheric conditions (`temperature`, `pressure`, `density`),
-- engine thrust and propellant mass consumption,
-- resultant forces (gravity, drag, thrust contributions),
-- updated kinematic state (position, velocity, attitude proxy).
+This simulator models a multi‑stage launch vehicle from lift‑off to orbital insertion. It marries a lightweight physics core with a live SFML visualization.
 
-The graphical UI displays:
-- altitude and velocity telemetry,
-- stage/fuel progress,
-- trajectory evolution in multiple views.
+Main loop (per step):
+- sample atmosphere (ISA-like profile: temperature, pressure, density vs altitude),
+- evaluate propulsion (solid base/advanced, liquid base/advanced),
+- compute forces (gravity, centripetal, drag, thrust) and net acceleration,
+- integrate motion and update attitude proxy,
+- stage management and fuel bookkeeping,
+- render telemetry to screen and log to files.
 
-Outputs are persisted to text files for offline analysis:
-- `assets/output_rocket.txt`
-- `assets/output_air.txt`
+What you see in the UI:
+- real-time altitude, speed, stage, fuel,
+- trajectory in Cartesian and polar mini-views,
+- countdown, launch audio, and background music.
+
+What you get on disk:
+- `assets/output_rocket.txt` (position, velocity, forces over time),
+- `assets/output_air.txt` (temperature, pressure, density over time).
+
+### 1.1 Physics model (concise)
+- Atmosphere: piecewise ISA approximation (see `simulation.cpp`).
+- Gravity: altitude-dependent g from Earth radius and mass.
+- Drag: quadratic with reference area and air density, uses velocity vector.
+- Thrust:
+  - Base engine: constant-Isp, mass flow from empirical coefficient.
+  - Advanced solid: pressure-dependent regression, isentropic nozzle.
+  - Advanced liquid: c* / nozzle model with chamber pressure control.
+- Kinematics: simple Euler integration at fixed timestep (1 s default).
 
 ---
 
@@ -240,43 +253,47 @@ For repeatable experiments:
 
 ## 9. Technical Difficulties Encountered and How They Were Solved
 
-This section documents the concrete engineering issues addressed during the cross-platform update.
+This section documents the concrete engineering issues addressed during development and the cross-platform hardening.
 
-### 9.1 Non-portable compiler/linker flags
+### 9.1 Build and toolchain portability
+- **Problem:** Global `CMAKE_CXX_FLAGS*` contained sanitizer/linker flags that break MSVC and multi-config generators.  
+  **Fix:** Moved flags to target-scoped options; sanitized only Debug on GCC/Clang.
 
-**Issue:** global flags were injected directly into `CMAKE_CXX_FLAGS*`, including sanitizer options incompatible with some toolchains.  
-**Risk:** build failures on MSVC and brittle multi-config behavior.  
-**Solution:** moved to target-scoped compile/link options and enabled sanitizers only for GCC/Clang Debug configurations.
+### 9.2 Dual SFML naming schemes
+- **Problem:** Some distros expose `SFML::Graphics`, others only `sfml-graphics`.  
+  **Fix:** A linker helper in CMake selects targets if present, else falls back to library names.
 
-### 9.2 SFML linkage differences between environments
+### 9.3 Missing SFML on fresh installs
+- **Problem:** New environments often lack SFML, blocking first build.  
+  **Fix:** Added `ROCKET_FETCH_SFML` to auto-download SFML via `FetchContent` when not found.
 
-**Issue:** environments may expose SFML either as modern targets (`SFML::Graphics`) or legacy libs (`sfml-graphics`).  
-**Risk:** configuration succeeds on one OS and fails on another.  
-**Solution:** added a compatibility linking function in CMake that supports both target naming styles.
+### 9.4 Asset lookup fragility
+- **Problem:** Relative paths assumed a specific working directory; assets failed to load on IDE/Windows.  
+  **Fix:** Introduced `ROCKET_ASSETS_DIR` and central `asset_path()` using `std::filesystem` so binaries locate assets reliably.
 
-### 9.3 Missing dependencies on fresh machines
+### 9.5 Constant definitions and headers
+- **Problem:** `M_PI` is non-standard on MSVC.  
+  **Fix:** Replaced with `std::numbers::pi_v<double>`.
+- **Problem:** Signature mismatch (`create_ad_eng_minim`) between header and implementation.  
+  **Fix:** Corrected declaration to match definition to satisfy stricter compilers.
 
-**Issue:** first-time setup often fails because SFML is not installed locally.  
-**Risk:** blocked onboarding and broken CI reproducibility.  
-**Solution:** introduced optional automatic SFML fetch through `FetchContent` when system package discovery fails.
+### 9.6 Data-driven simulation pitfalls
+- **Problem:** JSON arrays sometimes provided single values for multi-stage rockets.  
+  **Fix:** Added normalization logic that expands scalars or singletons to the required stage count, with validation and clear errors.
+- **Problem:** Config parsing lacked early validation.  
+  **Fix:** Regex/substring extractors now throw descriptive errors when keys or structures are missing; schema file documents expected shape.
 
-### 9.4 Runtime asset path fragility
+### 9.7 Runtime correctness checks
+- **Problem:** Silent physics failures (negative velocity, missing thrust) were hard to spot.  
+  **Fix:** Added defensive runtime checks that raise exceptions on invalid states (negative altitude/velocity, zero thrust with active stages), surfacing issues immediately.
 
-**Issue:** relative paths depended on current working directory assumptions.  
-**Risk:** executable launches but cannot find images/fonts/audio on IDE/OS variations.  
-**Solution:** introduced `ROCKET_ASSETS_DIR` compile definition and centralized asset path resolution using `std::filesystem`.
+### 9.8 Cross-platform developer experience
+- **Problem:** IDEs on Windows changed working directory, breaking asset loading during debugging.  
+  **Fix:** CMake sets `VS_DEBUGGER_WORKING_DIRECTORY` to project root for MSVC targets.
 
-### 9.5 `M_PI` portability problem
-
-**Issue:** `M_PI` is not guaranteed by all standard library implementations (notably common MSVC setups).  
-**Risk:** compile errors on Windows.  
-**Solution:** replaced with C++20 `std::numbers::pi_v<double>`.
-
-### 9.6 API declaration inconsistency
-
-**Issue:** function declaration mismatch for `create_ad_eng_minim` in `interface.h`.  
-**Risk:** compilation or linkage failures on stricter toolchains.  
-**Solution:** updated declaration to match implementation signature.
+### 9.9 User feedback and observability
+- **Problem:** Without clear logs, users could not tell when asset or audio loading failed.  
+  **Fix:** Console messages for each critical load, plus on-screen error window via SFML in exception paths.
 
 ---
 
