@@ -79,6 +79,30 @@ end
 - Utilities: `interface.*` (UI helpers), `vector_math.*`.
 - Outputs: `assets/output_rocket.txt`, `assets/output_air.txt`.
 
+### 2.1 Engine models in detail
+
+- **Base_engine** (simplified, constant-Isp)  
+  Inputs: `isp`, `cm` (mass-loss coefficient), `p0`, `burn_a`.  
+  Behavior: thrust = `Isp * g0 * mass_flow`; mass flow from `cm` and chamber pressure; reused for both solid/liquid baseline.  
+  When to use: quick runs, lower fidelity acceptable.
+
+- **Ad_sol_engine** (advanced solid)  
+  Inputs: chamber pressure/temperature, grain density, burn law (`a`, `n`), burning area `A_b`, nozzle throat/exit (`A_t`, `A_e`), molar mass.  
+  Behavior: regression `r_dot = a * p_c^n`; mass flow from burn surface * density; exhaust velocity via isentropic expansion; thrust adds exit/ambient pressure term.  
+  Strength: captures pressure-coupled burn and nozzle expansion, suitable for solid boosters.
+
+- **Ad_liquid_engine** (advanced liquid)  
+  Inputs: chamber pressure/temperature, `A_t`, `A_e`, characteristic velocity `c*`, molar mass.  
+  Behavior: mass flow tied to throat area and chamber pressure; exhaust velocity from isentropic relations; thrust includes ambient correction.  
+  Strength: mimics pump-fed liquids with controllable chamber pressure.
+
+**Shared interface (`engine::Engine`)**
+- `delta_m(time, is_orbiting)`: propellant mass spent in the step.  
+- `eng_force(pa, pe, theta, is_orbiting)`: thrust vector with ambient vs exit pressure.  
+- `release()`: ignite/arm the engine.  
+- `is_ad_eng() / is_liquid() / is_released()`: capability flags for runtime logic.  
+- `get_pression()`: expose chamber pressure to other subsystems (e.g., thrust balancing).
+
 ### Interface and Runtime
 
 - `main.cpp`
