@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rocket Simulation Parameters",
+  "type": "object",
+  "required": [
+    "orbit_altitude_m",
+    "rocket",
+    "engine"
+  ],
+  "properties": {
+    "input_mode": {
+      "type": "string",
+      "enum": [
+        "json"
+      ]
+    },
+    "orbit_altitude_m": {
+      "type": "number",
+      "minimum": 60000
+    },
+    "rocket": {
+      "type": "object",
+      "required": [
+        "name",
+        "detail_level",
+        "stage_num",
+        "mass_structure_kg",
+        "upper_area_m2",
+        "solid_propellant_mass_kg",
+        "solid_container_mass_kg",
+        "solid_engine_count",
+        "liquid_propellant_masses_kg",
+        "liquid_container_masses_kg",
+        "liquid_engines_per_stage"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "detail_level": {
+          "type": "string",
+          "enum": [
+            "many",
+            "some",
+            "few"
+          ]
+        },
+        "stage_num": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mass_structure_kg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "upper_area_m2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "solid_propellant_mass_kg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "solid_container_mass_kg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "solid_engine_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "liquid_propellant_masses_kg": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "liquid_container_masses_kg": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "liquid_engines_per_stage": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "required": [
+        "family",
+        "detail_level",
+        "base"
+      ],
+      "properties": {
+        "family": {
+          "type": "string",
+          "enum": [
+            "base",
+            "advanced_solid",
+            "advanced_liquid"
+          ]
+        },
+        "detail_level": {
+          "type": "string",
+          "enum": [
+            "many",
+            "some",
+            "few"
+          ]
+        },
+        "base": {
+          "type": "object",
+          "required": [
+            "isp_s",
+            "cm",
+            "chamber_pressure_pa",
+            "burn_area_m2"
+          ],
+          "properties": {
+            "isp_s": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "cm": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "chamber_pressure_pa": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "burn_area_m2": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "advanced_solid": {
+          "type": "object",
+          "properties": {
+            "burn_area_m2": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "nozzle_throat_area_m2": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "chamber_temperature_k": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "grain_dimension_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "grain_density_kg_m3": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "burn_rate_a": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "burn_rate_n": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "propellant_molar_mass_g_mol": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "advanced_liquid": {
+          "type": "object",
+          "properties": {
+            "chamber_pressure_pa": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "burn_area_m2": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "nozzle_throat_area_m2": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "chamber_temperature_k": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

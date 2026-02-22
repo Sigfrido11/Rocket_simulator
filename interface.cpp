@@ -9,13 +9,13 @@
 
 namespace interface {
 
-void set_text_style(sf::Text &text, sf::Font &font) {
+ void set_text_style(sf::Text &text, sf::Font &font) {
   text.setFont(font);
   text.setCharacterSize(24);
   text.setFillColor(sf::Color::White);
 }
 
-void create_ad_eng_all(ad_eng_data &eng_data) {
+ void create_ad_eng_all(ad_eng_data &eng_data) {
   eng_data.type = 'm';
   std::cout << "give me the burn area (m^2) ≈ 2.2" << '\n';
   std::cin >> eng_data.burn_a;
@@ -37,7 +37,7 @@ void create_ad_eng_all(ad_eng_data &eng_data) {
   std::cin >> eng_data.prop_mm;
 }
 
-void create_ad_eng_med(ad_eng_data &eng_data) {
+ void create_ad_eng_med(ad_eng_data &eng_data) {
   eng_data.type = 's';
   std::cout << "give me the burn area (m^2) ≈ 2.2" << '\n';
   std::cin >> eng_data.burn_a;
@@ -50,7 +50,7 @@ void create_ad_eng_med(ad_eng_data &eng_data) {
   std::cin >> eng_data.p_0;
 }
 
-void create_ad_eng_minim(ad_eng_data &eng_data) {
+ void create_ad_eng_minim(ad_eng_data &eng_data) {
   eng_data.type = 'f';
   std::cout << "give me the pressure inside the engine (Pa) ≈e6" << '\n';
   std::cin >> eng_data.p_0;
@@ -59,7 +59,7 @@ void create_ad_eng_minim(ad_eng_data &eng_data) {
   std::cin >> eng_data.t_0;
 }
 
-rocket_data create_complete_roc() {
+ rocket_data create_complete_roc() {
   rocket_data rocket_data;
   std::cout << "give a name to your rocket"
             << '\n';
@@ -85,7 +85,7 @@ rocket_data create_complete_roc() {
   return rocket_data;
 }
 
-rocket_data create_med_roc() {
+ rocket_data create_med_roc() {
   rocket_data rocket_data;
   std::cout << "give a name to your rocket"
             << '\n';
@@ -103,7 +103,7 @@ rocket_data create_med_roc() {
   return rocket_data;
 }
 
-rocket_data create_minim_roc() {
+ rocket_data create_minim_roc() {
   interface::rocket_data rocket_data;
   std::cout << "give a name to your rocket"
             << '\n';
@@ -117,7 +117,7 @@ rocket_data create_minim_roc() {
   return rocket_data;
 }
 
-void create_base_eng_all(base_eng_data &eng_data) {
+ void create_base_eng_all(base_eng_data &eng_data) {
   eng_data.type = 'm';
   std::cout << "give me the specific impulse (s) 150 < x < 300" << '\n';
   std::cin >> eng_data.isp;
@@ -129,7 +129,7 @@ void create_base_eng_all(base_eng_data &eng_data) {
   std::cin >> eng_data.burn_a;
 }
 
-void create_base_eng_med(base_eng_data &eng_data) {
+ void create_base_eng_med(base_eng_data &eng_data) {
   eng_data.type = 's';
   std::cout << "give me the specific impulse (s) 150 < x < 300" << '\n';
   std::cin >> eng_data.isp;
@@ -139,7 +139,7 @@ void create_base_eng_med(base_eng_data &eng_data) {
   std::cin >> eng_data.p0;
 }
 
-void create_base_eng_minim(base_eng_data &eng_data) {
+ void create_base_eng_minim(base_eng_data &eng_data) {
   eng_data.type = 'f';
   std::cout << "give me the specific impulse (s) 150 < x < 300" << '\n';
   std::cin >> eng_data.isp;
@@ -147,7 +147,7 @@ void create_base_eng_minim(base_eng_data &eng_data) {
   std::cin >> eng_data.cm;
 }
 
-void select_ad_eng(ad_eng_data &data) {
+ void select_ad_eng(ad_eng_data &data) {
   char ans;
   std::cout << "how many parameters do you want to insert"
             << '\n';
@@ -174,7 +174,7 @@ void select_ad_eng(ad_eng_data &data) {
   }
 }
 
-void select_base_eng(base_eng_data &data) {
+ void select_base_eng(base_eng_data &data) {
   char ans;
   std::cout << "how many parameters do you want to insert"
             << '\n';
@@ -201,7 +201,7 @@ void select_base_eng(base_eng_data &data) {
   }
 }
 
-void run_countdown(sf::Text& countdown, std::vector<sf::Drawable *> const &drawables,
+ void run_countdown(sf::Text& countdown, std::vector<sf::Drawable *> const &drawables,
                    std::vector<sf::Vertex *> const& vertices,
                    sf::RenderWindow& window) {
   sf::Clock clock;
@@ -242,13 +242,13 @@ void run_countdown(sf::Text& countdown, std::vector<sf::Drawable *> const &drawa
 }
 
 
-void handle_exception(const std::string& err, sf::Font const& tnr) {
+ void handle_exception(const std::string& err, sf::Font const& tnr) {
   std::cerr << "known exception detected: " << err << '\n';
 
   sf::RenderWindow error_window(sf::VideoMode(800, 600), "error SFML");
 
   if (!error_window.isOpen()) {
-    std::cerr << "error: Impossibile create the error windows" << '\n';
+    std::cerr << "error: Impossibile create the error windows " << '\n';
     return;
   }
   sf::Text error_text(err, tnr, 30);
