@@ -201,6 +201,10 @@ int main() {
     }
 
     std::string file_name = asset_path("input_data/theta_data.txt");
+    std::ifstream theta_file(file_name);
+    if (!theta_file.is_open()) {
+      throw std::runtime_error("Cannot open theta data file: " + file_name);
+    }
     std::string const params_file = asset_path("input_data/simulation_params.json");
     std::string const params_text = read_text_file(params_file);
 
@@ -453,7 +457,7 @@ int main() {
       bool const orbiting{
           rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity())};
 
-      rocket.set_state(file_name, orbital_h, delta_time, orbiting, start_pos);
+      rocket.set_state(theta_file, orbital_h, delta_time, orbiting, start_pos);
 
       air.set_state(rocket.get_pos()[0]-sim::cost::earth_radius_);
       double const pa = air.get_p();
@@ -472,7 +476,7 @@ int main() {
 
       rocket.move(delta_time, force);
 
-      if (rocket.get_velocity()[0] < 0.) {
+      if (rocket.get_velocity()[0] < 0. && rocket.get_pos()[0]< sim::cost::earth_radius_) {
         std::cout << "error in velocity ";
         std::cout << rocket.get_velocity()[0];
         

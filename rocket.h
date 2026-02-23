@@ -2,6 +2,7 @@
 #define ROCKET_H
 
 #include <algorithm>
+#include <fstream>
 #include <cmath>
 #include <iterator>
 #include <memory>
@@ -111,8 +112,7 @@ std::vector<int> n_liq_eng_;
 /*                               kinematics rocket                              */
 /* -------------------------------------------------------------------------- */
 
-
-  void set_state(std::string const& file_name, double orbital_h, double time,
+  void set_state(std::ifstream& theta_file, double orbital_h, double time,
                        bool is_orbiting, std::streampos& file_pos);
 
   void stage_release(double delta_ms, double delta_ml);  
@@ -131,8 +131,8 @@ Vec const total_force(double rho, double total_mass, double altitude,
                       double upper_area, Vec const& velocity, Vec const& eng, double a);
 
 
-double improve_theta(std::string const& name_f, double theta, double pos,
-                            double orbital_h, std::streampos& file_pos);
+double improve_theta(std::ifstream& file, double theta, double pos,
+                     double orbital_h, std::streampos& file_pos);
 
 bool is_orbiting(double r, Vec velocity);
 

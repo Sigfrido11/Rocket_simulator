@@ -182,7 +182,7 @@ void Rocket::mass_lost(double solid_lost, double liq_lost)
     }
 }
 
-void Rocket::set_state(std::string const& file_name,
+void Rocket::set_state(std::ifstream& theta_file,
                        double orbital_h,
                        double time,
                        bool is_orbiting,
@@ -196,7 +196,7 @@ void Rocket::set_state(std::string const& file_name,
     const double old_theta{theta_};
 
     // Improve flight angle based on guidance file
-    theta_ = improve_theta(file_name, theta_, pos_[0],
+    theta_ = improve_theta(theta_file, theta_, pos_[0],
                            orbital_h, file_pos);
 
     // ============================================================
@@ -358,12 +358,9 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
 
 
 
-double improve_theta(std::string const& name_f, double theta, double pos,
-                            double orbital_h, std::streampos& file_pos) {
-  // Open the input file whose name is provided
-  std::ifstream file(name_f);
-  
-  // Ensure the file has been opened correctly
+double improve_theta(std::ifstream& file, double theta, double pos,
+                     double orbital_h, std::streampos& file_pos) {
+  // Ensure the file stream is valid and has been opened correctly
   assert(file.is_open());
   
   // Variable used to store each line read from the file
@@ -593,9 +590,3 @@ Vec drag(double rho, double altitude,
 
 
     
-
-
-
-
-
-
