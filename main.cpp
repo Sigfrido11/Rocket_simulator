@@ -26,6 +26,9 @@
 // angular component [1]
 //
 
+// ============================================================================
+// HELPER FUNCTIONS FOR FILE I/O AND JSON PARSING
+// ============================================================================
 namespace {
 std::string asset_path(std::string_view relative_path) {
   return (std::filesystem::path(ROCKET_ASSETS_DIR) / relative_path).string();
@@ -33,6 +36,7 @@ std::string asset_path(std::string_view relative_path) {
 
 constexpr double kPi = std::numbers::pi_v<double>;
 
+// Reads the entire content of a text file into a string.
 std::string read_text_file(std::string const& path) {
   std::ifstream in(path);
   if (!in.is_open()) {
@@ -42,6 +46,7 @@ std::string read_text_file(std::string const& path) {
                      std::istreambuf_iterator<char>());
 }
 
+// Extracts a JSON object block associated with a specific key.
 std::string extract_object(std::string const& text, std::string const& key) {
   std::string const marker = "\"" + key + "\"";
   std::size_t const key_pos = text.find(marker);
@@ -75,6 +80,7 @@ std::string extract_object(std::string const& text, std::string const& key) {
   throw std::runtime_error("unterminated object for key: " + key);
 }
 
+// Extracts a JSON array block associated with a specific key.
 std::string extract_array(std::string const& text, std::string const& key) {
   std::string const marker = "\"" + key + "\"";
   std::size_t const key_pos = text.find(marker);
@@ -108,6 +114,7 @@ std::string extract_array(std::string const& text, std::string const& key) {
   throw std::runtime_error("unterminated array for key: " + key);
 }
 
+// Extracts a numeric value associated with a key using regex.
 double extract_number(std::string const& text, std::string const& key) {
   std::regex const rx("\\\"" + key + "\\\"\\s*:\\s*(-?[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)");
   std::smatch match;
@@ -117,6 +124,7 @@ double extract_number(std::string const& text, std::string const& key) {
   return std::stod(match[1].str());
 }
 
+// Extracts a numeric value or returns a fallback if the key is missing.
 double extract_number_or(std::string const& text, std::string const& key,
                          double fallback) {
   std::regex const rx("\\\"" + key + "\\\"\\s*:\\s*(-?[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)");
@@ -131,6 +139,7 @@ int extract_int(std::string const& text, std::string const& key) {
   return static_cast<int>(extract_number(text, key));
 }
 
+// Extracts a string value associated with a key.
 std::string extract_string(std::string const& text, std::string const& key) {
   std::regex const rx("\\\"" + key + "\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
   std::smatch match;
@@ -140,6 +149,7 @@ std::string extract_string(std::string const& text, std::string const& key) {
   return match[1].str();
 }
 
+// Parses a JSON array of numbers into a std::vector<double>.
 std::vector<double> extract_double_array(std::string const& text,
                                          std::string const& key) {
   std::vector<double> out;
@@ -152,6 +162,7 @@ std::vector<double> extract_double_array(std::string const& text,
   return out;
 }
 
+// Parses a JSON array of integers into a std::vector<int>.
 std::vector<int> extract_int_array(std::string const& text,
                                    std::string const& key) {
   std::vector<int> out;
@@ -164,6 +175,7 @@ std::vector<int> extract_int_array(std::string const& text,
   return out;
 }
 
+// Ensures vectors match the number of stages, filling with defaults if necessary.
 template <typename T>
 void normalize_size(std::vector<T>& values, std::size_t size, T fallback,
                     std::string const& field_name) {
@@ -185,6 +197,9 @@ void normalize_size(std::vector<T>& values, std::size_t size, T fallback,
 
 }  // namespace
 
+// ============================================================================
+// MAIN APPLICATION ENTRY POINT
+// ============================================================================
 int main() {
   interface::rocket_data rocket_data;
   std::vector<double> l_p_m;
@@ -194,6 +209,7 @@ int main() {
   engine::Engine* liquid_eng = nullptr;
 
   try {
+    // 1. User Input: Select Engine Family
     char ans_eng{};
     std::cout << "do you prefer a base engine (b) or advanced engines (a)?"
               << "\n";
@@ -202,6 +218,7 @@ int main() {
       throw std::runtime_error("invalid engine family, use 'a' or 'b'");
     }
 
+    // 2. Load Configuration Files
     std::string file_name = asset_path("input_data/theta_data.txt");
     std::ifstream theta_file(file_name);
     if (!theta_file.is_open()) {
@@ -210,12 +227,14 @@ int main() {
     std::string const params_file = asset_path("input_data/simulation_params.json");
     std::string const params_text = read_text_file(params_file);
 
+    // 3. Parse JSON Configuration
     std::string const rocket_obj = extract_object(params_text, "rocket");
     std::string const engine_obj = extract_object(params_text, "engine");
     std::string const base_obj = extract_object(engine_obj, "base");
     std::string const adv_sol_obj = extract_object(engine_obj, "advanced_solid");
     std::string const adv_liq_obj = extract_object(engine_obj, "advanced_liquid");
 
+    // Extract Rocket Parameters
     rocket_data.name = extract_string(rocket_obj, "name");
     rocket_data.stage_num = extract_int(rocket_obj, "stage_num");
     rocket_data.mass_structure = extract_number(rocket_obj, "mass_structure_kg");
@@ -228,6 +247,7 @@ int main() {
     l_c_m = extract_double_array(rocket_obj, "liquid_container_masses_kg");
     n_liq_eng = extract_int_array(rocket_obj, "liquid_engines_per_stage");
 
+    // Normalize array sizes to match stage count
     normalize_size(l_p_m, static_cast<std::size_t>(rocket_data.stage_num),
                    rocket_data.s_p_m, "liquid_propellant_masses_kg");
     normalize_size(l_c_m, static_cast<std::size_t>(rocket_data.stage_num),
@@ -235,11 +255,13 @@ int main() {
     normalize_size(n_liq_eng, static_cast<std::size_t>(rocket_data.stage_num),
                    1, "liquid_engines_per_stage");
 
+    // Extract Base Engine Parameters
     double const base_isp = extract_number(base_obj, "isp_s");
     double const base_cm = extract_number(base_obj, "cm");
     double const base_p0 = extract_number(base_obj, "chamber_pressure_pa");
     double const base_burn_a = extract_number(base_obj, "burn_area_m2");
 
+    // Extract Advanced Solid Engine Parameters
     double const adv_p_c = extract_number_or(adv_sol_obj, "chamber_pressure_pa", 7.0e6);
     double const adv_t_c = extract_number(adv_sol_obj, "chamber_temperature_k");
     double const adv_a_b = extract_number(adv_sol_obj, "burn_area_m2");
@@ -249,17 +271,20 @@ int main() {
     double const adv_n = extract_number(adv_sol_obj, "burn_rate_n");
     double const adv_m = extract_number(adv_sol_obj, "propellant_molar_mass_g_mol") / 1000.0;
 
+    // Extract Advanced Liquid Engine Parameters
     double const liq_p_c = extract_number(adv_liq_obj, "chamber_pressure_pa");
     double const liq_t_c = extract_number(adv_liq_obj, "chamber_temperature_k");
     double const liq_a_t = extract_number(adv_liq_obj, "nozzle_throat_area_m2");
     double const liq_a_e = extract_number(adv_liq_obj, "burn_area_m2");
 
+    // 4. Initialize Engine Objects
     engine::Base_engine base_solid{base_isp, base_cm, base_p0, base_burn_a};
     engine::Base_engine base_liquid{base_isp, base_cm, base_p0, base_burn_a};
     engine::Ad_sol_engine ad_solid{adv_p_c, adv_t_c, adv_a_b, adv_a_t, adv_rho,
                                    adv_a, adv_n, adv_m};
     engine::Ad_liquid_engine ad_liquid{liq_p_c, liq_t_c, liq_a_t, liq_a_e};
 
+    // Select engines based on user choice
     if (ans_eng == 'a') {
       solid_eng = &ad_solid;
       liquid_eng = &ad_liquid;
@@ -268,11 +293,13 @@ int main() {
       liquid_eng = &base_liquid;
     }
 
+    // 5. User Input: Orbital Parameters
     std::cout << "at which altitude do you want to orbit? (m) >60'000"
               << "\n";
     double orbital_h;
     std::cin >> orbital_h;
 
+    // 6. Setup Output Logging
     std::ofstream output_rocket(asset_path("output_rocket.txt"));
     std::streampos start_pos;
     std::ofstream output_air(asset_path("output_air.txt"));
@@ -284,6 +311,8 @@ int main() {
       std::cout << "rocket output is ok" << '\n';
       std::cout << "also air output is ok" << '\n';
     }
+
+    // 7. Initialize Rocket Simulation Object
     rocket::Rocket rocket{rocket_data.name,
                           rocket_data.mass_structure,
                           rocket_data.up_ar,
@@ -297,14 +326,16 @@ int main() {
                           n_liq_eng};
 
     sim::Air_var air;
+
+  // 8. Initialize SFML Graphics
   float const width{1200.f};
   float const height{600.f};
 
   sf::RenderWindow window(sf::VideoMode(width, height), "Rocket simulator");
   window.setPosition(sf::Vector2i(0, 0));
-
   window.setFramerateLimit(5);
 
+  // Load Textures and Sprites
   sf::Texture texture1;
   if (!texture1.loadFromFile(asset_path("img/rocket.png"))) {
     std::cout << "error in loading rocket.png";
@@ -316,6 +347,7 @@ int main() {
   rocket1.setScale(sf::Vector2f(0.2f, 0.2f));
   rocket1.setPosition(sf::Vector2f(250.f, height / 4.f * 3.f - 1024.f / 5.f));
 
+  // Setup Environment Shapes (Atmosphere, Ground)
   sf::RectangleShape inner_atm({500.f, 51000.f});
   inner_atm.setFillColor(sf::Color::Cyan);
   inner_atm.setPosition(0.f, height / 4.f * 3.f - 51000.f);
@@ -360,6 +392,7 @@ int main() {
   rocket3.setOrigin(2.f, 2.f);
   rocket3.setPosition(750.f, height / 4 * 3);
 
+  // Setup HUD (Heads-Up Display) Text
   sf::Font tnr;
   if (!tnr.loadFromFile(asset_path("font/times_new_roman.ttf"))) {
     std::cout << "error in loading the font";
@@ -414,6 +447,7 @@ int main() {
       sf::Vertex(sf::Vector2f((width - 500.f) / 2 + 500.f, 0.f)),
       sf::Vertex(sf::Vector2f((width - 500.f) / 2 + 500.f, height / 2))};
 
+  // Group drawables for easier rendering
   std::vector<sf::Drawable *> drawables{
       &map,      &ground, &inner_atm, &rocket1, &earth,     &rocket2, &rocket3,
       &altitude, &angle,  &speed,     &stage,   &fuel_left, &time};
@@ -421,6 +455,7 @@ int main() {
   std::vector<sf::Vertex *> vertices{line, line1, line2};
 
   sf::SoundBuffer buffer;
+  // Load Audio Assets
   if (!buffer.loadFromFile(asset_path("music/launch.wav"))) {
     std::cout << "error in loading the countdown audio ";
     throw std::runtime_error("error in loading the countdown audio");
@@ -431,6 +466,7 @@ int main() {
 
   sf::sleep(sf::seconds(0.5f));
 
+  // Run Pre-launch Countdown
   interface::run_countdown(countdown, drawables, vertices, window);
 
   sf::Music music;
@@ -445,7 +481,7 @@ int main() {
   Vec eng_force;
 
   double delta_time{1};
-  // game loop inizia
+  // Start of the game loop
     while (window.isOpen()) {
       sf::Event event;
 
@@ -456,25 +492,33 @@ int main() {
         }
       }
 
+      // Check orbital status
       bool const orbiting{
           rocket::is_orbiting(rocket.get_pos()[0], rocket.get_velocity())};
 
+      // Update rocket state (guidance, mass, staging)
       rocket.set_state(theta_file, orbital_h, delta_time, orbiting, start_pos);
 
+      // Update atmospheric conditions based on altitude
       air.set_state(rocket.get_pos()[0]-sim::cost::earth_radius_);
       double const pa = air.get_p();
+      
+      // Calculate thrust
       eng_force = rocket.thrust(delta_time, pa, orbiting);
 
+      // Calculate total force (Thrust + Gravity + Drag)
       Vec const force{rocket::total_force(
           air.get_rho(), rocket.get_mass(), rocket.get_pos()[0]-sim::cost::earth_radius_,
           rocket.get_up_ar(), rocket.get_velocity(), eng_force, air.get_speed_sound())};
 
+      // Update angular position for visualization
       double const angle_var{
           ((rocket.get_velocity()[1] + sim::cost::earth_speed_) * delta_time +
            0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) /
           rocket.get_pos()[0]};
       angle_total += angle_var;
 
+      // Integrate motion (update position and velocity)
       rocket.move(delta_time, force);
 
       if (rocket.get_velocity()[0] < 0. && rocket.get_pos()[0]< sim::cost::earth_radius_) {
@@ -494,15 +538,17 @@ int main() {
         throw std::runtime_error("error in position");
       };
 
+      // Log telemetry to files
       output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
                     << rocket.get_velocity()[0] << "  "
                     << rocket.get_velocity()[1] << "  " << force[0] << "  "
                     << force[1] << '\n';
       output_air << air.get_t() << " " << air.get_p() << " " << air.get_rho() << '\n';
 
+      // Calculate altitude for rendering
       double altitude_rocket =  rocket.get_pos()[0] * std::sin(rocket.get_pos()[1]);
 
-      // grafica
+      // Graphics update section
 
       int const out_time_min{out_time / 60};
       int const out_time_sec{out_time - out_time_min * 60};
@@ -528,6 +574,7 @@ int main() {
       fuel_left.setString("Fuel left: " +
                           std::to_string(rocket.get_fuel_left()));
 
+      // Update sprite positions and rotations
       rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * kPi));
       outer_atm.setPosition(0.f,
                             altitude_rocket + (height * 3 / 4) - 100'000);
@@ -566,6 +613,7 @@ int main() {
                             pos3.y);
       }
 
+      // Render frame
       window.clear();
 
       std::for_each(drawables.begin(), drawables.end(),

@@ -378,7 +378,7 @@ double improve_theta(std::ifstream& file, double theta, double pos,
   // First: scale pos proportionally to orbital height.
   // Second: subtract a correction term (500,000 / pos).
   // Finally: ensure pos is not negative.
-  pos = std::max(0., (pos * 170'000) / orbital_h - 5e5 / pos);
+  pos = std::max(0., (pos * 170'000) / orbital_h);
   
   // Slightly slow down the rate at which the angle changes
   // (initial previous angle set to 2)
@@ -585,7 +585,7 @@ Vec drag(double rho, double altitude,
   //pay attention is altitude
   double const r_force{eng[0]  + gra[0] + drag_f[0]};
   double const psi_force{eng[1] + gra[1] + drag_f[1]};
-  if (psi_force <= 0) {
+  if (psi_force <= 0 && altitude < 10000.0) {
     return {r_force, 0};
   } else {
     return {r_force, psi_force};
