@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wall -Wextra CMakeFiles/rocket_test.t.dir/test_calc.cpp.o CMakeFiles/rocket_test.t.dir/simulation.cpp.o CMakeFiles/rocket_test.t.dir/rocket.cpp.o -o rocket_test.t 

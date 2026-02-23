@@ -8,9 +8,9 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/graph_test.cpp" "CMakeFiles/graph_test.t.dir/graph_test.cpp.o" "gcc" "CMakeFiles/graph_test.t.dir/graph_test.cpp.o.d"
-  "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/interface.cpp" "CMakeFiles/graph_test.t.dir/interface.cpp.o" "gcc" "CMakeFiles/graph_test.t.dir/interface.cpp.o.d"
-  "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp" "CMakeFiles/graph_test.t.dir/simulation.cpp.o" "gcc" "CMakeFiles/graph_test.t.dir/simulation.cpp.o.d"
+  "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/graph_test.cpp" "CMakeFiles/graph_test.t.dir/graph_test.cpp.o" "gcc" "CMakeFiles/graph_test.t.dir/graph_test.cpp.o.d"
+  "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/interface.cpp" "CMakeFiles/graph_test.t.dir/interface.cpp.o" "gcc" "CMakeFiles/graph_test.t.dir/interface.cpp.o.d"
+  "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp" "CMakeFiles/graph_test.t.dir/simulation.cpp.o" "gcc" "CMakeFiles/graph_test.t.dir/simulation.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

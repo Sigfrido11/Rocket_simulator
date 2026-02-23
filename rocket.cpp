@@ -98,7 +98,6 @@ void Rocket::change_vel(double dt, Vec const& force) {
 
   // Current state in polar coordinates
   double r     = pos_[0];       // radial position
-  double psi   = pos_[1];       // angular position (not directly used here)
   double vr = velocity_[0];  // radial velocity [m/s]
   double vt = velocity_[1];  // tangential velocity [m/s]
 
@@ -195,8 +194,8 @@ void Rocket::set_state(std::ifstream& theta_file,
     // Store previous angle
     const double old_theta{theta_};
 
-    // Improve flight angle based on guidance file
-    theta_ = improve_theta(theta_file, theta_, pos_[0],
+    // Improve flight angle based on guidance file using the altitude, +0.005 avoid singularity
+    theta_ = improve_theta(theta_file, theta_, pos_[0]-sim::cost::earth_radius_+0.005,
                            orbital_h, file_pos);
 
     // ============================================================
@@ -441,10 +440,16 @@ double improve_theta(std::ifstream& file, double theta, double pos,
 
 
 
-Vec const Rocket::thrust(double time, double pe, double pa, bool is_orbiting) const {
-  Vec engs = engs_->eng_force(pa,pe,theta_, is_orbiting);
-  Vec engl = engl_->eng_force(pa,pe,theta_, is_orbiting);
+Vec const Rocket::thrust(double time, double pa, bool is_orbiting) const {
+  Vec engs = engs_->eng_force(pa,time,theta_, is_orbiting);
+  Vec engl = engl_->eng_force(pa,time,theta_, is_orbiting);
   
+  if (engs.norm() < 1e-8 && engl.norm() < 1e-8) {
+    return {0.0, 0.0}; // No thrust if both engines are inactive
+  }
+  else if (n_liq_eng_.empty()){
+    return {0.0, 0.0}; //no more engine active
+  }
   double const fr{engs[0] * n_sol_eng_ + engl[0] * n_liq_eng_[0]};
   double const fpsi{engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0]};
   return {fr, fpsi};

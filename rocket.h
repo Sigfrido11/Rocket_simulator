@@ -119,7 +119,7 @@ std::vector<int> n_liq_eng_;
 
   void change_vel(double time, Vec const& force);
 
-  Vec const thrust(double time, double pe, double pa, bool is_orbiting) const; //engine thrust
+  Vec const thrust(double time, double pa, bool is_orbiting) const; //engine thrust
 };
 
 

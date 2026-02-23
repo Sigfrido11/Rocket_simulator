@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo
-BuildDirectory: /home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build
+SourceDirectory: /home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo
+BuildDirectory: /home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build
 
 # Where to place the cost data store
 CostDataFile: 
@@ -27,7 +27,7 @@ SubmitInactivityTimeout:
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/usr/bin/cmake" "/home/giuseppe/Desktop/Giuseppe/università/triennale/primo_anno/programmazione/razzo"
+ConfigureCommand: "/usr/bin/cmake" "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo"
 MakeCommand: /usr/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
@@ -64,7 +64,7 @@ UpdateType: git
 
 # Compiler info
 Compiler: /usr/bin/c++
-CompilerVersion: 13.3.0
+CompilerVersion: 15.2.0
 
 # Dynamic analysis (MemCheck)
 PurifyCommand: 
@@ -94,6 +94,9 @@ TimeOut: 1500
 # During parallel testing CTest will not start a new test if doing
 # so would cause the system load to exceed this value.
 TestLoad: 
+
+TLSVerify: 
+TLSVersion: 
 
 UseLaunchers: 
 CurlOptions: 

@@ -9,6 +9,8 @@
 #include <vector>
 
 #include <stdio.h>
+#include <SFML/Audio.hpp>
+#include <SFML/Graphics.hpp>
 #include "interface.h"
 #include "rocket.h"
 #include "simulation.h"
@@ -461,8 +463,7 @@ int main() {
 
       air.set_state(rocket.get_pos()[0]-sim::cost::earth_radius_);
       double const pa = air.get_p();
-      double const pe = solid_eng->get_pression();
-      eng_force = rocket.thrust(delta_time, pe, pa, orbiting);
+      eng_force = rocket.thrust(delta_time, pa, orbiting);
 
       Vec const force{rocket::total_force(
           air.get_rho(), rocket.get_mass(), rocket.get_pos()[0]-sim::cost::earth_radius_,
