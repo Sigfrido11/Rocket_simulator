@@ -426,7 +426,7 @@ int main() {
   fuel_left.setString("Fuel left: ");
   fuel_left.setPosition((width - 500.f) / 2 + 500.f + 50.f, 190.f);
 
-  int out_time{};
+  double out_time{};
 
   sf::Text time;
   interface::set_text_style(time, tnr);
@@ -483,7 +483,11 @@ int main() {
   Vec eng_force;
 
   double delta_time{0.3};
-  // Start of the game loop
+  
+  // ============================================================
+  // START MAIN SIMULATION LOOP
+  // ============================================================
+
     while (window.isOpen()) {
       sf::Event event;
 
@@ -549,16 +553,18 @@ int main() {
                     << rocket.get_velocity()[1] << "  " << eng_force[0] << "  "
                     << eng_force[1] << "  " << drag_vec[0] << "  "
                     << drag_vec[1] << "  " << gravity_vec[0] << '\n';
-      output_air << rocket.get_altitude() << " " << air.get_t() << " " << air.get_p() << " " << air.get_rho() << '\n';
-      
+      if(rocket.get_altitude() < 700000) // Limit air data logging to within 1000 km altitude
+      {
+        output_air << rocket.get_altitude() << " " << air.get_t() << " " << air.get_p() << " " << air.get_rho() << '\n';
+      }
       // Altitude for the side-scrolling view.
       // NOTE: The scaling for the background movement seems to be 1 meter = 1 pixel, which might be too fast.
       double altitude_for_scrolling = rocket.get_altitude();
       
       // Graphics update section
-
-      int const out_time_min{out_time / 60};
-      int const out_time_sec{out_time - out_time_min * 60};
+      int const total_seconds = static_cast<int>(out_time);
+      int const out_time_min{total_seconds / 60};
+      int const out_time_sec{total_seconds % 60};
       time.setString("Time: " + std::to_string(out_time_min) + " min " +
                      std::to_string(out_time_sec) + " sec ");
 

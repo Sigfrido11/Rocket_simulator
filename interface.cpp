@@ -206,27 +206,29 @@ namespace interface {
                    sf::RenderWindow& window) {
   sf::Clock clock;
   for (int i = 10; i >= 1; --i) {
-    sf::Event event;
-    while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed) window.close();
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-        window.close();
-      }
-    }
-
     countdown.setString(std::to_string(i));
-    sf::Time dur = sf::Time::Zero;
-    
-    clock.restart();
+
+    // Disegna la scena una volta per il numero corrente
     window.clear();
-    while (dur.asSeconds() < 1.0f) {
-      std::for_each(drawables.begin(), drawables.end(),
-                    [&](sf::Drawable *obj) { window.draw(*obj); });
-      std::for_each(vertices.begin(), vertices.end(),
-                    [&](sf::Vertex *obj) { window.draw(obj, 2, sf::Lines); });
-      window.draw(countdown);
-      window.display();
-      dur = clock.getElapsedTime();
+    std::for_each(drawables.begin(), drawables.end(),
+                  [&](sf::Drawable *obj) { window.draw(*obj); });
+    std::for_each(vertices.begin(), vertices.end(),
+                  [&](sf::Vertex *obj) { window.draw(obj, 2, sf::Lines); });
+    window.draw(countdown);
+    window.display();
+
+    // Attendi per 1 secondo, mantenendo la finestra reattiva
+    clock.restart();
+    while (clock.getElapsedTime().asSeconds() < 1.0f) {
+      sf::Event event;
+      while (window.pollEvent(event)) {
+        if (event.type == sf::Event::Closed ||
+            sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+          window.close();
+          return; // Esci immediatamente dal countdown
+        }
+      }
+      sf::sleep(sf::milliseconds(10)); // Evita un alto utilizzo della CPU
     }
   }
 
@@ -239,6 +241,7 @@ namespace interface {
                 [&](sf::Vertex *obj) { window.draw(obj, 2, sf::Lines); });
   window.draw(countdown);
   window.display();
+  sf::sleep(sf::seconds(1.0f)); // Mostra "GO!" per un momento
 }
 
 
