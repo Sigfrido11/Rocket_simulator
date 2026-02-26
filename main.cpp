@@ -224,7 +224,7 @@ int main() {
     if (!theta_file.is_open()) {
       throw std::runtime_error("Cannot open theta data file: " + file_name);
     }
-    std::string const params_file = asset_path("input_data/simulation_params.json");
+    std::string const params_file = asset_path("input_data/simulation_params_test.json");
     std::string const params_text = read_text_file(params_file);
 
     // 3. Parse JSON Configuration
@@ -305,8 +305,8 @@ int main() {
     std::ofstream output_rocket(asset_path("output_rocket.txt"));
     std::streampos start_pos;
     std::ofstream output_air(asset_path("output_air.txt"));
-    output_rocket << "posizione y-x   velocità y-x    forza y-x" << '\n';
-    output_air << "temp    pres    rho" << '\n';
+    output_rocket << "altitude  angle_pos radial_velocity tangential_velocity thrust_r thrust_psi drag_r drag_psi gravity" << '\n';
+    output_air << "altitude temp    pres    rho" << '\n';
     if (!output_rocket.is_open() or !output_air.is_open()) {
       throw std::runtime_error("impossible to open file");
     } else {
@@ -482,7 +482,7 @@ int main() {
 
   Vec eng_force;
 
-  double delta_time{1};
+  double delta_time{0.3};
   // Start of the game loop
     while (window.isOpen()) {
       sf::Event event;
@@ -507,6 +507,11 @@ int main() {
       
       // Calculate thrust
       eng_force = rocket.thrust(delta_time, pa, orbiting);
+
+      // Calculate separate force components for logging
+      //COMMENT THIS LINE  AND THE LINE OF OUTPUT IF YOU ARE NOT INTERESTED IN TELEMETRY 
+      Vec const gravity_vec = ::rocket::g_force(rocket.get_pos()[0], rocket.get_mass(), rocket.get_velocity()[0]);
+      Vec const drag_vec = ::rocket::drag(air.get_rho(), rocket.get_pos()[0]-sim::cost::earth_radius_, rocket.get_up_ar(), rocket.get_velocity(), air.get_speed_sound());
 
       // Calculate total force (Thrust + Gravity + Drag)
       Vec const force{rocket::total_force(
@@ -539,15 +544,17 @@ int main() {
       };
 
       // Log telemetry to files
-      output_rocket << rocket.get_pos()[0] << "  " << rocket.get_pos()[1]
+      output_rocket << rocket.get_altitude() << "  " << rocket.get_pos()[1] << "  "
                     << rocket.get_velocity()[0] << "  "
-                    << rocket.get_velocity()[1] << "  " << force[0] << "  "
-                    << force[1] << '\n';
-      output_air << air.get_t() << " " << air.get_p() << " " << air.get_rho() << '\n';
-
-      // Calculate altitude for rendering
-      double altitude_rocket =  rocket.get_pos()[0] * std::sin(rocket.get_pos()[1]);
-
+                    << rocket.get_velocity()[1] << "  " << eng_force[0] << "  "
+                    << eng_force[1] << "  " << drag_vec[0] << "  "
+                    << drag_vec[1] << "  " << gravity_vec[0] << '\n';
+      output_air << rocket.get_altitude() << " " << air.get_t() << " " << air.get_p() << " " << air.get_rho() << '\n';
+      
+      // Altitude for the side-scrolling view.
+      // NOTE: The scaling for the background movement seems to be 1 meter = 1 pixel, which might be too fast.
+      double altitude_for_scrolling = rocket.get_altitude();
+      
       // Graphics update section
 
       int const out_time_min{out_time / 60};
@@ -555,7 +562,7 @@ int main() {
       time.setString("Time: " + std::to_string(out_time_min) + " min " +
                      std::to_string(out_time_sec) + " sec ");
 
-      altitude.setString("Altitude: " + std::to_string(rocket.get_pos()[0]) +
+      altitude.setString("Altitude: " + std::to_string(rocket.get_altitude()) +
                          " m");
 
       angle.setString("Angle: " + std::to_string(rocket.get_theta()) + " rad");
@@ -565,45 +572,45 @@ int main() {
 
       speed.setString(
           "Speed: " +
-          std::to_string(
-              sqrt(std::pow(rocket.get_velocity()[0], 2) +
-                   std::pow(rocket.get_velocity()[1] + sim::cost::earth_speed_ * (rocket.get_altitude()) * delta_time +,
-                            2))) +
-          " m/s");
+          std::to_string(rocket.get_velocity().norm()) + " m/s");
 
       fuel_left.setString("Fuel left: " +
                           std::to_string(rocket.get_fuel_left()));
 
       // Update sprite positions and rotations
       rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * kPi));
-      outer_atm.setPosition(0.f,
-                            altitude_rocket + (height * 3 / 4) - 100'000);
-      ground.setPosition(0.f, altitude_rocket + (height * 3 / 4));
-      inner_atm.setPosition(0.f,
-                            altitude_rocket + (height * 3 / 4) - 51'000);
+      outer_atm.setPosition(0.f, altitude_for_scrolling + (height * 3 / 4) - 100'000);
+      ground.setPosition(0.f, altitude_for_scrolling + (height * 3 / 4));
+      inner_atm.setPosition(0.f, altitude_for_scrolling + (height * 3 / 4) - 51'000);
 
-      if (altitude_rocket / sim::cost::earth_radius_ * 100.f < 50.f) {
+      // Calculate rocket's on-screen radius for the orbital map view
+      double const screen_radius = (rocket.get_pos()[0] / sim::cost::earth_radius_) * 100.f;
+      double const screen_radius_far = (rocket.get_pos()[0] / sim::cost::earth_radius_) * 1.f;
+
+      // Switch between close-up and far view for the orbital map
+      if (rocket.get_altitude() < 4'000'000) { // Use a fixed altitude threshold for switching views
         earth.setScale(200.f / 1195.f, 200.f / 1193.f);
         earth.setPosition((width - 500.f) / 4 + 500.f - 100.f,
                           height / 4.f - 100.f);
         rocket2.setPosition(
             (width - 500.f) / 4 + 500.f -
-                100.f * altitude_rocket/ sim::cost::earth_radius_ *
-                    std::sin(angle_total),
-            height / 4.f - 100.f * altitude_rocket / sim::cost::earth_radius_ *
-                               std::cos(angle_total));
+                screen_radius * std::sin(angle_total),
+            height / 4.f -
+                screen_radius * std::cos(angle_total));
       } else {
         earth.setScale(2.f / 1195.f, 2.f / 1193.f);
         earth.setPosition((width - 500.f) / 4 + 500.f - 1.f,
                           height / 4.f - 1.f);
-        rocket2.setPosition((width - 500.f) / 4 + 500.f -
-                                1.f * altitude_rocket / sim::cost::earth_radius_ *
-                                    std::sin(rocket.get_theta()),
-                            height / 4.f - 1.f * altitude_rocket /
-                                               sim::cost::earth_radius_ *
-                                               std::cos(angle_total));
+        // The logic here was inconsistent (using rocket.get_theta() and angle_total).
+        // Corrected to use angle_total (psi) for both components.
+        rocket2.setPosition(
+            (width - 500.f) / 4 + 500.f -
+                screen_radius_far * std::sin(angle_total),
+            height / 4.f -
+                screen_radius_far * std::cos(angle_total));
       }
 
+      // Update rocket position on the flat map
       rocket3.setPosition(angle_total / 2 / kPi * 700.f + 750.f,
                           height / 4 * 3);
       sf::Vector2f const pos3{rocket3.getPosition()};

@@ -50,10 +50,12 @@ double total_mass_{68000.0};
 // Total number of rocket stages
 int total_stage_{1};
 
-// Current velocity vector (m/s) (r/psi)
+// assumed reference frame centered inthe core of the earth not rotating
+
+// Current velocity vector (m/s) (r/ vtangential)
 Vec velocity_{0.0, 0.0};
 
-// Current position vector (m) (r,psi)
+// Current position vector (m) (r) and (psi) (rad))
 Vec pos_{sim::cost::earth_radius_, 0.0};
 
 // Index of the currently active stage

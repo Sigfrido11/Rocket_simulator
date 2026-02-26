@@ -274,10 +274,10 @@ void Rocket::set_state(std::ifstream& theta_file,
     // ============================================================
 
     // Once above 20 km, align velocity with updated angle
-    if (pos_[0]-sim::cost::earth_radius_ > 20000.0 && std::abs(old_theta) > 1e-8)
+    if (get_altitude() > 20000.0 && std::abs(old_theta) > 1e-8)
     {
         // Compute current speed magnitude
-        const double speed = std::sqrt(velocity_[0]*velocity_[0]+ velocity_[1]*velocity_[1]);
+        const double speed = velocity_.norm();
 
         // Redistribute velocity components according to new angle
         velocity_[0] = speed * std::sin(theta_);
@@ -295,9 +295,11 @@ void Rocket::set_state(std::ifstream& theta_file,
 
     //compute mass loss
     double const solid_burn = engs_->delta_m(time, is_orbiting) * n_sol_eng_;
-
-    double const liquid_burn = engl_->delta_m(time, is_orbiting) * n_liq_eng_.front();
-
+    double liquid_burn = 0.0;
+    // FIX: Check if liquid engines exist before calculating burn to prevent crash.
+    if (!n_liq_eng_.empty()) {
+        liquid_burn = engl_->delta_m(time, is_orbiting) * n_liq_eng_.front();
+    }
 
     // Apply mass loss
     mass_lost(solid_burn, liquid_burn);
@@ -334,6 +336,12 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
   // so the solid booster is no longer present)
   // ------------------------------------------------------------
   if (m_sol_cont_ == 0) {
+
+    // If there are no more liquid stages, there's nothing to release.
+    // This prevents a crash from accessing an empty m_liq_prop_ vector.
+    if (m_liq_prop_.empty()) {
+      return;
+    }
 
     // Number of remaining liquid stages
     int const len{static_cast<int>(m_liq_prop_.size())};
@@ -375,11 +383,6 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
 
         // Release engines (final shutdown)
         engl_->release();
-
-        // Resize liquid prop vector to size 1
-        // (This line does not modify content meaningfully,
-        // but ensures vector is not empty)
-        m_liq_prop_.resize(1);
       }
     }
   }
@@ -522,6 +525,9 @@ Vec const Rocket::thrust(double time, double pa, bool is_orbiting) const {
   if (!engs_ || !engl_){
     throw std::runtime_error("Engine pointer is null");
   }
+  if(engs_->is_released() && engl_->is_released()){
+    return {0.0, 0.0}; //no more engine active
+  }
   
   Vec engs = engs_->eng_force(pa,time,theta_, is_orbiting);
   Vec engl = engl_->eng_force(pa,time,theta_, is_orbiting);
@@ -634,7 +640,7 @@ Vec drag(double rho, double altitude,
     double vr    = velocity[0];      // radial velocity
     double vpsi = velocity[1]; // angular velocity
       // Total speed magnitude  
-    double v = std::sqrt(vr*vr + vpsi*vpsi);
+    double v = velocity.norm();
 
     // Avoid division by zero at very low speed
     if (v < 1e-7) {
