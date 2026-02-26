@@ -29,6 +29,7 @@ if (NOT SFML_FOUND AND ROCKET_FETCH_SFML)
   set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
   set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
+  set(SFML_USE_STATIC_LIBS TRUE CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(sfml)
 endif ()
 
@@ -97,3 +98,27 @@ rocket_link_sfml(graph_test.t FALSE)
 add_test(NAME graph_test COMMAND graph_test.t)
 
 endif()
+
+# --- Installation and Packaging ---
+
+# Installa l'eseguibile nella root del pacchetto
+install(TARGETS rocket.t RUNTIME DESTINATION .)
+
+# Copia la cartella assets nella root del pacchetto
+install(DIRECTORY assets/ DESTINATION assets)
+
+# --- Configurazione CPack ---
+set(CPACK_PACKAGE_NAME "rocket")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_VENDOR "GitHub")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A simple rocket simulator")
+set(CPACK_PACKAGE_FILE_NAME "rocket-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
+
+if(DEFINED CPACK_GENERATOR)
+    set(CPACK_GENERATORS ${CPACK_GENERATOR})
+endif()
+
+set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_BINARY_DIR};${PROJECT_NAME};ALL;/")
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 1)
+
+include(CPack)

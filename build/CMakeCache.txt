@@ -510,6 +510,8 @@ SFML_SOURCE_DIR:STATIC=/home/giuseppe/Scrivania/Giuseppe/università/triennale/p
 //TRUE to use DRM windowing backend
 SFML_USE_DRM:BOOL=FALSE
 
+SFML_USE_STATIC_LIBS:BOOL=TRUE
+
 //TRUE to use system dependencies, FALSE to use the bundled ones.
 SFML_USE_SYSTEM_DEPS:BOOL=FALSE
 
