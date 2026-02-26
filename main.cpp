@@ -276,7 +276,7 @@ int main() {
     double const liq_p_c = extract_number(adv_liq_obj, "chamber_pressure_pa");
     double const liq_t_c = extract_number(adv_liq_obj, "chamber_temperature_k");
     double const liq_a_t = extract_number(adv_liq_obj, "nozzle_throat_area_m2");
-    double const liq_a_e = extract_number(adv_liq_obj, "burn_area_m2");
+    double const liq_a_e = extract_number(adv_liq_obj, "nozzle_exit_area_m2");
     double const liq_m = extract_number(adv_liq_obj, "propellant_molar_mass_g_mol") / 1000.0;
    
     // 4. Initialize Engine Objects
@@ -636,8 +636,12 @@ int main() {
                     [&](sf::Vertex *obj) { window.draw(obj, 2, sf::Lines); });
 
       window.display();
-
+      if(rocket.get_altitude() > 6e4 || orbiting) {
+         delta_time= 4.5;
+      }
+      
       out_time += delta_time;
+      
     }
   } catch (const std::exception &e) {
     sf::Font font;

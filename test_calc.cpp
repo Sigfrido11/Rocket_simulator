@@ -13,6 +13,7 @@
 
 TEST_CASE("TESTING THE CALCS") {
   SUBCASE("Testing rocket") {
+    // first do basic rocket as before
     std::string name{"my rocket"};
     double mass_structure{12'000};
     double up_ar{0.4};
@@ -27,6 +28,25 @@ TEST_CASE("TESTING THE CALCS") {
 
     rocket::Rocket rocket{name,  mass_structure, up_ar, s_p_m,       m_s_cont,
                           l_p_m, l_c_m,          &eng_b, n_solid_eng, n_liq_eng};
+
+    // --- new section: exercise advanced engine briefly ---
+    {
+      rocket::Ad_sol_engine adv_s{7e6, 3600.0, 80.0, 0.18, 2.5, 1800.0, 0.00012, 0.35, 22.0/1000.0};
+      rocket::Ad_liquid_engine adv_l{18e6, 3600.0, 0.06, 2.5, 18.0/1000.0};
+      rocket::Rocket r2{name, mass_structure, up_ar, s_p_m, m_s_cont,
+                        l_p_m, l_c_m, &adv_s, &adv_l, n_solid_eng, n_liq_eng};
+      // run a few steps to ensure no crash and pos stays positive
+      Vec force{0.0,0.0};
+      for(int i=0;i<10;i++){
+        bool orb = rocket::is_orbiting(r2.get_pos()[0], r2.get_velocity());
+        Vec eng = r2.thrust(0.3, 101325.0, orb);
+        Vec tot = rocket::g_force(r2.get_pos()[0], r2.get_mass(), r2.get_velocity()[0]);
+        // simple move with just gravity+thrust
+        r2.move(0.3, eng);
+        CHECK(r2.get_pos()[0] > 0);
+      }
+    }
+
 
     rocket::Ad_engine eng_1{6e6, 420.e-2, 250.e-5, 2'800.};
     rocket::Ad_engine eng_2{3e6, 400.e-2, 250.e-4, 2'800.};

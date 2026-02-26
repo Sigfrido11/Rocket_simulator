@@ -91,11 +91,17 @@ rocket_link_sfml(rocket.t TRUE)
 #   per disabilitare il testing, passare -DBUILD_TESTING=OFF a cmake durante la fase di configurazione
 if (BUILD_TESTING)
 
-# aggiungi l'eseguibile 
-add_executable(graph_test.t graph_test.cpp simulation.cpp interface.cpp)
-rocket_apply_common_settings(graph_test.t)
-rocket_link_sfml(graph_test.t FALSE)
-add_test(NAME graph_test COMMAND graph_test.t)
+  # aggiungi l'eseguibile per il test grafico (SFML)
+  add_executable(graph_test.t graph_test.cpp simulation.cpp interface.cpp)
+  rocket_apply_common_settings(graph_test.t)
+  rocket_link_sfml(graph_test.t FALSE)
+  add_test(NAME graph_test COMMAND graph_test.t)
+
+  # aggiungi eseguibile per i test unitari (doctest)
+  add_executable(unit_tests.t unit_tests.cpp rocket.cpp simulation.cpp vector_math.cpp engine.cpp)
+  rocket_apply_common_settings(unit_tests.t)
+  # no SFML needed for unit tests
+  add_test(NAME unit_tests COMMAND unit_tests.t)
 
 endif()
 

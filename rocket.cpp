@@ -159,6 +159,11 @@ void Rocket::move(double dt, Vec const& force) {
   double vr = velocity_[0];
   double vt = velocity_[1];
   double m = total_mass_;
+
+  // sanity: ensure values are finite
+  if (!std::isfinite(r) || !std::isfinite(vr) || !std::isfinite(vt) || !std::isfinite(m)) {
+      throw std::runtime_error("Non-finite state detected in rocket.move");
+  }
   
   // Force components
   double Fr = force[0];
@@ -544,7 +549,10 @@ Vec const Rocket::thrust(double time, double pa, bool is_orbiting) const {
 
 bool is_orbiting(double r, Vec velocity)
 {
-    assert(r > 0);
+    // robust check: r must be positive and finite. return false otherwise.
+    if (!(r > 0.0) || !std::isfinite(r)) {
+        return false;
+    }
 
     double const vr = velocity[0];      // radial velocity [m/s]
     double const vt = velocity[1];      // tangential velocity [m/s] (inertial frame)

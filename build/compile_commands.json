@@ -54,6 +54,36 @@
   "output": "CMakeFiles/graph_test.t.dir/interface.cpp.o"
 },
 {
+  "directory": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++ -DROCKET_ASSETS_DIR=\\\"/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/assets\\\"  -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles/unit_tests.t.dir/unit_tests.cpp.o -c /home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/unit_tests.cpp",
+  "file": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/unit_tests.cpp",
+  "output": "CMakeFiles/unit_tests.t.dir/unit_tests.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++ -DROCKET_ASSETS_DIR=\\\"/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/assets\\\"  -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles/unit_tests.t.dir/rocket.cpp.o -c /home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/rocket.cpp",
+  "file": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/rocket.cpp",
+  "output": "CMakeFiles/unit_tests.t.dir/rocket.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++ -DROCKET_ASSETS_DIR=\\\"/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/assets\\\"  -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles/unit_tests.t.dir/simulation.cpp.o -c /home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp",
+  "file": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/simulation.cpp",
+  "output": "CMakeFiles/unit_tests.t.dir/simulation.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++ -DROCKET_ASSETS_DIR=\\\"/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/assets\\\"  -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles/unit_tests.t.dir/vector_math.cpp.o -c /home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/vector_math.cpp",
+  "file": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/vector_math.cpp",
+  "output": "CMakeFiles/unit_tests.t.dir/vector_math.cpp.o"
+},
+{
+  "directory": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build",
+  "command": "/usr/bin/c++ -DROCKET_ASSETS_DIR=\\\"/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/assets\\\"  -std=c++20 -Wall -Wextra -Wpedantic -o CMakeFiles/unit_tests.t.dir/engine.cpp.o -c /home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/engine.cpp",
+  "file": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/engine.cpp",
+  "output": "CMakeFiles/unit_tests.t.dir/engine.cpp.o"
+},
+{
   "directory": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-build/src/SFML/System",
   "command": "/usr/bin/c++ -DSFML_SYSTEM_EXPORTS -I/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-src/include -I/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-src/src -std=c++20 -fPIC -fvisibility=hidden  -Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wcast-align -Wunused -Woverloaded-virtual -Wconversion -Wsign-conversion -Wdouble-promotion -Wformat=2 -Wnull-dereference -Wold-style-cast -Wpedantic -Wmisleading-indentation -Wduplicated-cond -Wlogical-op -Wduplicated-branches -o CMakeFiles/sfml-system.dir/Clock.cpp.o -c /home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-src/src/SFML/System/Clock.cpp",
   "file": "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-src/src/SFML/System/Clock.cpp",

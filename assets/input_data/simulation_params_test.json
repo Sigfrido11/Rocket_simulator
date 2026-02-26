@@ -1,7 +1,7 @@
 {
   "rocket": {
-    "name": "Gemini Medium Lifter",
-    "stage_num": 1,
+    "name": "Medium Lifter",
+    "stage_num": 2,
     "mass_structure_kg": 10000.0,
     "upper_area_m2": 10.0,
     "solid_propellant_mass_kg": 50000.0,
@@ -39,8 +39,8 @@
 },
     "advanced_liquid": {
   "chamber_pressure_pa": 18000000.0,
-  "burn_area_m2": 2.5,
   "nozzle_throat_area_m2": 0.06,
+  "nozzle_exit_area_m2": 2.5,
   "chamber_temperature_k": 3600.0,
   "propellant_molar_mass_g_mol": 18.0
 }

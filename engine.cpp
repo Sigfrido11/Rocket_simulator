@@ -120,7 +120,15 @@ double Ad_sol_engine::dpc_dt() const {
     double m_noz = (p_c_ * A_t_) / c_star_;
 
     // Chamber pressure time derivative
-    return (R_spec * T_c_ / V_c_) * (m_gen - m_noz);
+    double dp = (R_spec * T_c_ / V_c_) * (m_gen - m_noz);
+
+    // guard: if pressure is already extremely high, stop growth
+    constexpr double max_pc = 1e8; // 100 MPa safe upper bound
+    if (p_c_ >= max_pc && dp > 0) {
+        return 0.0;
+    }
+
+    return dp;
 }
 
 double Ad_sol_engine::compute_exit_pressure(double Pc) const {
@@ -194,26 +202,23 @@ Ad_sol_engine::Ad_sol_engine(double p_c,
     assert(p_c_ > 0 && T_c_ > 0 && A_b_ > 0 && A_t_ > 0 && A_e_ > 0 && rho_p_ > 0 &&
            a_ > 0 && n_ > 0 && M_ > 0);
            // Computes characteristic velocity c* [m/s]
+// Formula corretta: c* = sqrt((2/(gamma+1))^((gamma+1)/(gamma-1)) * R_spec * T_c)
 // Assumes ideal gas and isentropic combustion products
 // gamma  : specific heat ratio
 // T_c    : chamber temperature [K]
-// M      : molar mass [kg/kmol]
-// Universal gas constant [J/(kmol*K)]
+// M      : molar mass [kg/mol]
+// Universal gas constant [J/(mol*K)]
     const double R_univ = sim::cost::R_;
 
     // Specific gas constant [J/(kg*K)]
     double R_spec = R_univ / M;
 
-    // First term: sqrt(R*T_c/gamma)
-    double term1 = std::sqrt(R_spec * T_c / gamma_);
-
-    // Second term: ((gamma+1)/2)^((gamma+1)/(2*(gamma-1)))
-    double term2 = std::pow(
-        (gamma_ + 1.0) / 2.0,
-        (gamma_ + 1.0) / (2.0 * (gamma_ - 1.0))
+    // Compute characteristic velocity
+    double term = std::pow(
+        2.0 / (gamma_ + 1.0),
+        (gamma_ + 1.0) / (gamma_ - 1.0)
     );
-
-    c_star_=term1 * term2;
+    c_star_ = std::sqrt(term * R_spec * T_c);
     
 }
 
@@ -239,10 +244,15 @@ Vec Ad_sol_engine::eng_force(double pa, double time, double theta,
     double dp = dpc_dt();
     p_c_ += dp * time;
 
-    if(p_c_ < 0.0)
-    {
+    // clamp pressure to realistic bounds and avoid NaN/infinity
+    if (!std::isfinite(p_c_) || p_c_ < 0.0) {
         p_c_ = 0.0;
     }
+    constexpr double max_pc = 1e8; // 100 MPa
+    if (p_c_ > max_pc) {
+        p_c_ = max_pc;
+    }
+
     double pe = compute_exit_pressure(p_c_);
     // Compute exhaust velocity
     double v_e = exhaust_velocity(pe); 
@@ -252,6 +262,12 @@ Vec Ad_sol_engine::eng_force(double pa, double time, double theta,
 
     // Ideal thrust formula: F = m_dot * v_e + (p_e - p_a) * A_e
     double thrust = m_dot * v_e + (pe - pa) * A_e_;
+
+    // sanitize thrust
+    if (!std::isfinite(thrust)) {
+        thrust = 0.0;
+        released_ = true; // shut down engine
+    }
     double F_r   = thrust * std::sin(theta);
     double F_psi = thrust * std::cos(theta);
 
@@ -286,9 +302,14 @@ bool Ad_sol_engine::is_released() const {
 Ad_liquid_engine::Ad_liquid_engine(double p_c, double T_c, double A_t, double A_e, double M)
     : p_c_{p_c}, T_c_{T_c}, A_t_{A_t}, A_e_{A_e}, M_{M} {
     assert(p_c_ > 0 && T_c_ > 0 && A_t_ > 0 && A_e_ > 0 && M_ > 0);
-    double term = 2.0 / (gamma_ + 1.0);
-     c_star_ = std::sqrt(sim::cost::R_ * T_c_ / M_) * (1.0 / gamma_) * std::pow(term, (gamma_ + 1.0) / (2.0 * (gamma_ - 1.0)));
-        
+    // Computes characteristic velocity c* [m/s]
+    // Formula corretta: c* = sqrt((2/(gamma+1))^((gamma+1)/(gamma-1)) * R_spec * T_c)
+    double R_spec = sim::cost::R_ / M_;
+    double term = std::pow(
+        2.0 / (gamma_ + 1.0),
+        (gamma_ + 1.0) / (gamma_ - 1.0)
+    );
+    c_star_ = std::sqrt(term * R_spec * T_c_);
 }
 
 double Ad_liquid_engine::isentropic_area_ratio(double M, double gamma) {
@@ -389,9 +410,13 @@ Vec Ad_liquid_engine::eng_force(double pa, double time, double theta,
     // so we compute the exit pressure from the initial chamber pressure, otherwise much more complex models
     // would be needed to compute the time evolution
 
-    if(p_c_ < 0.0)
+    if(p_c_ < 0.0 || !std::isfinite(p_c_))
     {
         p_c_ = 0.0;
+    }
+    constexpr double max_pc_liq = 2e8; // 200 MPa upper safe bound for liquid
+    if(p_c_ > max_pc_liq) {
+        p_c_ = max_pc_liq;
     }
 
     double pe   = compute_exit_pressure();
@@ -401,6 +426,10 @@ Vec Ad_liquid_engine::eng_force(double pa, double time, double theta,
     double thrust =
         mdot * v_e +
         (pe - pa) * A_e_;
+    if (!std::isfinite(thrust)) {
+        thrust = 0.0;
+        released_ = true;
+    }
 
     double F_r   = thrust * std::sin(theta);
     double F_psi = thrust * std::cos(theta);

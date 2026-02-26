@@ -582,6 +582,19 @@ graph_test.t/fast:
 .PHONY : graph_test.t/fast
 
 #=============================================================================
+# Target rules for targets named unit_tests.t
+
+# Build rule for target.
+unit_tests.t: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 unit_tests.t
+.PHONY : unit_tests.t
+
+# fast build rule for target.
+unit_tests.t/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/build
+.PHONY : unit_tests.t/fast
+
+#=============================================================================
 # Target rules for targets named sfml-system
 
 # Build rule for target.
@@ -639,6 +652,7 @@ engine.o: engine.cpp.o
 # target to build an object file
 engine.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/engine.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/engine.cpp.o
 .PHONY : engine.cpp.o
 
 engine.i: engine.cpp.i
@@ -647,6 +661,7 @@ engine.i: engine.cpp.i
 # target to preprocess a source file
 engine.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/engine.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/engine.cpp.i
 .PHONY : engine.cpp.i
 
 engine.s: engine.cpp.s
@@ -655,6 +670,7 @@ engine.s: engine.cpp.s
 # target to generate assembly for a file
 engine.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/engine.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/engine.cpp.s
 .PHONY : engine.cpp.s
 
 graph_test.o: graph_test.cpp.o
@@ -738,6 +754,7 @@ rocket.o: rocket.cpp.o
 # target to build an object file
 rocket.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/rocket.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/rocket.cpp.o
 .PHONY : rocket.cpp.o
 
 rocket.i: rocket.cpp.i
@@ -746,6 +763,7 @@ rocket.i: rocket.cpp.i
 # target to preprocess a source file
 rocket.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/rocket.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/rocket.cpp.i
 .PHONY : rocket.cpp.i
 
 rocket.s: rocket.cpp.s
@@ -754,6 +772,7 @@ rocket.s: rocket.cpp.s
 # target to generate assembly for a file
 rocket.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/rocket.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/rocket.cpp.s
 .PHONY : rocket.cpp.s
 
 simulation.o: simulation.cpp.o
@@ -763,6 +782,7 @@ simulation.o: simulation.cpp.o
 simulation.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/simulation.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph_test.t.dir/build.make CMakeFiles/graph_test.t.dir/simulation.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/simulation.cpp.o
 .PHONY : simulation.cpp.o
 
 simulation.i: simulation.cpp.i
@@ -772,6 +792,7 @@ simulation.i: simulation.cpp.i
 simulation.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/simulation.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph_test.t.dir/build.make CMakeFiles/graph_test.t.dir/simulation.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/simulation.cpp.i
 .PHONY : simulation.cpp.i
 
 simulation.s: simulation.cpp.s
@@ -781,7 +802,32 @@ simulation.s: simulation.cpp.s
 simulation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/simulation.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph_test.t.dir/build.make CMakeFiles/graph_test.t.dir/simulation.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/simulation.cpp.s
 .PHONY : simulation.cpp.s
+
+unit_tests.o: unit_tests.cpp.o
+.PHONY : unit_tests.o
+
+# target to build an object file
+unit_tests.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/unit_tests.cpp.o
+.PHONY : unit_tests.cpp.o
+
+unit_tests.i: unit_tests.cpp.i
+.PHONY : unit_tests.i
+
+# target to preprocess a source file
+unit_tests.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/unit_tests.cpp.i
+.PHONY : unit_tests.cpp.i
+
+unit_tests.s: unit_tests.cpp.s
+.PHONY : unit_tests.s
+
+# target to generate assembly for a file
+unit_tests.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/unit_tests.cpp.s
+.PHONY : unit_tests.cpp.s
 
 vector_math.o: vector_math.cpp.o
 .PHONY : vector_math.o
@@ -789,6 +835,7 @@ vector_math.o: vector_math.cpp.o
 # target to build an object file
 vector_math.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/vector_math.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/vector_math.cpp.o
 .PHONY : vector_math.cpp.o
 
 vector_math.i: vector_math.cpp.i
@@ -797,6 +844,7 @@ vector_math.i: vector_math.cpp.i
 # target to preprocess a source file
 vector_math.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/vector_math.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/vector_math.cpp.i
 .PHONY : vector_math.cpp.i
 
 vector_math.s: vector_math.cpp.s
@@ -805,6 +853,7 @@ vector_math.s: vector_math.cpp.s
 # target to generate assembly for a file
 vector_math.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rocket.t.dir/build.make CMakeFiles/rocket.t.dir/vector_math.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit_tests.t.dir/build.make CMakeFiles/unit_tests.t.dir/vector_math.cpp.s
 .PHONY : vector_math.cpp.s
 
 # Help Target
@@ -856,6 +905,7 @@ help:
 	@echo "... sfml-graphics"
 	@echo "... sfml-system"
 	@echo "... sfml-window"
+	@echo "... unit_tests.t"
 	@echo "... engine.o"
 	@echo "... engine.i"
 	@echo "... engine.s"
@@ -874,6 +924,9 @@ help:
 	@echo "... simulation.o"
 	@echo "... simulation.i"
 	@echo "... simulation.s"
+	@echo "... unit_tests.o"
+	@echo "... unit_tests.i"
+	@echo "... unit_tests.s"
 	@echo "... vector_math.o"
 	@echo "... vector_math.i"
 	@echo "... vector_math.s"
