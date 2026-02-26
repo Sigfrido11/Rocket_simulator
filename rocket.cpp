@@ -95,53 +95,124 @@ double Rocket::get_altitude() const {return pos_[0] - sim::cost::earth_radius_;}
 
 
 void Rocket::change_vel(double dt, Vec const& force) {
-
-  // Current state in polar coordinates
-  double r     = pos_[0];       // radial position
-  double vr = velocity_[0];  // radial velocity [m/s]
-  double vt = velocity_[1];  // tangential velocity [m/s]
+  // ============================================================
+  // Runge-Kutta 2 (Midpoint Method) Integration
+  // Reference frame: Inertial, centered at Earth (non-rotating)
+  // Coordinates: Polar (r, psi)
+  // ============================================================
+  
+  double r  = pos_[0];      // radial position [m]
+  double vr = velocity_[0]; // radial velocity [m/s]
+  double vt = velocity_[1]; // tangential velocity [m/s]
 
   if (r <= 1e-8) {
     throw std::runtime_error("Radius too small (singularity at r=0)");
   }
 
-  // Total external force components (already includes gravity, drag, thrust, etc.)
-  double Fr   = force[0];   // radial force component
-  double Fpsi = force[1];   // tangential force component
+  // Force components (already include gravity, drag, thrust)
+  double Fr   = force[0];   // radial force component [N]
+  double Ft   = force[1];   // tangential force component [N]
+  double m = total_mass_;   // rocket mass [kg]
 
-  // ----- Polar coordinate accelerations -----
-  // These extra terms appear because we are in a rotating coordinate system.
-
-  // Polar dynamics using linear components (vr, vt):
-  // d(vr)/dt = Fr/m + vt^2/r
-  // d(vt)/dt = Fpsi/m - (vr*vt)/r
-  double ar = Fr / total_mass_ + (vt * vt) / r;
-  double at = Fpsi / total_mass_ - (vr * vt) / r;
-
-  // ----- Semi-implicit (symplectic) Euler velocity update -----
-  // v(t+dt) = v(t) + a(t)*dt
-
-  velocity_[0] += ar * dt;
-  velocity_[1] += at * dt;
+  // ============================================================
+  // RK2 METHOD - STEP 1: Compute half-step accelerations
+  // ============================================================
+  
+  // Equations of motion in inertial polar coordinates:
+  // d(vr)/dt = Fr/m - (vt^2)/r  (centripetal acceleration, negative!)
+  // d(vt)/dt = Ft/m + (vr*vt)/r (Coriolis-like geometric term)
+  
+  double ar_initial = Fr / m - (vt * vt) / r;
+  double at_initial = Ft / m + (vr * vt) / r;
+  
+  // Half-step velocities
+  double vr_half = vr + 0.5 * ar_initial * dt;
+  double vt_half = vt + 0.5 * at_initial * dt;
+  
+  // ============================================================
+  // RK2 METHOD - STEP 2: Compute accelerations at half-step
+  // ============================================================
+  
+  double ar_half = Fr / m - (vt_half * vt_half) / r;
+  double at_half = Ft / m + (vr_half * vt_half) / r;
+  
+  // ============================================================
+  // RK2 METHOD - STEP 3: Update velocities using half-step accelerations
+  // ============================================================
+  
+  velocity_[0] += ar_half * dt;
+  velocity_[1] += at_half * dt;
 }
 
 
 void Rocket::move(double dt, Vec const& force) {
 
-  change_vel(dt, force);
-  // Updated velocities
+ 
+// assumed reference frame centered inthe core of the earth not rotating
+  // ============================================================
+  // Integration using RK2 for both velocity and position
+  // ============================================================
+  
+  // Current state
+  double r  = pos_[0];
+  double psi = pos_[1];
   double vr = velocity_[0];
   double vt = velocity_[1];
-
-  // ----- Position update -----
-  // r(t+dt)   = r(t)   + vr(t+dt) * dt
-  // psi(t+dt) = psi(t) + (vt/r)(t+dt) * dt
-
-  pos_[0] += vr * dt;
-  double const r_for_angle = std::max(pos_[0], 1e-8);
-  pos_[1] += (vt / r_for_angle) * dt;
-
-  // Prevent negative radius (impact or numerical instability)
+  double m = total_mass_;
+  
+  // Force components
+  double Fr = force[0];
+  double Ft = force[1];
+  
+  if (r <= 1e-8) {
+    throw std::runtime_error("Radius too small (singularity at r=0)");
+  }
+  
+  // ============================================================
+  // RK2 METHOD - STEP 1: Compute half-step state
+  // ============================================================
+  
+  // Accelerations at current state
+  double ar_0 = Fr / m - (vt * vt) / r;
+  double at_0 = Ft / m + (vr * vt) / r;
+  
+  // Position and velocity at t + dt/2
+  double vr_half = vr + 0.5 * ar_0 * dt;
+  double vt_half = vt + 0.5 * at_0 * dt;
+  double r_half = r + 0.5 * vr_half * dt;
+  
+  // Avoid singularity at r=0
+  if (r_half <= 1e-8) {
+    throw std::runtime_error("Radius too small at half-step");
+  }
+  
+  // ============================================================
+  // RK2 METHOD - STEP 2: Compute accelerations at half-step
+  // ============================================================
+  
+  double ar_half = Fr / m - (vt_half * vt_half) / r_half;
+  double at_half = Ft / m + (vr_half * vt_half) / r_half;
+  
+  // ============================================================
+  // RK2 METHOD - STEP 3: Full-step integration
+  // ============================================================
+  
+  // Update velocity
+  velocity_[0] += ar_half * dt;
+  velocity_[1] += at_half * dt;
+  
+  // Update position (radial)
+  pos_[0] += velocity_[0] * dt;
+  
+  // Update position (angular)
+  // dψ/dt = vt / r, use updated radius for stability
+  double r_for_angle = std::max(pos_[0], 1e-8);
+  pos_[1] += (velocity_[1] / r_for_angle) * dt;
+  
+  // ============================================================
+  // Safety checks
+  // ============================================================
+  
   if (pos_[0] <= 0.0) {
     throw std::runtime_error("Rocket reached r <= 0 (impact or instability)");
   }
@@ -469,21 +540,19 @@ bool is_orbiting(double r, Vec velocity)
 {
     assert(r > 0);
 
-    double const vr = velocity[0];
-    double const vt_rel = velocity[1];
+    double const vr = velocity[0];      // radial velocity [m/s]
+    double const vt = velocity[1];      // tangential velocity [m/s] (inertial frame)
 
     // Earth constants
     const double mu = sim::cost::G_ * sim::cost::earth_mass_;
 
-    // Inertial tangential velocity: relative tangential speed + frame speed.
-    const double vt = vt_rel + sim::cost::earth_angular_speed_ * r;
-
-    // Circular orbital speed at radius r
+    // Circular orbital speed at radius r (in inertial frame)
+    // For a stable circular orbit: vt = sqrt(mu/r), vr = 0
     const double v_circ = std::sqrt(mu / r);
 
-    // Numerical tolerances
-    const double eps_vr = 1e2;    // radial velocity tolerance (m/s)
-    const double eps_vt = 1e2;    // tangential speed tolerance (m/s)
+    // Numerical tolerances for orbit detection
+    const double eps_vr = 50.0;    // radial velocity tolerance (m/s)
+    const double eps_vt = 50.0;    // tangential velocity tolerance (m/s)
 
     // Conditions for circular equatorial orbit
     bool radial_ok = std::abs(vr) < eps_vr;
@@ -494,26 +563,26 @@ bool is_orbiting(double r, Vec velocity)
 
   
 
- Vec g_force(double r, double mass, double vr) {
-  const double mu =
-        sim::cost::G_ * sim::cost::earth_mass_;
+Vec g_force(double r, double mass, double vr) {
+  // ============================================================
+  // Gravitational force in INERTIAL reference frame
+  // (centered at Earth's center, non-rotating)
+  // ============================================================
+  // In this frame, there are NO fictitious forces
+  // (no centrifugal force, no Coriolis force)
+  // Only the true gravitational force acts.
+  // ============================================================
+  
+  const double mu = sim::cost::G_ * sim::cost::earth_mass_;
 
-    const double Omega =
-        sim::cost::earth_angular_speed_;
+  // Gravitational force (radial direction, toward Earth center)
+  // F_r = -mu * mass / r^2   (negative = toward center)
+  double Fr = -mu * mass / (r * r);
+  
+  // Tangential component (always zero for gravity in spherical symmetry)
+  double Ft = 0.0;
 
-    // Gravitational force
-    double Fg = - mu * mass / (r * r);
-
-    // Centrifugal force
-    double Fcent = mass * Omega * Omega * r;
-
-    // Coriolis force (tangential only)
-    double Fcoriolis = -2.0 * mass * Omega * vr;
-
-    double Fr   = Fg + Fcent;
-    double Fpsi = Fcoriolis;
-
-    return {Fr, Fpsi};
+  return {Fr, Ft};
 }
 
 

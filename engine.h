@@ -115,6 +115,7 @@ public:
                   double T_c,
                   double A_b,
                   double A_t,
+                  double A_e,
                   double rho_p,
                   double a,
                   double n,
@@ -182,7 +183,7 @@ class Ad_liquid_engine final : public Engine {
 
 public:
     Ad_liquid_engine() = default;
-    Ad_liquid_engine(double p_c, double T_c, double A_t, double A_e);
+    Ad_liquid_engine(double p_c, double T_c, double A_t, double A_e, double M);
 
     double delta_m(double time, bool is_orbiting) const override;
 

@@ -174,22 +174,24 @@ double Ad_sol_engine::compute_exit_pressure(double Pc) const {
 // ------------------------
 
 Ad_sol_engine::Ad_sol_engine(double p_c,
-                             double T_c,
-                             double A_b,
-                             double A_t,
-                             double rho_p,
-                             double a,
-                             double n,
-                             double M)
+                  double T_c,
+                  double A_b,
+                  double A_t,
+                  double A_e,
+                  double rho_p,
+                  double a,
+                  double n,
+                  double M)
     : p_c_{p_c},
       T_c_{T_c},
       A_b_{A_b},
       A_t_{A_t},
+      A_e_{A_e},
       rho_p_{rho_p},
       a_{a},
       n_{n},
       M_{M} {
-    assert(p_c_ > 0 && T_c_ > 0 && A_b_ > 0 && A_t_ > 0 && rho_p_ > 0 &&
+    assert(p_c_ > 0 && T_c_ > 0 && A_b_ > 0 && A_t_ > 0 && A_e_ > 0 && rho_p_ > 0 &&
            a_ > 0 && n_ > 0 && M_ > 0);
            // Computes characteristic velocity c* [m/s]
 // Assumes ideal gas and isentropic combustion products
@@ -281,9 +283,9 @@ bool Ad_sol_engine::is_released() const {
 // ADVANCED LIQUID ENGINE IMPLEMENTATION
 // ============================================================================
 
-Ad_liquid_engine::Ad_liquid_engine(double p_c, double T_c, double A_t, double A_e, double A_b, double M)
-    : p_c_{p_c}, T_c_{T_c}, A_t_{A_t}, A_e_{A_e}, A_b_{A_b}, M_{M} {
-    assert(p_c_ > 0 && T_c_ > 0 && A_t_ > 0 && A_e_ > 0 && A_b_ > 0 && M_ > 0);
+Ad_liquid_engine::Ad_liquid_engine(double p_c, double T_c, double A_t, double A_e, double M)
+    : p_c_{p_c}, T_c_{T_c}, A_t_{A_t}, A_e_{A_e}, M_{M} {
+    assert(p_c_ > 0 && T_c_ > 0 && A_t_ > 0 && A_e_ > 0 && M_ > 0);
     double term = 2.0 / (gamma_ + 1.0);
      c_star_ = std::sqrt(sim::cost::R_ * T_c_ / M_) * (1.0 / gamma_) * std::pow(term, (gamma_ + 1.0) / (2.0 * (gamma_ - 1.0)));
         

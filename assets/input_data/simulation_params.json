@@ -37,13 +37,15 @@
       "grain_density_kg_m3": 1873.0,
       "burn_rate_a": 0.01,
       "burn_rate_n": 0.02,
-      "propellant_molar_mass_g_mol": 178.0
+      "propellant_molar_mass_g_mol": 178.0,
+       "nozzle_exit_area_m2": 7.0
     },
     "advanced_liquid": {
       "chamber_pressure_pa": 8000000.0,
       "burn_area_m2": 2.2,
       "nozzle_throat_area_m2": 2.2,
-      "chamber_temperature_k": 3200.0
+      "chamber_temperature_k": 3200.0,
+      "propellant_molar_mass_g_mol": 220.0
     }
   },
   "allowed_values": {

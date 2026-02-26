@@ -1,0 +1,45 @@
+{
+  "rocket": {
+    "name": "Gemini Medium Lifter",
+    "stage_num": 1,
+    "mass_structure_kg": 10000.0,
+    "upper_area_m2": 10.0,
+    "solid_propellant_mass_kg": 50000.0,
+    "solid_container_mass_kg": 5000.0,
+    "solid_engine_count": 1,
+    "liquid_propellant_masses_kg": [
+      100000.0
+    ],
+    "liquid_container_masses_kg": [
+      10000.0
+    ],
+    "liquid_engines_per_stage": [
+      1
+    ]
+  },
+  "engine": {
+    "base": {
+      "isp_s": 350.0,
+      "cm": 0.35,
+      "chamber_pressure_pa": 5000000.0,
+      "burn_area_m2": 0.0002
+    },
+    "advanced_solid": {
+      "chamber_temperature_k": 3400.0,
+      "burn_area_m2": 40.0,
+      "nozzle_throat_area_m2": 1.0,
+      "nozzle_exit_area_m2": 7.0,
+      "grain_density_kg_m3": 1800.0,
+      "burn_rate_a": 5e-05,
+      "burn_rate_n": 0.35,
+      "propellant_molar_mass_g_mol": 23.0
+    },
+    "advanced_liquid": {
+      "chamber_pressure_pa": 15000000.0,
+      "chamber_temperature_k": 3600.0,
+      "nozzle_throat_area_m2": 0.8,
+      "burn_area_m2": 12.0,
+      "propellant_molar_mass_g_mol": 22.0
+    }
+  }
+}

@@ -266,6 +266,7 @@ int main() {
     double const adv_t_c = extract_number(adv_sol_obj, "chamber_temperature_k");
     double const adv_a_b = extract_number(adv_sol_obj, "burn_area_m2");
     double const adv_a_t = extract_number(adv_sol_obj, "nozzle_throat_area_m2");
+    double const adv_a_e = extract_number(adv_sol_obj, "nozzle_exit_area_m2");
     double const adv_rho = extract_number(adv_sol_obj, "grain_density_kg_m3");
     double const adv_a = extract_number(adv_sol_obj, "burn_rate_a");
     double const adv_n = extract_number(adv_sol_obj, "burn_rate_n");
@@ -276,13 +277,14 @@ int main() {
     double const liq_t_c = extract_number(adv_liq_obj, "chamber_temperature_k");
     double const liq_a_t = extract_number(adv_liq_obj, "nozzle_throat_area_m2");
     double const liq_a_e = extract_number(adv_liq_obj, "burn_area_m2");
-
+    double const liq_m = extract_number(adv_liq_obj, "propellant_molar_mass_g_mol") / 1000.0;
+   
     // 4. Initialize Engine Objects
     engine::Base_engine base_solid{base_isp, base_cm, base_p0, base_burn_a};
     engine::Base_engine base_liquid{base_isp, base_cm, base_p0, base_burn_a};
-    engine::Ad_sol_engine ad_solid{adv_p_c, adv_t_c, adv_a_b, adv_a_t, adv_rho,
+    engine::Ad_sol_engine ad_solid{adv_p_c, adv_t_c, adv_a_b, adv_a_t, adv_a_e, adv_rho,
                                    adv_a, adv_n, adv_m};
-    engine::Ad_liquid_engine ad_liquid{liq_p_c, liq_t_c, liq_a_t, liq_a_e};
+    engine::Ad_liquid_engine ad_liquid{liq_p_c, liq_t_c, liq_a_t, liq_a_e, liq_m};
 
     // Select engines based on user choice
     if (ans_eng == 'a') {
@@ -511,12 +513,10 @@ int main() {
           air.get_rho(), rocket.get_mass(), rocket.get_pos()[0]-sim::cost::earth_radius_,
           rocket.get_up_ar(), rocket.get_velocity(), eng_force, air.get_speed_sound())};
 
-      // Update angular position for visualization
-      double const angle_var{
-          ((rocket.get_velocity()[1] + sim::cost::earth_speed_) * delta_time +
-           0.5 * (force[1] / rocket.get_mass()) * std::pow(delta_time, 2)) /
-          rocket.get_pos()[0]};
-      angle_total += angle_var;
+      // Note: Angular position is now updated automatically within rocket.move()
+      // via the integration of dpsi/dt = vt/r in the inertial reference frame.
+      // The angular position is part of the state vector and integrated directly.
+      angle_total = rocket.get_pos()[1];
 
       // Integrate motion (update position and velocity)
       rocket.move(delta_time, force);
@@ -567,7 +567,7 @@ int main() {
           "Speed: " +
           std::to_string(
               sqrt(std::pow(rocket.get_velocity()[0], 2) +
-                   std::pow(rocket.get_velocity()[1] + sim::cost::earth_speed_,
+                   std::pow(rocket.get_velocity()[1] + sim::cost::earth_speed_ * (rocket.get_altitude()) * delta_time +,
                             2))) +
           " m/s");
 
