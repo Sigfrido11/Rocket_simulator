@@ -36,7 +36,7 @@ Rocket::Rocket(std::string const& name, double mass_structure, double Up_Ar,
                   std::accumulate(l_p_m.begin(), l_p_m.end(), 0.) + s_p_m +
                   m_s_cont + std::accumulate(l_c_m.begin(), l_c_m.end(), 0.)},
 
-      total_stage_{static_cast<int>(l_p_m.size()) + 1},
+      total_stage_{static_cast<int>(l_p_m.size()) + 1}, //only one solid stage, liquid stages are determined by the size of the vector
       n_sol_eng_{n_solid_eng},
       n_liq_eng_{n_liq_eng} {
   assert(m_liq_cont_.size() == m_liq_prop_.size() &&
@@ -79,7 +79,7 @@ double Rocket::get_fuel_left() const {
   if(current_stage_==0){
     return 0;
   } else{
-  return (m_liq_prop_[0] + m_sol_prop_); 
+  return (std::accumulate(m_liq_prop_ .begin(), m_liq_prop_ .end(), 0) + m_sol_prop_); 
   }}
 
 double Rocket::get_up_ar() const { return upper_area_; }
@@ -235,7 +235,7 @@ void Rocket::set_state(std::ifstream& theta_file,
     // 4. Check for stage separation
     // ============================================================
 
-    if (current_stage_ != 0){
+    if (current_stage_ != 0 && n_liq_eng_.size() >= 1){
         stage_release(solid_burn, liquid_burn);
     }
 
@@ -270,6 +270,10 @@ void Rocket::stage_release(double delta_ms, double delta_ml) {
     // Check that current_stage_ index is consistent
     if(!(current_stage_ < len + 1 && current_stage_ >= 0)){
       throw std::runtime_error("error in stage release");
+    }
+
+    if(n_liq_eng_.size() == 0){
+      throw std::runtime_error("error in vectori liquid engine");
     }
 
     // ------------------------------------------------------------
@@ -441,15 +445,20 @@ double improve_theta(std::ifstream& file, double theta, double pos,
 
 
 Vec const Rocket::thrust(double time, double pa, bool is_orbiting) const {
+ if (n_liq_eng_.empty()){
+    return {0.0, 0.0}; //no more engine active
+  }
+  if (!engs_ || !engl_){
+    throw std::runtime_error("Engine pointer is null");
+  }
+  
   Vec engs = engs_->eng_force(pa,time,theta_, is_orbiting);
   Vec engl = engl_->eng_force(pa,time,theta_, is_orbiting);
   
   if (engs.norm() < 1e-8 && engl.norm() < 1e-8) {
     return {0.0, 0.0}; // No thrust if both engines are inactive
   }
-  else if (n_liq_eng_.empty()){
-    return {0.0, 0.0}; //no more engine active
-  }
+ 
   double const fr{engs[0] * n_sol_eng_ + engl[0] * n_liq_eng_[0]};
   double const fpsi{engs[1] * n_sol_eng_ + engl[1] * n_liq_eng_[0]};
   return {fr, fpsi};
@@ -514,7 +523,7 @@ double Cd_from_Mach(double M) {
    // Inspired by experimental rocket/missile aerodynamics and NASA trends.
    // Smooth and continuous (no discontinuities in Cd or its derivative).
     // --- Baseline drag coefficients for different regimes ---
-    const double Cd_subsonic = 0.18;   // typical slender rocket Cd at low Mach
+    const double Cd_subsonic = 0.18;   // typical slec_star_ = std::sqrt(sim::cost::R_ * T_c_ / M_) * (1.0 / gamma_) * ...nder rocket Cd at low Mach
     const double Cd_transonic_peak = 0.70; // drag divergence near Mach 1
     const double Cd_supersonic = 0.30; // average supersonic Cd
     const double Cd_hypersonic = 0.23; // slightly lower Cd at hypersonic speeds
@@ -559,7 +568,7 @@ Vec drag(double rho, double altitude,
     double v = std::sqrt(vr*vr + vpsi*vpsi);
 
     // Avoid division by zero at very low speed
-    if (v < 1e-6) {
+    if (v < 1e-7) {
         return {0.0, 0.0};
     }
 

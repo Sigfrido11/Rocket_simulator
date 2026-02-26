@@ -55,7 +55,7 @@ class Base_engine final : public Engine {
     double isp_{350.0};     // Specific impulse [s]
     double cm_{4.0};        // Mass loss coefficient [kg/s]
     double p_0_{5e6};       // Nominal chamber pressure [Pa]
-    double burn_a_{};   
+    double burn_a_{0.0002}; // Burn area [m^2]  
     bool released_{false};  // Ignition flag
 
 public:

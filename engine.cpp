@@ -101,7 +101,7 @@ double Ad_sol_engine::exhaust_velocity(double p_e) const {
     if(p_e > p_c_){
         throw std::runtime_error("pe > pc");
     }
-    const double R_univ = 8314.5; // Universal gas constant [J/(kmol*K)]
+    const double R_univ = sim::cost::R_; // Universal gas constant [J/(kmol*K)]
     double R_spec = R_univ / M_;   // Specific gas constant [J/(kg*K)]
     double term = 1.0 - std::pow(p_e / p_c_, (gamma_ - 1.0) / gamma_);
     return std::sqrt(2.0 * gamma_ / (gamma_ - 1.0) * R_spec * T_c_ * term);
@@ -110,7 +110,7 @@ double Ad_sol_engine::exhaust_velocity(double p_e) const {
 double Ad_sol_engine::dpc_dt() const {
 
     // Specific gas constant
-    const double R_univ = sim::cost::R_;      // J/(kmol*K)
+    const double R_univ = sim::cost::R_;      // J/(mol*K)
     double R_spec = R_univ / M_;       // J/(kg*K)
 
     // Mass generation rate from combustion
@@ -281,9 +281,9 @@ bool Ad_sol_engine::is_released() const {
 // ADVANCED LIQUID ENGINE IMPLEMENTATION
 // ============================================================================
 
-Ad_liquid_engine::Ad_liquid_engine(double p_c, double T_c, double A_t, double A_e)
-    : p_c_{p_c}, T_c_{T_c}, A_t_{A_t}, A_e_{A_e} {
-    assert(p_c_ > 0 && T_c_ > 0 && A_t_ > 0 && A_e_ > 0);
+Ad_liquid_engine::Ad_liquid_engine(double p_c, double T_c, double A_t, double A_e, double A_b, double M)
+    : p_c_{p_c}, T_c_{T_c}, A_t_{A_t}, A_e_{A_e}, A_b_{A_b}, M_{M} {
+    assert(p_c_ > 0 && T_c_ > 0 && A_t_ > 0 && A_e_ > 0 && A_b_ > 0 && M_ > 0);
     double term = 2.0 / (gamma_ + 1.0);
      c_star_ = std::sqrt(sim::cost::R_ * T_c_ / M_) * (1.0 / gamma_) * std::pow(term, (gamma_ + 1.0) / (2.0 * (gamma_ - 1.0)));
         
