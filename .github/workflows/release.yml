@@ -24,34 +24,46 @@ jobs:
             cpack_generator: ZIP
 
     steps:
-    - name: Clean previous build
-      run: |
-        rm -rf build
-
+    # 1 Checkout del codice
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # 2 Pulizia build precedente (cross-platform)
+    - name: Clean previous build
+      run: |
+        if [ $RUNNER_OS = 'Windows' ]; then
+          powershell Remove-Item -Recurse -Force build
+        else
+          rm -rf build
+        fi
+
+    # 3 Install dependencies Linux
     - name: Install Linux dependencies
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update -y
         sudo apt-get install -y libopenal-dev libflac-dev libvorbis-dev libudev-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev mesa-common-dev libgl1-mesa-dev
 
+    # 4 Install dependencies macOS
     - name: Install macOS dependencies
       if: runner.os == 'macOS'
       run: brew install openal-soft flac libvorbis
 
+    # 5 Configura CMake
     - name: Configure CMake
       run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=${{ matrix.cpack_generator }}
 
+    # 6 Build progetto
     - name: Build project
       run: cmake --build build --config Release
 
+    # 7 Creazione pacchetto
     - name: Create package
       run: |
         cd build
         cpack -C Release --verbose
 
+    # 8 Upload pacchetto su GitHub Release
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       with:
