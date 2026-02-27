@@ -20,17 +20,26 @@ find_package(SFML 2.5 COMPONENTS ${SFML_COMPONENTS} QUIET)
 
 if (NOT SFML_FOUND AND ROCKET_FETCH_SFML)
   message(STATUS "SFML not found, downloading it with FetchContent")
+  
+  # Imposta le opzioni PRIMA di rendere disponibile il contenuto
+  # È importante impostarle sia come CACHE che come variabili normali per la propagazione
+  set(SFML_INSTALL OFF CACHE BOOL "" FORCE)
+  set(SFML_INSTALL OFF) 
+  set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
+  set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
+  set(SFML_USE_STATIC_LIBS TRUE CACHE BOOL "" FORCE)
+
   FetchContent_Declare(
     sfml
     GIT_REPOSITORY https://github.com/SFML/SFML.git
     GIT_TAG 2.6.2
     GIT_SHALLOW TRUE
   )
-  set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-  set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
-  set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
-  set(SFML_USE_STATIC_LIBS TRUE CACHE BOOL "" FORCE)
-  FetchContent_MakeAvailable(sfml)
+FetchContent_GetProperties(sfml)
+if(NOT sfml_POPULATED)
+  FetchContent_Populate(sfml)
+  add_subdirectory(${sfml_SOURCE_DIR} ${sfml_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
 
 if (NOT SFML_FOUND AND NOT TARGET sfml-graphics AND NOT TARGET SFML::Graphics)
@@ -59,12 +68,11 @@ function(rocket_apply_common_settings target_name)
     )
   endif ()
 
-  target_compile_definitions(
-    ${target_name}
-    PRIVATE
-    ROCKET_ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets"
-  )
-
+ target_compile_definitions(
+  ${target_name}
+  PRIVATE
+  ROCKET_ASSETS_DIR="assets"
+)
   if (MSVC)
     set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   endif ()

@@ -28,7 +28,7 @@ CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build (Debug or Release)
-CMAKE_BUILD_TYPE:STRING=
+CMAKE_BUILD_TYPE:STRING=Release
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -489,6 +489,8 @@ SFML_BUILD_WINDOW:BOOL=TRUE
 
 //The directory containing a CMake configuration file for SFML.
 SFML_DIR:PATH=SFML_DIR-NOTFOUND
+
+SFML_INSTALL:BOOL=OFF
 
 //TRUE to automatically install pkg-config files so other projects
 // can find SFML

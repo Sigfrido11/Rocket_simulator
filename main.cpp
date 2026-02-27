@@ -7,6 +7,8 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <iomanip>
+#include <cmath>
 
 #include <stdio.h>
 #include <SFML/Audio.hpp>
@@ -483,7 +485,8 @@ int main() {
   Vec eng_force;
 
   double delta_time{0.3};
-  
+
+
   // ============================================================
   // START MAIN SIMULATION LOOP
   // ============================================================

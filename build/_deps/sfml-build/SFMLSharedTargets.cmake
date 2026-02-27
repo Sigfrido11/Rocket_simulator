@@ -127,32 +127,32 @@ set_target_properties(sfml-audio PROPERTIES
   INTERFACE_LINK_LIBRARIES "sfml-system"
 )
 
-# Import target "sfml-system" for configuration ""
-set_property(TARGET sfml-system APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+# Import target "sfml-system" for configuration "Release"
+set_property(TARGET sfml-system APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-system PROPERTIES
-  IMPORTED_LOCATION_NOCONFIG "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-build/lib/libsfml-system.so.2.6.2"
-  IMPORTED_SONAME_NOCONFIG "libsfml-system.so.2.6"
+  IMPORTED_LOCATION_RELEASE "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-build/lib/libsfml-system.so.2.6.2"
+  IMPORTED_SONAME_RELEASE "libsfml-system.so.2.6"
   )
 
-# Import target "sfml-window" for configuration ""
-set_property(TARGET sfml-window APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+# Import target "sfml-window" for configuration "Release"
+set_property(TARGET sfml-window APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-window PROPERTIES
-  IMPORTED_LOCATION_NOCONFIG "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-build/lib/libsfml-window.so.2.6.2"
-  IMPORTED_SONAME_NOCONFIG "libsfml-window.so.2.6"
+  IMPORTED_LOCATION_RELEASE "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-build/lib/libsfml-window.so.2.6.2"
+  IMPORTED_SONAME_RELEASE "libsfml-window.so.2.6"
   )
 
-# Import target "sfml-graphics" for configuration ""
-set_property(TARGET sfml-graphics APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+# Import target "sfml-graphics" for configuration "Release"
+set_property(TARGET sfml-graphics APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-graphics PROPERTIES
-  IMPORTED_LOCATION_NOCONFIG "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-build/lib/libsfml-graphics.so.2.6.2"
-  IMPORTED_SONAME_NOCONFIG "libsfml-graphics.so.2.6"
+  IMPORTED_LOCATION_RELEASE "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-build/lib/libsfml-graphics.so.2.6.2"
+  IMPORTED_SONAME_RELEASE "libsfml-graphics.so.2.6"
   )
 
-# Import target "sfml-audio" for configuration ""
-set_property(TARGET sfml-audio APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+# Import target "sfml-audio" for configuration "Release"
+set_property(TARGET sfml-audio APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-audio PROPERTIES
-  IMPORTED_LOCATION_NOCONFIG "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-build/lib/libsfml-audio.so.2.6.2"
-  IMPORTED_SONAME_NOCONFIG "libsfml-audio.so.2.6"
+  IMPORTED_LOCATION_RELEASE "/home/giuseppe/Scrivania/Giuseppe/università/triennale/primo_anno/programmazione/razzo/build/_deps/sfml-build/lib/libsfml-audio.so.2.6.2"
+  IMPORTED_SONAME_RELEASE "libsfml-audio.so.2.6"
   )
 
 # This file does not depend on other imported targets which have
