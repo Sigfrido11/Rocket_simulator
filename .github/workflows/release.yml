@@ -84,7 +84,7 @@ jobs:
     - name: Create package
       run: |
         cd build
-        cpack -C Release --verbose
+        cpack -G ${{ runner.os == 'Windows' && 'ZIP' || 'TGZ' }}
 
     # ========================
     # Release upload
