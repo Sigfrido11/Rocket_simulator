@@ -7,76 +7,88 @@ on:
 
 jobs:
   release:
-    name: Build and Release on ${{ matrix.os }}
+    name: Build ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            asset_extension: tar.gz
-            cpack_generator: TGZ
-          - os: windows-latest
-            asset_extension: zip
-            cpack_generator: ZIP
-          - os: macos-latest
-            asset_extension: zip
-            cpack_generator: ZIP
 
     steps:
-    # 1 Checkout del codice
+    # ========================
+    # Checkout
+    # ========================
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-    # 2 Pulizia build precedente (cross-platform con bash)
-    - name: Clean previous build
-      run: rm -rf build
-      shell: bash
+    # ========================
+    # Install Dependencies
+    # ========================
 
-    # 3 Install dependencies Linux
-    - name: Install Linux dependencies
+    # Linux
+    - name: Install Linux deps
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update -y
-        sudo apt-get install -y libopenal-dev libflac-dev libvorbis-dev libudev-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev mesa-common-dev libgl1-mesa-dev
-        sudo apt-get update -y
-        libopenal-dev \
-        libflac-dev \
-        libvorbis-dev \
-        libudev-dev \
-        libxrandr-dev \
-        libxcursor-dev \
-        libxinerama-dev \
-        libxi-dev \
-        mesa-common-dev \
-        libgl1-mesa-dev \
-        libfreetype6-dev
-      shell: bash
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          libopenal-dev \
+          libflac-dev \
+          libvorbis-dev \
+          libudev-dev \
+          libxrandr-dev \
+          libxcursor-dev \
+          libxinerama-dev \
+          libxi-dev \
+          mesa-common-dev \
+          libgl1-mesa-dev \
+          libfreetype6-dev \
+          g++
 
-    # 4 Install dependencies macOS
-    - name: Install macOS dependencies
+    # macOS
+    - name: Install macOS deps
       if: runner.os == 'macOS'
-      run: brew install openal-soft flac libvorbis
-      shell: bash
+      run: |
+        brew update
+        brew install cmake sfml openal-soft flac libvorbis
 
-    # 5 Configura CMake
+    # Windows
+    - name: Setup MSVC + CMake
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+
+    # ========================
+    # CMake Configure
+    # ========================
+
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=${{ matrix.cpack_generator }}
-      shell: bash
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release \
+        -DCPACK_GENERATOR=${{ matrix.os == 'windows-latest' && 'ZIP' || 'TGZ' }}
 
-    # 6 Build progetto
+    # ========================
+    # Build
+    # ========================
+
     - name: Build project
-      run: cmake --build build --config Release --parallel --target rocket.t
-      shell: bash
+      run: cmake --build build --config Release --parallel
 
-    # 7 Creazione pacchetto
+    # ========================
+    # Packaging
+    # ========================
+
     - name: Create package
       run: |
         cd build
         cpack -C Release --verbose
-      shell: bash
 
-    # 8 Upload pacchetto su GitHub Release
+    # ========================
+    # Release upload
+    # ========================
+
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       with:
