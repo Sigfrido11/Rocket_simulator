@@ -39,6 +39,18 @@ jobs:
       run: |
         sudo apt-get update -y
         sudo apt-get install -y libopenal-dev libflac-dev libvorbis-dev libudev-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev mesa-common-dev libgl1-mesa-dev
+        sudo apt-get update -y
+        libopenal-dev \
+        libflac-dev \
+        libvorbis-dev \
+        libudev-dev \
+        libxrandr-dev \
+        libxcursor-dev \
+        libxinerama-dev \
+        libxi-dev \
+        mesa-common-dev \
+        libgl1-mesa-dev \
+        libfreetype6-dev
       shell: bash
 
     # 4 Install dependencies macOS
@@ -54,7 +66,7 @@ jobs:
 
     # 6 Build progetto
     - name: Build project
-      run: cmake --build build --config Release --parallel
+      run: cmake --build build --config Release --parallel --target rocket.t
       shell: bash
 
     # 7 Creazione pacchetto
