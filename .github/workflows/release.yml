@@ -1,0 +1,56 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Build and Release on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            asset_extension: tar.gz
+            cpack_generator: TGZ
+          - os: windows-latest
+            asset_extension: zip
+            cpack_generator: ZIP
+          - os: macos-latest
+            asset_extension: zip
+            cpack_generator: ZIP
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y libopenal-dev libflac-dev libvorbis-dev libudev-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev mesa-common-dev libgl1-mesa-dev
+
+    - name: Install macOS dependencies
+      if: runner.os == 'macOS'
+      run: brew install openal-soft flac libvorbis
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=${{ matrix.cpack_generator }}
+
+    - name: Build project
+      run: cmake --build build --config Release
+
+    - name: Create package
+      run: |
+        cd build
+        cpack -C Release --verbose
+
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/_CPack_Packages/**/*.*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
