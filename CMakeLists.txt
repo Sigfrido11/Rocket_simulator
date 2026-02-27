@@ -17,27 +17,11 @@ if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-# Define SFML_STATIC when we are linking the library statically.  This must be
-# exported before we pull in SFML headers (either via find_package or
-# FetchContent) so that users of the library see the correct __declspec
-# attributes.
-if(ROCKET_USE_STATIC_SFML)
-    add_compile_definitions(SFML_STATIC)
-endif()
-
-# globally default to static libraries to avoid accidental dynamic linking
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-# when we fetch SFML locally we also ask it to build its static variants
-set(SFML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-option(ROCKET_ENABLE_SANITIZERS "Enable ASAN/UBSAN in Debug builds" ON)
-option(ROCKET_FETCH_SFML "Fetch SFML automatically if not found" ON)
 
 # =============================
 # SFML
@@ -45,34 +29,29 @@ option(ROCKET_FETCH_SFML "Fetch SFML automatically if not found" ON)
 
 set(SFML_COMPONENTS graphics window system audio)
 
-# when we request fetching we set the same options that the old CMakeLists
-# used; in particular we propagate the static/shared choice through
-if(ROCKET_FETCH_SFML)
-    message(STATUS "ROCKET_FETCH_SFML=ON: configuring FetchContent options for SFML")
+# Try system SFML first
+find_package(SFML 2.5 COMPONENTS ${SFML_COMPONENTS} QUIET)
+
+# If not found -> fetch
+if(NOT SFML_FOUND AND ROCKET_FETCH_SFML)
+
+    message(STATUS "Fetching SFML via FetchContent")
+
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
     set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
     set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
-    set(SFML_USE_STATIC_LIBS ${ROCKET_USE_STATIC_SFML} CACHE BOOL "" FORCE)
-    # prevent upstream project from trying to install files to system
     set(SFML_INSTALL OFF CACHE BOOL "" FORCE)
 
     FetchContent_Declare(
         sfml
         GIT_REPOSITORY https://github.com/SFML/SFML.git
         GIT_TAG 2.6.2
-        GIT_SHALLOW TRUE
     )
+
     FetchContent_MakeAvailable(sfml)
-endif()
 
-# look for whatever version of SFML we have available (fetched or system)
-find_package(SFML 2.5 COMPONENTS ${SFML_COMPONENTS} QUIET)
-
-if(NOT SFML_FOUND)
-    message(STATUS "SFML not found on system")
-    if(NOT TARGET sfml-graphics AND NOT TARGET SFML::Graphics)
-        message(FATAL_ERROR "SFML could not be located. Try -DROCKET_FETCH_SFML=ON")
-    endif()
 endif()
 
 # =============================
@@ -116,7 +95,6 @@ endfunction()
 
 function(rocket_link_sfml target_name enable_audio)
 
-    # prefer modern imported targets from find_package/fetchcontent
     if(TARGET SFML::Graphics)
         target_link_libraries(${target_name} PRIVATE
             SFML::Graphics
@@ -126,8 +104,8 @@ function(rocket_link_sfml target_name enable_audio)
         if(${enable_audio})
             target_link_libraries(${target_name} PRIVATE SFML::Audio)
         endif()
-    else()
-        # fall back to legacy names (should only happen when SFML built in-tree)
+    elseif(TARGET sfml-graphics)
+        # FetchContent creates legacy targets, use those
         target_link_libraries(${target_name} PRIVATE
             sfml-graphics
             sfml-window
@@ -136,6 +114,8 @@ function(rocket_link_sfml target_name enable_audio)
         if(${enable_audio})
             target_link_libraries(${target_name} PRIVATE sfml-audio)
         endif()
+    else()
+        message(FATAL_ERROR "SFML targets not found")
     endif()
 
 endfunction()
@@ -161,23 +141,14 @@ rocket_link_sfml(rocket.t TRUE)
 # =============================
 
 if(WIN32 AND NOT ROCKET_USE_STATIC_SFML)
+
     add_custom_command(TARGET rocket.t POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:sfml-graphics>
+        $<TARGET_RUNTIME_DLLS:rocket.t>
         $<TARGET_FILE_DIR:rocket.t>
-
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:sfml-window>
-        $<TARGET_FILE_DIR:rocket.t>
-
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:sfml-system>
-        $<TARGET_FILE_DIR:rocket.t>
-
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:sfml-audio>
-        $<TARGET_FILE_DIR:rocket.t>
+        COMMAND_EXPAND_LISTS
     )
+
 endif()
 
 # =============================
