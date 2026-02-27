@@ -54,7 +54,7 @@ jobs:
 
     # 6 Build progetto
     - name: Build project
-      run: cmake --build build --config Release
+      run: cmake --build build --config Release --parallel
       shell: bash
 
     # 7 Creazione pacchetto
