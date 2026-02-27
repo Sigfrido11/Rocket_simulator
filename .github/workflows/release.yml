@@ -28,14 +28,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2 Pulizia build precedente (cross-platform)
+    # 2 Pulizia build precedente (cross-platform con bash)
     - name: Clean previous build
-      run: |
-        if [ $RUNNER_OS = 'Windows' ]; then
-          powershell Remove-Item -Recurse -Force build
-        else
-          rm -rf build
-        fi
+      run: rm -rf build
+      shell: bash
 
     # 3 Install dependencies Linux
     - name: Install Linux dependencies
@@ -43,25 +39,30 @@ jobs:
       run: |
         sudo apt-get update -y
         sudo apt-get install -y libopenal-dev libflac-dev libvorbis-dev libudev-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev mesa-common-dev libgl1-mesa-dev
+      shell: bash
 
     # 4 Install dependencies macOS
     - name: Install macOS dependencies
       if: runner.os == 'macOS'
       run: brew install openal-soft flac libvorbis
+      shell: bash
 
     # 5 Configura CMake
     - name: Configure CMake
       run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=${{ matrix.cpack_generator }}
+      shell: bash
 
     # 6 Build progetto
     - name: Build project
       run: cmake --build build --config Release
+      shell: bash
 
     # 7 Creazione pacchetto
     - name: Create package
       run: |
         cd build
         cpack -C Release --verbose
+      shell: bash
 
     # 8 Upload pacchetto su GitHub Release
     - name: Upload Release Asset
