@@ -36,6 +36,7 @@ if (NOT SFML_FOUND AND ROCKET_FETCH_SFML)
     GIT_TAG 2.6.2
     GIT_SHALLOW TRUE
   )
+endif()
 FetchContent_GetProperties(sfml)
 if(NOT sfml_POPULATED)
   FetchContent_Populate(sfml)
