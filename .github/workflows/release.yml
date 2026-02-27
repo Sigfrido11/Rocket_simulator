@@ -24,6 +24,10 @@ jobs:
             cpack_generator: ZIP
 
     steps:
+    - name: Clean previous build
+      run: |
+        rm -rf build
+
     - name: Checkout code
       uses: actions/checkout@v4
 

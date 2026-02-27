@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/unit_tests.t.dir/unit_tests.cpp.o CMakeFiles/unit_tests.t.dir/rocket.cpp.o CMakeFiles/unit_tests.t.dir/simulation.cpp.o CMakeFiles/unit_tests.t.dir/vector_math.cpp.o CMakeFiles/unit_tests.t.dir/engine.cpp.o -o unit_tests.t
