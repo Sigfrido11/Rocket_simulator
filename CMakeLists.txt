@@ -53,6 +53,8 @@ if(ROCKET_FETCH_SFML)
     set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
     set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
     set(SFML_USE_STATIC_LIBS ${ROCKET_USE_STATIC_SFML} CACHE BOOL "" FORCE)
+    # prevent upstream project from trying to install files to system
+    set(SFML_INSTALL OFF CACHE BOOL "" FORCE)
 
     FetchContent_Declare(
         sfml
