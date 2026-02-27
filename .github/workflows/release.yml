@@ -28,35 +28,22 @@ jobs:
     # Install Dependencies
     # ========================
 
-    # Linux
+    # Linux: Minimal deps (SFML will be fetched)
     - name: Install Linux deps
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          cmake \
-          libopenal-dev \
-          libflac-dev \
-          libvorbis-dev \
-          libudev-dev \
-          libxrandr-dev \
-          libxcursor-dev \
-          libxinerama-dev \
-          libxi-dev \
-          mesa-common-dev \
-          libgl1-mesa-dev \
-          libfreetype6-dev \
-          g++
+        sudo apt-get install -y cmake g++ git
 
-    # macOS
+    # macOS: Only cmake (SFML will be fetched)
     - name: Install macOS deps
       if: runner.os == 'macOS'
       run: |
         brew update
-        brew install cmake sfml openal-soft flac libvorbis
+        brew install cmake
 
-    # Windows
-    - name: Setup MSVC + CMake
+    # Windows: MSVC
+    - name: Setup MSVC
       if: runner.os == 'Windows'
       uses: ilammy/msvc-dev-cmd@v1
 
@@ -68,8 +55,9 @@ jobs:
       shell: bash
       run: |
         cmake -B build \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCPACK_GENERATOR=${{ matrix.os == 'windows-latest' && 'ZIP' || 'TGZ' }}
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX="${PWD}/build/package"
+
     # ========================
     # Build
     # ========================
