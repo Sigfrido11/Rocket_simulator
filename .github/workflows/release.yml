@@ -58,24 +58,43 @@ jobs:
           -DBUILD_TESTING=OFF
           -DROCKET_FETCH_SFML=ON
           -DROCKET_FORCE_FETCH_SFML=ON
-          -DROCKET_FETCH_SFML_SHARED=OFF
+          -DROCKET_FETCH_SFML_SHARED=${{ runner.os == 'Windows' && 'ON' || 'OFF' }}
 
       - name: Build project
         run: cmake --build build --config Release --parallel
 
-      - name: Stage install (Unix)
+      - name: Stage package (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
           cmake -E rm -rf build/package
-          cmake --install build --config Release --prefix build/package
+          cmake -E make_directory build/package
+          cmake -E copy build/rocket.t build/package/rocket.t
+          cmake -E copy_directory assets build/package/assets
 
-      - name: Stage install (Windows)
+      - name: Stage package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           cmake -E rm -rf build/package
-          cmake --install build --config Release --prefix build/package
+          cmake -E make_directory build/package
+          if (Test-Path "build/Release/rocket.t.exe") {
+            Copy-Item "build/Release/rocket.t.exe" "build/package/rocket.t.exe"
+          } elseif (Test-Path "build/rocket.t.exe") {
+            Copy-Item "build/rocket.t.exe" "build/package/rocket.t.exe"
+          } else {
+            throw "rocket.t.exe not found in build output"
+          }
+          Copy-Item -Recurse "assets" "build/package/assets"
+
+          $dlls = Get-ChildItem -Path "build/_deps" -Recurse -Filter "*.dll" -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match "sfml|openal" }
+          if (-not $dlls) {
+            throw "No SFML/OpenAL DLLs found. Ensure ROCKET_FETCH_SFML_SHARED=ON on Windows."
+          }
+          foreach ($dll in $dlls) {
+            Copy-Item $dll.FullName "build/package/$($dll.Name)" -Force
+          }
 
       - name: Create zip (Unix)
         if: runner.os != 'Windows'

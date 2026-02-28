@@ -41,13 +41,7 @@ if ((NOT SFML_FOUND) AND ROCKET_FETCH_SFML)
     GIT_TAG 2.6.2
     GIT_SHALLOW TRUE
   )
-  # SFML provides install() rules; for packaging we only want to install our app.
-  # Disabling install rules for this dependency avoids CPack trying to write into
-  # system prefixes like /usr/local on CI runners.
-  set(_rocket_prev_skip_install_rules "${CMAKE_SKIP_INSTALL_RULES}")
-  set(CMAKE_SKIP_INSTALL_RULES TRUE)
   FetchContent_MakeAvailable(sfml)
-  set(CMAKE_SKIP_INSTALL_RULES "${_rocket_prev_skip_install_rules}")
 endif ()
 
 if (NOT SFML_FOUND AND NOT TARGET sfml-graphics AND NOT TARGET SFML::Graphics)
