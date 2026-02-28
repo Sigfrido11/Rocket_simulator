@@ -3,96 +3,63 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
+
+permissions:
+  contents: write
 
 jobs:
   release:
     name: Build ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    # ========================
-    # Checkout
-    # ========================
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # ========================
-    # Install Dependencies
-    # ========================
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libopenal-dev \
+            libflac-dev \
+            libvorbis-dev \
+            libudev-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxinerama-dev \
+            libxi-dev \
+            mesa-common-dev \
+            libgl1-mesa-dev \
+            libfreetype6-dev
 
-    # Linux
-    - name: Install Linux deps
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          cmake \
-          libopenal-dev \
-          libflac-dev \
-          libvorbis-dev \
-          libudev-dev \
-          libxrandr-dev \
-          libxcursor-dev \
-          libxinerama-dev \
-          libxi-dev \
-          mesa-common-dev \
-          libgl1-mesa-dev \
-          libfreetype6-dev \
-          g++
+      - name: Setup MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
-    # macOS
-    - name: Install macOS deps
-      if: runner.os == 'macOS'
-      run: |
-        brew update
-        brew install cmake sfml openal-soft flac libvorbis
+      - name: Configure CMake
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_TESTING=OFF
+          -DROCKET_FETCH_SFML=ON
+          -DROCKET_FORCE_FETCH_SFML=ON
+          -DROCKET_FETCH_SFML_SHARED=OFF
+          -DCPACK_GENERATOR=ZIP
 
-    # Windows
-    - name: Setup MSVC + CMake
-      if: runner.os == 'Windows'
-      uses: ilammy/msvc-dev-cmd@v1
+      - name: Build project
+        run: cmake --build build --config Release --parallel
 
-    # ========================
-    # CMake Configure
-    # ========================
+      - name: Create package
+        run: cpack --config build/CPackConfig.cmake -C Release -G ZIP
 
-    - name: Configure CMake
-      shell: bash
-      run: |
-        cmake -B build \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCPACK_GENERATOR=${{ matrix.os == 'windows-latest' && 'ZIP' || 'TGZ' }}
-    # ========================
-    # Build
-    # ========================
-
-    - name: Build project
-      run: cmake --build build --config Release --parallel
-
-    # ========================
-    # Packaging
-    # ========================
-
-    - name: Create package
-      run: |
-        cd build
-        cpack -C Release --verbose
-        cpack -G ${{ runner.os == 'Windows' && 'ZIP' || 'TGZ' }}
-
-    # ========================
-    # Release upload
-    # ========================
-
-    - name: Upload Release Asset
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/_CPack_Packages/**/*.*
-      env:
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/rocket-*.zip
+          fail_on_unmatched_files: true

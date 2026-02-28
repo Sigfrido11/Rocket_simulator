@@ -131,7 +131,7 @@ end
 
 ## 3. Build Requirements
 
-- CMake >= 3.16
+- CMake >= 3.21
 - C++20 compiler:
   - Linux/macOS: `g++` or `clang++`
   - Windows: MSVC (Visual Studio 2022) or MinGW
@@ -208,6 +208,8 @@ The CMake configuration supports two modes:
 
 Useful options:
 - `-DROCKET_FETCH_SFML=ON|OFF`
+- `-DROCKET_FORCE_FETCH_SFML=ON|OFF`
+- `-DROCKET_FETCH_SFML_SHARED=ON|OFF`
 - `-DROCKET_ENABLE_SANITIZERS=ON|OFF`
 
 Examples:
