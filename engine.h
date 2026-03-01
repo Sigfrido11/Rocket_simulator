@@ -90,6 +90,7 @@ class Ad_sol_engine final : public Engine {
 
     // Thermodynamic chamber state
     double p_c_{7.0e6};     // Chamber pressure [Pa]
+    double max_pc_{7.0e6};  // Maximum chamber pressure [Pa]
     double T_c_{3400.0};    // Chamber temperature [K]
     double gamma_{1.22};    // Heat capacity ratio of exhaust gases
     double M_{0.023};       // Effective molar mass [kg/mol]

@@ -190,7 +190,7 @@ Ad_sol_engine::Ad_sol_engine(double p_c,
                   double a,
                   double n,
                   double M)
-    : p_c_{p_c},
+    : max_pc_{p_c},
       T_c_{T_c},
       A_b_{A_b},
       A_t_{A_t},
@@ -208,6 +208,8 @@ Ad_sol_engine::Ad_sol_engine(double p_c,
 // T_c    : chamber temperature [K]
 // M      : molar mass [kg/mol]
 // Universal gas constant [J/(mol*K)]
+    p_c_ = p_c * (1-0.15); // start slightly below max to allow initial regression
+
     const double R_univ = sim::cost::R_;
 
     // Specific gas constant [J/(kg*K)]
@@ -248,9 +250,8 @@ Vec Ad_sol_engine::eng_force(double pa, double time, double theta,
     if (!std::isfinite(p_c_) || p_c_ < 0.0) {
         p_c_ = 0.0;
     }
-    constexpr double max_pc = 1e8; // 100 MPa
-    if (p_c_ > max_pc) {
-        p_c_ = max_pc;
+    if (p_c_ > max_pc_) {
+        p_c_ = max_pc_;
     }
 
     double pe = compute_exit_pressure(p_c_);
@@ -303,7 +304,7 @@ Ad_liquid_engine::Ad_liquid_engine(double p_c, double T_c, double A_t, double A_
     : p_c_{p_c}, T_c_{T_c}, A_t_{A_t}, A_e_{A_e}, M_{M} {
     assert(p_c_ > 0 && T_c_ > 0 && A_t_ > 0 && A_e_ > 0 && M_ > 0);
     // Computes characteristic velocity c* [m/s]
-    // Formula corretta: c* = sqrt((2/(gamma+1))^((gamma+1)/(gamma-1)) * R_spec * T_c)
+    // equation: c* = sqrt((2/(gamma+1))^((gamma+1)/(gamma-1)) * R_spec * T_c)
     double R_spec = sim::cost::R_ / M_;
     double term = std::pow(
         2.0 / (gamma_ + 1.0),

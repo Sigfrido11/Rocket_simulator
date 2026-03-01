@@ -226,7 +226,7 @@ int main() {
     if (!theta_file.is_open()) {
       throw std::runtime_error("Cannot open theta data file: " + file_name);
     }
-    std::string const params_file = asset_path("input_data/simulation_params_test.json");
+    std::string const params_file = asset_path("input_data/simulation_params.json");
     std::string const params_text = read_text_file(params_file);
 
     // 3. Parse JSON Configuration
@@ -302,6 +302,9 @@ int main() {
               << "\n";
     double orbital_h;
     std::cin >> orbital_h;
+    if(orbital_h < 60000.0) {
+      throw std::runtime_error("invalid orbital altitude, must be >= 60000 m");
+    }
 
     // 6. Setup Output Logging
     std::ofstream output_rocket(asset_path("output_rocket.txt"));
