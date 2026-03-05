@@ -1,442 +1,649 @@
-# Rocket Simulator
+# Rocket Launch Phase Simulator
 
-A C++20 orbital launch simulator with:
-- physically inspired ascent dynamics,
-- modular propulsion models (`base`, `advanced solid`, `advanced liquid`),
-- SFML visualization,
-- JSON-driven runtime configuration.
+The purpose of this project is to simulate a launch vehicle from liftoff, occurring at the equatorial line, up to the possible achievement of orbit. This project required the coherent coupling of aerodynamics, thermodynamics, and orbital mechanics within a numerically stable scheme.
 
-The project is prepared for Linux, macOS, and Windows builds through CMake.
+This simulator, developed in **C++20** with **SFML**, aims to model a physically consistent ascent while avoiding purely kinematic simplifications.
 
----
+The project repository can be viewed and downloaded by clicking the button below.
 
-## 1. What This Program Does
+<div class="rocket_repo">
+  <a class="btn" href="https://github.com/Sigfrido11/Rocket_simulator" target="_blank" rel="noopener">
+    Visit the repository
+  </a>
+</div>
 
-This simulator models a multi‑stage launch vehicle from lift‑off to orbital insertion. It marries a lightweight physics core with a live SFML visualization.
+## Build and Dependencies (macOS, Windows, Linux)
 
-Main loop (per step):
-- sample atmosphere (ISA-like profile: temperature, pressure, density vs altitude),
-- evaluate propulsion (solid base/advanced, liquid base/advanced),
-- compute forces (gravity, centripetal, drag, thrust) and net acceleration,
-- integrate motion and update attitude proxy,
-- stage management and fuel bookkeeping,
-- render telemetry to screen and log to files.
+This project uses **CMake** and requires a **C++20** compiler.
 
-What you see in the UI:
-- real-time altitude, speed, stage, fuel,
-- trajectory in Cartesian and polar mini-views,
-- countdown, launch audio, and background music.
+### Required Tools
 
-What you get on disk:
-- `assets/output_rocket.txt` (position, velocity, forces over time),
-- `assets/output_air.txt` (temperature, pressure, density over time).
+- **CMake 3.21+**
+- A **C++20 compiler**:
+  - GCC 10+ or Clang 12+ on Linux/macOS
+  - MSVC (Visual Studio 2022 or newer) on Windows
+- A build backend:
+  - `Ninja` (recommended), or
+  - platform-native tools (`make`, Visual Studio/MSBuild, etc.)
+- **Git** (required only if SFML is fetched automatically)
 
-### 1.1 Physics model (concise)
-- Atmosphere: piecewise ISA approximation (see `simulation.cpp`).
-- Gravity: altitude-dependent g from Earth radius and mass.
-- Drag: quadratic with reference area and air density, uses velocity vector.
-- Thrust:
-  - Base engine: constant-Isp, mass flow from empirical coefficient.
-  - Advanced solid: pressure-dependent regression, isentropic nozzle.
-  - Advanced liquid: c* / nozzle model with chamber pressure control.
-- Kinematics: simple Euler integration at fixed timestep (1 s default).
+### SFML Dependency Model
 
-### 1.2 Simulation flow (high level)
-```
-load config JSON
-select engine family (base / advanced)
-init rocket state (stages, masses, geometry)
-loop over time:
-  sample atmosphere at current altitude
-  compute thrust (solid + liquid stages as needed)
-  compute drag, gravity, centripetal contributions
-  sum forces, update velocity (semi-implicit), update position
-  update angles/attitude proxy for rendering
-  handle staging and fuel bookkeeping
-  log outputs, refresh SFML scene
-end
-```
+The CMake configuration supports two valid approaches:
 
----
+1. **Use system-installed SFML (preferred when available)**  
+   CMake tries `find_package(SFML 2.5 COMPONENTS graphics window system audio)`.
+2. **Fetch SFML automatically from source**  
+   If SFML is not found and `ROCKET_FETCH_SFML=ON` (default), CMake downloads SFML `2.6.2` via `FetchContent`.
 
-## 2. Core Files and Structure
+### Platform Setup
 
-### Engine and Dynamics
+Install the required tools with your preferred package manager.
 
-- `engine.h`, `engine.cpp`
-  - propulsion interface and concrete engine implementations.
-- `rocket.h`, `rocket.cpp`
-  - vehicle state, staging logic, force aggregation.
-- `simulation.h`, `simulation.cpp`
-  - atmospheric model and physical constants.
-- `vector_math.h`, `vector_math.cpp`
-  - vector helpers used by force/kinematic calculations.
-
-**Architecture snapshot**
-- Data inputs: `simulation_params.json`, `theta_data.txt`.
-- Physics core: `rocket.cpp`, `engine.cpp`, `simulation.cpp`.
-- Presentation: `main.cpp`, `graph_test.cpp`, SFML assets.
-- Utilities: `interface.*` (UI helpers), `vector_math.*`.
-- Outputs: `assets/output_rocket.txt`, `assets/output_air.txt`.
-
-### 2.1 Engine models in detail
-
-- **Base_engine** (simplified, constant-Isp)  
-  Inputs: `isp`, `cm` (mass-loss coefficient), `p0`, `burn_a`.  
-  Behavior: thrust = `Isp * g0 * mass_flow`; mass flow from `cm` and chamber pressure; reused for both solid/liquid baseline.  
-  When to use: quick runs, lower fidelity acceptable.
-
-- **Ad_sol_engine** (advanced solid)  
-  Inputs: chamber pressure/temperature, grain density, burn law (`a`, `n`), burning area `A_b`, nozzle throat/exit (`A_t`, `A_e`), molar mass.  
-  Behavior: regression `r_dot = a * p_c^n`; mass flow from burn surface * density; exhaust velocity via isentropic expansion; thrust adds exit/ambient pressure term.  
-  Strength: captures pressure-coupled burn and nozzle expansion, suitable for solid boosters.
-
-- **Ad_liquid_engine** (advanced liquid)  
-  Inputs: chamber pressure/temperature, `A_t`, `A_e`, characteristic velocity `c*`, molar mass.  
-  Behavior: mass flow tied to throat area and chamber pressure; exhaust velocity from isentropic relations; thrust includes ambient correction.  
-  Strength: mimics pump-fed liquids with controllable chamber pressure.
-
-**Shared interface (`engine::Engine`)**
-- `delta_m(time, is_orbiting)`: propellant mass spent in the step.  
-- `eng_force(pa, pe, theta, is_orbiting)`: thrust vector with ambient vs exit pressure.  
-- `release()`: ignite/arm the engine.  
-- `is_ad_eng() / is_liquid() / is_released()`: capability flags for runtime logic.  
-- `get_pression()`: expose chamber pressure to other subsystems (e.g., thrust balancing).
-
-### Interface and Runtime
-
-- `main.cpp`
-  - production executable entrypoint.
-- `graph_test.cpp`
-  - graphics behavior test executable.
-- `interface.h`, `interface.cpp`
-  - SFML text style, countdown, and runtime support utilities.
-
-### Configuration and Input Data
-
-- `assets/input_data/simulation_params.json`
-  - main runtime configuration.
-- `assets/input_data/simulation_params.schema.json`
-  - schema describing valid configuration structure.
-- `assets/input_data/theta_data.txt`
-  - data used by trajectory angle shaping logic.
-
-### Assets
-
-- `assets/img/`
-- `assets/font/`
-- `assets/music/`
-
----
-
-## 3. Build Requirements
-
-- CMake >= 3.21
-- C++20 compiler:
-  - Linux/macOS: `g++` or `clang++`
-  - Windows: MSVC (Visual Studio 2022) or MinGW
-
-Optional but recommended:
-- `ninja-build` for faster builds
-
----
-
-## 4. Installation (Per Operating System)
-
-### Ubuntu / Debian
-
-```bash
-sudo apt update
-sudo apt install -y cmake g++ ninja-build libsfml-dev
-```
-
-### macOS (Homebrew)
-
-```bash
-brew install cmake ninja sfml
-```
-
-### Windows (PowerShell + winget)
-
-```powershell
-winget install Kitware.CMake
-winget install Microsoft.VisualStudio.2022.BuildTools
-```
-
-If SFML is not installed system-wide, CMake can fetch it automatically (see section 6).
-
----
-
-## 5. Build and Run
+- **macOS (Homebrew)**
+  - `brew install cmake ninja git sfml`
+- **Ubuntu/Debian**
+  - `sudo apt update`
+  - `sudo apt install -y cmake ninja-build build-essential git libsfml-dev`
+- **Fedora**
+  - `sudo dnf install -y cmake ninja-build gcc-c++ git SFML-devel`
+- **Arch Linux**
+  - `sudo pacman -S --needed cmake ninja base-devel git sfml`
+- **Windows**
+  - Install **Visual Studio 2022** with *Desktop development with C++*
+  - Install **CMake** and optionally **Ninja**
+  - Optional (system SFML): `winget install SFML.SFML`
+  - If SFML is not installed system-wide, keep `ROCKET_FETCH_SFML=ON` (default)
 
 ### Configure and Build
 
+From the project root:
+
 ```bash
-cmake -S . -B build
-cmake --build build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --parallel
 ```
 
-Main executables:
-- `build/rocket.t`
-- `build/graph_test.t`
+Notes:
+- `-DCMAKE_BUILD_TYPE=Release` is used by single-config generators (Ninja/Makefiles).
+- `--config Release` is used by multi-config generators (Visual Studio, Xcode).
 
 ### Run
 
-```bash
-./build/rocket.t
-```
+- **Linux/macOS**
+  - `./build/rocket.t`
+- **Windows (Visual Studio generator)**
+  - `.\build\Release\rocket.t.exe`
 
-On Windows (PowerShell):
+Run from the project root so the executable can resolve the `assets/` directory correctly.
 
-```powershell
-.\build\Debug\rocket.t.exe
-```
+### Build Options
 
-Note: output and input files are under `assets/`, so run from repository root or ensure working directory is set correctly.
+- `-DBUILD_TESTING=OFF` disables test targets (`graph_test.t`, `unit_tests.t`).
+- `-DROCKET_ENABLE_SANITIZERS=ON` enables ASan/UBSan in **Debug** builds for GCC/Clang (non-MSVC).
+- `-DROCKET_FETCH_SFML=OFF` requires SFML to be already installed.
+- `-DROCKET_FORCE_FETCH_SFML=ON` always builds SFML from source.
+- `-DROCKET_FETCH_SFML_SHARED=ON` fetches SFML as shared libraries (default is static).
 
----
-
-## 6. Dependency Management (SFML and Toolchain Checks)
-
-The CMake configuration supports two modes:
-
-1. **System SFML mode**  
-   CMake tries `find_package(SFML ...)`.
-
-2. **Auto-fetch mode**  
-   If SFML is missing and `ROCKET_FETCH_SFML=ON`, CMake downloads SFML via `FetchContent`.
-
-Useful options:
-- `-DROCKET_FETCH_SFML=ON|OFF`
-- `-DROCKET_FORCE_FETCH_SFML=ON|OFF`
-- `-DROCKET_FETCH_SFML_SHARED=ON|OFF`
-- `-DROCKET_ENABLE_SANITIZERS=ON|OFF`
-
-Examples:
+### Run Tests
 
 ```bash
-cmake -S . -B build -DROCKET_FETCH_SFML=ON
-cmake -S . -B build -DROCKET_ENABLE_SANITIZERS=OFF
+ctest --test-dir build -C Release --output-on-failure
 ```
 
-Sanitizers are enabled only on GCC/Clang Debug builds to avoid MSVC incompatibilities.
+## How to Use the Program
+
+The considerable complexity of the program required the use of several input parameters that the user must provide at the start of the simulation.  
+To prevent the software from becoming inaccessible to non-expert users and to simplify data entry, at startup the user is asked whether to use the **base engine model**, a simplified version with few parameters, or an **advanced version** that requires knowledge of many parameters.
+
+These parameters can be conveniently edited by the user in the file:
+
+`assets/input_data/simulation_params.json`
+
+For convenience, reasonable default values are already set.
+
+Below is a brief description of all configuration parameters.  
+**Warning:** if advanced engines are selected, modifying the base engine section will have no effect and viceversa.
 
 ---
 
-## 7. Configuration File: Detailed Parameter Guide
+## Configuration Parameters
 
-The primary runtime config is:
-- `assets/input_data/simulation_params.json`
+| Parameter | Description |
+|------------|-------------|
+| Rocket |
+| `rocket.name` | Identifier name of the launch vehicle. |
+| `rocket.stage_num` | Total number of stages (1 initial solid stage + N liquid stages). |
+| `rocket.mass_structure_kg` | Main structural mass of the vehicle, excluding propellant and tanks. |
+| `rocket.upper_area_m2` | Equivalent frontal area used in aerodynamic drag calculations. |
+| `rocket.solid_propellant_mass_kg` | Total propellant mass of the solid propellant stage. |
+| `rocket.solid_container_mass_kg` | Structural mass of the solid propellant booster, discarded at separation. |
+| `rocket.solid_engine_count` | Number of solid propellant  engines firing simultaneously. |
+| `rocket.liquid_propellant_masses_kg` | List of propellant masses for each liquid propellant  stage. |
+| `rocket.liquid_container_masses_kg` | List of structural tank masses for each liquid propellant stage. |
+| `rocket.liquid_engines_per_stage` | Number of liquid propellant engines active in each stage. |
+| Base Engines |
+| `engine.base.isp_s` | Specific impulse expressed in seconds. |
+| `engine.base.cm` | Mass flow coefficient. |
+| `engine.base.chamber_pressure_pa` | Combustion chamber pressure (Pa). |
+| `engine.base.burn_area_m2` | Effective propellant burning area in the base model. |
+| Advanced Solid Engines |
+| `engine.advanced_solid.burn_area_m2` | Initial burning surface area of the solid grain. |
+| `engine.advanced_solid.nozzle_throat_area_m2` | Nozzle throat area of the solid propellant  engine (controls mass flow). |
+| `engine.advanced_solid.nozzle_exit_area_m2` | Nozzle exit area of the solid propellant engine (affects gas expansion). |
+| `engine.advanced_solid.chamber_temperature_k` | Combustion chamber gas temperature (K). |
+| `engine.advanced_solid.grain_dimension_m` | Characteristic grain dimension affecting burn evolution. |
+| `engine.advanced_solid.grain_density_kg_m3` | Solid propellant density. |
+| `engine.advanced_solid.burn_rate_a` | Solid propellant burn rate coefficient. |
+| `engine.advanced_solid.burn_rate_n` | Pressure exponent in the solid propellant regression law. |
+| `engine.advanced_solid.propellant_molar_mass_g_mol` | Molar mass of solid propellant engine combustion products (g/mol). |
+| Advanced Liquid Engines |
+| `engine.advanced_liquid.chamber_pressure_pa` | Combustion chamber pressure of the liquid engine (Pa). |
+| `engine.advanced_liquid.nozzle_throat_area_m2` | Nozzle throat area of the liquid propellant engine. |
+| `engine.advanced_liquid.nozzle_exit_area_m2` | Nozzle exit area of the liquid propellant engine. |
+| `engine.advanced_liquid.chamber_temperature_k` | Combustion chamber gas temperature of the liquid propellant engine (K). |
+| `engine.advanced_liquid.propellant_molar_mass_g_mol` | Molar mass of combustion gases in the liquid propellant engine (g/mol). |
 
-### Top-level keys
-
-- `input_mode`
-  - expected source style for runtime parameters.
-- `orbit_altitude_m`
-  - target orbital altitude in meters.
-- `rocket`
-  - vehicle geometry, masses, stages, engines-per-stage.
-- `engine`
-  - propulsion family and detailed parameters.
-- `allowed_values`
-  - valid enum-like values for selected fields.
-
-### `rocket` section
-
-- `name` (string): rocket name.
-- `stage_num` (int): number of liquid stages.
-- `mass_structure_kg` (double): dry structural mass.
-- `upper_area_m2` (double): reference frontal area for drag.
-- `solid_propellant_mass_kg` (double): propellant mass for solid stage.
-- `solid_container_mass_kg` (double): mass of solid stage container.
-- `solid_engine_count` (int): number of solid engines.
-- `liquid_propellant_masses_kg` (double or array): per-stage propellant mass.
-- `liquid_container_masses_kg` (array): per-stage container masses.
-- `liquid_engines_per_stage` (array): engine count for each liquid stage.
-
-Normalization logic in code expands scalar/single-value arrays when needed to match `stage_num`.
-
-### `engine` section
-
-- `family`:
-  - `base`
-  - `advanced_solid`
-  - `advanced_liquid`
-- `base`:
-  - `isp_s`
-  - `cm`
-  - `chamber_pressure_pa`
-  - `burn_area_m2`
-- `advanced_solid`:
-  - `burn_area_m2`
-  - `nozzle_throat_area_m2`
-  - `chamber_temperature_k`
-  - `grain_dimension_m`
-  - `grain_density_kg_m3`
-  - `burn_rate_a`
-  - `burn_rate_n`
-  - `propellant_molar_mass_g_mol`
-- `advanced_liquid`:
-  - `chamber_pressure_pa`
-  - `burn_area_m2`
-  - `nozzle_throat_area_m2`
-  - `chamber_temperature_k`
+The user will also be asked to specify the altitude at which the rocket will attempt orbital insertion.  
+This altitude **must** be greater than 60,000 m.
 
 ---
 
-## 8. Typical Usage Workflow
+# Main File Organization
 
-1. Configure `assets/input_data/simulation_params.json`.
-2. Build with CMake.
-3. Launch `rocket.t`.
-4. Provide console inputs requested at startup (engine family selection, orbit altitude if prompted).
-5. Inspect generated output files:
-   - `assets/output_rocket.txt`
-   - `assets/output_air.txt`
-
-For repeatable experiments:
-- keep multiple JSON presets,
-- copy the selected preset into `simulation_params.json` before each run.
+* Rocket → rocket management, dynamics, and kinematics  
+* Engine → physics of all selectable engine types  
+* Atmosphere → simulation of atmospheric parameters at different altitudes  
 
 ---
 
-## 9. Technical Difficulties Encountered and How They Were Solved
+# Core Dynamic Implementation: `rocket.cpp`
 
-This section documents the concrete engineering issues addressed during development and the cross-platform hardening.
-
-### 9.1 Build and toolchain portability
-- **Problem:** Global `CMAKE_CXX_FLAGS*` contained sanitizer/linker flags that break MSVC and multi-config generators.  
-  **Fix:** Moved flags to target-scoped options; sanitized only Debug on GCC/Clang.
-
-### 9.2 Dual SFML naming schemes
-- **Problem:** Some distros expose `SFML::Graphics`, others only `sfml-graphics`.  
-  **Fix:** A linker helper in CMake selects targets if present, else falls back to library names.
-
-### 9.3 Missing SFML on fresh installs
-- **Problem:** New environments often lack SFML, blocking first build.  
-  **Fix:** Added `ROCKET_FETCH_SFML` to auto-download SFML via `FetchContent` when not found.
-
-### 9.4 Asset lookup fragility
-- **Problem:** Relative paths assumed a specific working directory; assets failed to load on IDE/Windows.  
-  **Fix:** Introduced `ROCKET_ASSETS_DIR` and central `asset_path()` using `std::filesystem` so binaries locate assets reliably.
-
-### 9.5 Constant definitions and headers
-- **Problem:** `M_PI` is non-standard on MSVC.  
-  **Fix:** Replaced with `std::numbers::pi_v<double>`.
-- **Problem:** Signature mismatch (`create_ad_eng_minim`) between header and implementation.  
-  **Fix:** Corrected declaration to match definition to satisfy stricter compilers.
-
-### 9.6 Data-driven simulation pitfalls
-- **Problem:** JSON arrays sometimes provided single values for multi-stage rockets.  
-  **Fix:** Added normalization logic that expands scalars or singletons to the required stage count, with validation and clear errors.
-- **Problem:** Config parsing lacked early validation.  
-  **Fix:** Regex/substring extractors now throw descriptive errors when keys or structures are missing; schema file documents expected shape.
-
-### 9.7 Runtime correctness checks
-- **Problem:** Silent physics failures (negative velocity, missing thrust) were hard to spot.  
-  **Fix:** Added defensive runtime checks that raise exceptions on invalid states (negative altitude/velocity, zero thrust with active stages), surfacing issues immediately.
-
-### 9.8 Cross-platform developer experience
-- **Problem:** IDEs on Windows changed working directory, breaking asset loading during debugging.  
-  **Fix:** CMake sets `VS_DEBUGGER_WORKING_DIRECTORY` to project root for MSVC targets.
-
-### 9.9 User feedback and observability
-- **Problem:** Without clear logs, users could not tell when asset or audio loading failed.  
-  **Fix:** Console messages for each critical load, plus on-screen error window via SFML in exception paths.
-
-### 9.10 Atmospheric reconstruction and drag
-- **Problem:** Need a realistic-enough atmosphere without external tables.  
-  **Fix:** Implemented a layered ISA-style profile in `simulation.cpp` that returns `T/P/ρ` deterministically for any altitude, enabling reproducible runs across platforms.
-- **Problem:** Drag must honor local density and direction in the correct frame.  
-  **Fix:** Drag uses the velocity vector in the simulation frame, the frontal area, and dynamic pressure derived from the atmospheric sample; unit handling was validated against analytical spot checks.
-
-### 9.11 Force aggregation and reference frames
-- **Problem:** Mixing radial/tangential components with screen-space visuals risked frame errors.  
-  **Fix:** `rocket.cpp` keeps forces in physical coordinates, aggregates thrust, gravity, centripetal, and drag before projection; rendering-only values are derived afterward to avoid cross-contamination.
-
-### 9.12 Staging robustness
-- **Problem:** Stage separation could leave the vehicle with zero thrust or negative mass.  
-  **Fix:** Added guards to prevent stage drop when propellant is still required, and assertions on mass/fuel non-negativity; thrust requests fail fast if stages are inconsistent.
-
-### 9.13 Integrator choice (semi-implicit/symplectic-like step)
-- **Problem:** Pure explicit Euler caused noticeable energy drift at larger timesteps.  
-  **Fix:** Adopted a semi-implicit update order (force → velocity → position) in `rocket.cpp`, which behaves like a simple symplectic integrator for this system, improving stability without complexity.
-
-### 9.14 Engine model diversity
-- **Problem:** Solid and liquid advanced models require different state and equations but share interfaces.  
-  **Fix:** Interface in `engine.h` plus separate `Ad_sol_engine` / `Ad_liquid_engine` implementations; both expose consistent methods so `rocket.cpp` can stay generic while still using model-specific thermodynamics.
-
-### 9.15 Time-step stability vs performance
-- **Problem:** A 1 s step risks instability during high-acceleration segments; reducing dt hurts performance.  
-  **Fix:** Semi-implicit ordering plus guardrails on state validity; documented dt trade-offs and kept logs to validate drift. Future work: adaptive step or RK2 where needed.
-
-### 9.16 Asset and audio latency
-- **Problem:** Audio/texture loading on the fly caused hitches in older builds.  
-  **Fix:** All assets are loaded before the countdown; failure aborts early with clear errors to avoid mid-sim stalls.
-
-### 9.17 I/O determinism
-- **Problem:** Output files had been opened in working directory, breaking determinism under IDEs.  
-  **Fix:** Outputs now live under `assets/`, and asset path resolution is centralized, giving deterministic locations and names.
-
-### 9.18 Parameter validation and safety rails
-- **Problem:** User-provided JSON could silently accept nonsensical values (negative masses, zero stages).  
-  **Fix:** Added numeric regex extraction with explicit error messages, stage-size normalization, and runtime checks in `rocket.cpp` to fail fast on invalid physical states.
-
-### 9.19 Coordinate consistency with rendering
-- **Problem:** Mixing polar (physics) and Cartesian (UI) frames led to visual drift.  
-  **Fix:** Physics stays in physical coordinates; only at render time are values mapped to screen coordinates, ensuring calculations remain frame-consistent.
-
-### 9.20 Drag correctness at high altitude
-- **Problem:** Drag should vanish smoothly as density drops; earlier versions clipped abruptly.  
-  **Fix:** Atmospheric sampler returns continuous density; drag uses that density directly, eliminating discontinuities near 50–100 km.
-
-### 9.21 Staging edge cases under zero thrust
-- **Problem:** Dropping a stage without residual thrust caused divisions by zero and negative fuel.  
-  **Fix:** Staging now checks thrust availability and mass before detaching; zero-thrust conditions raise controlled exceptions with guidance.
+The file `rocket.cpp` represents the dynamic and kinematic core of the simulator:  
+it integrates **propulsion, aerodynamics, gravity, stage management, and numerical integration**, thus governing the time evolution of the simulation.
 
 ---
 
-## 10. Troubleshooting
+## Choice of Reference Frame
 
-### CMake not found
+The simulation uses an **inertial frame centered at the Earth's center**, expressed in polar coordinates:
 
-Install CMake (see section 4), then verify:
+$$
+(r, \psi)
+$$
 
-```bash
-cmake --version
+where:
+
+* ( r ) = distance from Earth's center  
+* ( $\psi$ ) = polar angle  
+* ( $v_r$ ) = radial velocity  
+* ( $v_t$ ) = tangential velocity  
+
+### Why not a Cartesian system?
+
+A Cartesian system would require:
+
+* Explicit handling of Earth curvature  
+* Continuous normalization of the gravity vector  
+* Greater numerical instability at high altitude  
+* Increased difficulty in graphical visualization of the rocket position  
+
+---
+
+# Numerical Integration: Runge–Kutta 2 (Midpoint Method)
+
+The file uses an **RK2 (midpoint method)** integrator to update velocity and position.
+
+### Why not explicit Euler?
+
+The classical Euler integrator:
+
+$$
+x_{n+1} = x_n + v_n \Delta t
+$$
+
+introduces:
+
+* Poorer energy conservation during time evolution  
+* Instability in orbital regimes  
+* Amplified errors in centrifugal terms ( $\frac{v_t^2}{r}$ )
+
+### Implemented Equations
+
+In inertial polar coordinates:
+
+$$
+\dot{v_r} = \frac{F_r}{m} - \frac{v_t^2}{r}
+$$
+
+and
+
+$$
+\dot{v_t} = \frac{F_t}{m} + \frac{v_r v_t}{r}
+$$
+
+The term:
+
+$$
+\frac{v_t^2}{r}
+$$
+
+is the geometric centripetal acceleration.
+
+The term:
+
+$$
+\frac{v_r v_t}{r}
+$$
+
+is the geometric coupling term.
+
+---
+
+## Advantages of RK2
+
+* Reduces error during time evolution ($O(\Delta t^3)$ compared to $O(\Delta t^2)$ for Euler)  
+* Maintains good orbital stability  
+* Balanced compromise between accuracy and computational cost  
+
+---
+
+## Stage Management
+
+The program can handle stage separation. However, note that due to the current design, **the solid fuel stage must be detached before the first liquid stage**.
+
+Separation is handled by predicting how much propellant will be consumed in the next iteration and attempting to use as much propellant as possible.
+
+In the current version, it is not possible to manually control the thrust level of each engine during the simulation.  
+This makes orbit insertion significantly more challenging and reduces interactivity.  
+
+A future version is planned in which the user will have greater control over the launch phase.
+
+---
+
+## Thrust Direction Control
+
+To achieve an optimal pitch angle evolution, rather than defining a regression law analytically, real mission telemetry data was used as reference.
+
+Specifically, telemetry data from several missions, especially Falcon 9, was analyzed, and an average pitch profile as a function of altitude was derived.
+
+```cpp
+improve_theta(...)
+````
+
+Reads an altitude–angle guidance file.
+
+Design choice:
+
+* Data-driven pitch profile
+* Complete separation between guidance and dynamics
+
+Challenges encountered:
+
+* Need to store `file_pos`
+* Avoid continuous file rewind
+* Stabilize angle changes above 20 km
+
+---
+
+## Mach-Dependent Aerodynamics and Transonic Regime
+
+Drag force is modeled as:
+
+$$
+F_d = \frac{1}{2} \rho v^2 C_d(M) A
+$$
+
+The main complexity lies in the dependence of the drag coefficient $$C_d(M)$$ on Mach number.
+
+### Drag Divergence
+
+Near Mach 1:
+
+* Shock waves form
+* Wave drag increases sharply
+* $C_d$ becomes strongly nonlinear
+
+A piecewise definition introduces undesirable numerical discontinuities.
+
+### Smooth Regime Transitions
+
+To avoid numerical artifacts, the following function is implemented:
+
+```cpp
+double Cd_from_Mach(double M);
 ```
 
-### SFML not found
+The function uses smooth transitions based on hyperbolic tangents:
 
-Try:
+$$
+C_d(M) =
+C_{sub}
 
-```bash
-cmake -S . -B build -DROCKET_FETCH_SFML=ON
-```
+* \frac{C_{trans} - C_{sub}}{2} \left(1 + \tanh(k_1(M - M_1))\right)
+* \frac{C_{sup} - C_{trans}}{2} \left(1 + \tanh(k_2(M - M_2))\right)
+* \dots
+  $$
 
-### Program starts but no assets are loaded
+This guarantees:
 
-- Run from repository root, or
-- ensure working directory points to the project root where `assets/` exists.
+* At least $C^1$ continuity
+* Smooth acceleration profiles
+* Numerical stability
 
-### Push/pull rejected on Git
+The modeled regimes are:
 
-- fetch and integrate remote branch tip before pushing:
-
-```bash
-git fetch origin ultimate
-git merge origin/ultimate
-git push origin HEAD:ultimate
-```
+* Subsonic
+* Transonic
+* Supersonic
+* Hypersonic
 
 ---
 
-## 11. Notes on Visual and Documentation Quality
+# Modeling of Main Atmospheric Parameters `simulation.cpp`
 
-Special care was applied to:
-- coherent section hierarchy,
-- operational examples near each concept,
-- explicit naming of files used in runtime and build phases,
-- actionable troubleshooting steps rather than generic guidance.
+A simple exponential decay of density is insufficient for a realistic ascent simulation.
+Aerodynamic drag and propulsion performance critically depend on the local thermodynamic state.
 
-This README is intended to be both onboarding material and technical reference.
+### International Standard Atmosphere (ISA)
+
+The simulator implements the **ISA model**, computing atmospheric properties layer by layer:
+
+* Troposphere
+* Tropopause
+* Stratosphere (up to ~51 km, extendable)
+
+Each layer is modeled using:
+
+Hydrostatic equilibrium: $\frac{dP}{dh} = -\rho g$
+
+Ideal gas law: $ P = \rho R T $
+
+From these relations, altitude-dependent quantities are derived:
+
+* Pressure $P(h)$
+* Density $\rho(h)$
+* Temperature $T(h)$
+* Local speed of sound $a(h)$
+
+For more technical details, see: <a href="https://agodemar.github.io/FlightMechanics4Pilots/mypages/international-standard-atmosphere/">ISA model</a>.
+
+---
+# Engine Modeling (`engine.cpp`)
+
+The file `engine.cpp` implements different levels of propulsion complexity:
+
+1. **Base Engine** – constant specific impulse model  
+2. **Advanced Solid Engine** – full internal ballistics coupled with chamber pressure  
+3. **Advanced Liquid Engine** – choked flow model with isentropic relations  
+
+The **architecture is polymorphic**: each engine exposes the same public interface, allowing the user complete freedom of choice:
+
+- `delta_m(dt)` → mass lost consumption  
+- `eng_force(pa, time, theta)` → thrust vector  
+
+For the mathematical modeling, the following references were used:
+
+- <a href="https://www.grc.nasa.gov/www/k-12/airplane/rktthsum.html"> NASA Glenn Research Center – Rocket Thrust Equations </a>  
+- <a href="https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html"> NASA Glenn – Isentropic Flow Relations </a>  
+- Sutton & Biblarz, *Rocket Propulsion Elements*, 9th Edition  
+
+---
+
+## Base Engine
+
+This model assumes:
+
+- Constant chamber pressure  
+- Constant mass loss  
+- Constant specific impulse  
+
+Mass Flow Rate
+
+$$
+\dot{m} = p_0 \cdot A_{burn} \cdot c_m
+$$
+
+where:
+
+- \( $p_0$ \) = nominal combustion chamber pressure  
+- \( $A_{burn}$ \) = burning surface area  
+- \( $c_m$ \) = empirical mass loss coefficient  
+
+Fuel consumption per timestep:
+
+$$
+\Delta m = \dot{m} \Delta t
+$$
+
+Thrust
+
+$$
+F = \dot{m} I_{sp} g_0
+$$
+
+where:
+
+- \( $I_{sp}$ \) = specific impulse  
+- \( $g_0$ \) = standard gravity acceleration (m/s²)  
+
+---
+
+## Advanced Solid Engine
+
+This model implements the internal physics of a solid propellant rocket motor.
+
+Propellant Regression Law (Saint-Robert’s Law):
+
+$$
+\dot{r} = a P_c^n
+$$
+
+where:
+
+- \( a \) = burn rate coefficient  
+- \( n \) = pressure exponent  
+- \( $P_c$ \) = chamber pressure  
+
+Generated Mass Flow Rate
+
+$$
+\dot{m}_{gen} = \rho_p A_b \dot{r}
+$$
+
+where:
+
+- \( \$rho_p$ \) = propellant density  
+- \( $A_b$ \) = burning area  
+
+Mass Flow Through the Nozzle (Choked Flow)
+
+$$
+\dot{m}_{noz} = \frac{P_c A_t}{c^*}
+$$
+
+where:
+
+- \( $A_t$ \) = throat area  
+- \( $c^*$ \) = characteristic velocity  
+
+Mass Balance
+
+$$
+\frac{dP_c}{dt} =
+\frac{R_{spec} T_c}{V_c}
+(\dot{m}_{gen} - \dot{m}_{noz})
+$$
+
+where:
+
+$$
+R_{spec} = \frac{R}{M}
+$$
+
+Characteristic Velocity
+
+$$
+c^* =
+\sqrt{
+\left(\frac{2}{\gamma + 1}\right)^{\frac{\gamma + 1}{\gamma - 1}}
+R_{spec} T_c
+}
+$$
+
+Exit Mach Number Calculation
+
+Numerical solution of the area–Mach equation:
+
+$$
+\frac{A_e}{A_t}
+=
+\frac{1}{M_e}
+\left(
+\frac{2}{\gamma+1}
+\left(1 + \frac{\gamma-1}{2} M_e^2\right)
+\right)^{\frac{\gamma+1}{2(\gamma-1)}}
+$$
+
+The equation is solved numerically using the Newton–Raphson method to obtain the supersonic exit Mach number \( $M_e$ \).
+
+Exit Pressure
+
+$$
+\frac{P_e}{P_c}
+=
+\left(
+1 + \frac{\gamma-1}{2} M_e^2
+\right)^{-\frac{\gamma}{\gamma-1}}
+$$
+
+Exhaust Velocity
+
+$$
+v_e =
+\sqrt{
+\frac{2\gamma}{\gamma - 1}
+R_{spec} T_c
+\left(
+1 -
+\left(\frac{P_e}{P_c}\right)^{\frac{\gamma - 1}{\gamma}}
+\right)
+}
+$$
+
+Total Thrust
+
+$$
+F =
+\dot{m} v_e
++
+(P_e - P_a) A_e
+$$
+
+The second term represents the pressure contribution due to the difference between exit pressure and ambient pressure.
+
+---
+
+## Advanced Liquid Engine
+
+Assumptions:
+
+- Constant chamber pressure  
+- Choked flow at the throat  
+- Isentropic expansion  
+
+Mass Flow Rate
+
+$$
+\dot{m} =
+\frac{P_c A_t}{c^*}
+$$
+
+Exit Mach Number
+
+Determined by numerically solving the same area–Mach equation:
+
+$$
+\frac{A_e}{A_t}
+=
+\frac{1}{M_e}
+\left(
+\frac{2}{\gamma+1}
+\left(1 + \frac{\gamma-1}{2} M_e^2\right)
+\right)^{\frac{\gamma+1}{2(\gamma-1)}}
+$$
+
+Exit Pressure
+
+$$
+P_e =
+P_c
+\left(
+1 + \frac{\gamma - 1}{2} M_e^2
+\right)^{-\frac{\gamma}{\gamma - 1}}
+$$
+
+Exhaust Velocity
+
+$$
+v_e =
+\sqrt{
+\frac{2\gamma}{\gamma - 1}
+\frac{R T_c}{M}
+\left(
+1 -
+\left(\frac{P_e}{P_c}\right)^{\frac{\gamma - 1}{\gamma}}
+\right)
+}
+$$
+
+Thrust
+
+$$
+F =
+\dot{m} v_e
++
+(P_e - P_a) A_e
+$$
+
+---
+
+# Differences Between Models
+
+| Model | Complexity | Pressure Evolution | Realism |
+|----------|------------|----------------------|----------|
+| Base | Low | Constant | Approximate |
+| Advanced Solid | High | Dynamic | High |
+| Advanced Liquid | Medium/High | Constant (assumed) | Realistic |
+
+The file `engine.cpp` represents the most sophisticated modeling layer of the simulator.
+
+The objective is not merely to compute thrust,  
+but to reproduce the coupling between:
+
+- Combustion gas thermodynamics  
+- Chamber pressure dynamics  
+- Compressible flow in the nozzle  
+- Interaction with ambient pressure  
+
+---
+
+# Conclusion
+
+The project evolved from a simple ascent simulator into a structured implementation of:
+
+- Layered atmospheric thermodynamics  
+- Internal propulsion modeling  
+- Orbital mechanics  
+- Numerical integration  
+
+Particular importance was given to the rigorous separation between propulsion, aerodynamics, and kinematics through polymorphism, ensuring improved architectural scalability.
+
+The result is a numerically consistent representation of the real engineering and physical challenges involved in reaching orbit.
+
+## 👥 Contributors
+
+This project was made possible thanks to the contribution of:
+
+- **Sigfrido11**  🔗 [GitHub](https://github.com/Sigfrido11)  
+- **SierraTangoEcho** 🔗 [GitHub](https://github.com/SierraTangoEcho)
