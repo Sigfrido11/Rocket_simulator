@@ -12,7 +12,7 @@ The project repository can be viewed and downloaded by clicking the button below
   </a>
 </div>
 
-## Build and Dependencies (macOS, Windows, Linux)
+## Build and Dependencies Linux
 
 This project uses **CMake** and requires a **C++20** compiler.
 
@@ -38,10 +38,7 @@ The CMake configuration supports two valid approaches:
 
 ### Platform Setup
 
-Install the required tools with your preferred package manager.
-
-- **macOS (Homebrew)**
-  - `brew install cmake ninja git sfml`
+Install the required tools with your pr
 - **Ubuntu/Debian**
   - `sudo apt update`
   - `sudo apt install -y cmake ninja-build build-essential git libsfml-dev`
@@ -49,11 +46,6 @@ Install the required tools with your preferred package manager.
   - `sudo dnf install -y cmake ninja-build gcc-c++ git SFML-devel`
 - **Arch Linux**
   - `sudo pacman -S --needed cmake ninja base-devel git sfml`
-- **Windows**
-  - Install **Visual Studio 2022** with *Desktop development with C++*
-  - Install **CMake** and optionally **Ninja**
-  - Optional (system SFML): `winget install SFML.SFML`
-  - If SFML is not installed system-wide, keep `ROCKET_FETCH_SFML=ON` (default)
 
 ### Configure and Build
 
@@ -69,13 +61,7 @@ Notes:
 - `--config Release` is used by multi-config generators (Visual Studio, Xcode).
 
 ### Run
-
-- **Linux/macOS**
   - `./build/rocket.t`
-- **Windows (Visual Studio generator)**
-  - `.\build\Release\rocket.t.exe`
-
-Run from the project root so the executable can resolve the `assets/` directory correctly.
 
 ### Build Options
 
