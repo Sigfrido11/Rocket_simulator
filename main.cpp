@@ -28,6 +28,19 @@
 // angular component [1]
 //
 
+
+
+// ============================================================================
+// HELPER FUNCTIONS FOR PRINTING
+// ============================================================================
+
+std::string format2(double value)
+{
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2) << value;
+    return oss.str();
+}
+
 // ============================================================================
 // HELPER FUNCTIONS FOR FILE I/O AND JSON PARSING
 // ============================================================================
@@ -487,7 +500,7 @@ int main() {
 
   Vec eng_force;
 
-  double delta_time{0.3};
+  double delta_time{0.2};
 
 
   // ============================================================
@@ -571,24 +584,28 @@ int main() {
       int const total_seconds = static_cast<int>(out_time);
       int const out_time_min{total_seconds / 60};
       int const out_time_sec{total_seconds % 60};
+
       time.setString("Time: " + std::to_string(out_time_min) + " min " +
                      std::to_string(out_time_sec) + " sec ");
 
-      altitude.setString("Altitude: " + std::to_string(rocket.get_altitude()) +
-                         " m");
+      altitude.setString("Altitude: " + format2(rocket.get_altitude()) + " m");
 
-      angle.setString("Angle: " + std::to_string(rocket.get_theta()) + " rad");
+      angle.setString("Angle: " + format2(rocket.get_theta()*180/M_PI) + " deg");
 
+      stage.setString("Stage: " + std::to_string(rocket.get_rem_stage()) + "/" +
+                std::to_string(rocket_data.stage_num + 1));
+
+      speed.setString("Speed: " +
+                format2(rocket.get_velocity().norm()) + " m/s");
+
+      fuel_left.setString("Fuel left: " +
+                    format2(rocket.get_fuel_left()));
+
+      
       stage.setString("Stage: " + std::to_string(rocket.get_rem_stage()) + "/" +
                       std::to_string(rocket_data.stage_num + 1));
 
-      speed.setString(
-          "Speed: " +
-          std::to_string(rocket.get_velocity().norm()) + " m/s");
-
-      fuel_left.setString("Fuel left: " +
-                          std::to_string(rocket.get_fuel_left()));
-
+      
       // Update sprite positions and rotations
       rocket1.setRotation(90 - rocket.get_theta() * 360 / (2 * kPi));
       outer_atm.setPosition(0.f, altitude_for_scrolling + (height * 3 / 4) - 100'000);
@@ -642,7 +659,7 @@ int main() {
                     [&](sf::Vertex *obj) { window.draw(obj, 2, sf::Lines); });
 
       window.display();
-      if(rocket.get_altitude() > 6e4 || orbiting) {
+      if(rocket.get_altitude() > 7e4 || orbiting) {
          delta_time= 4.5;
       }
       
