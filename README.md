@@ -4,14 +4,6 @@ The purpose of this project is to simulate a launch vehicle from liftoff, occurr
 
 This simulator, developed in **C++20** with **SFML**, aims to model a physically consistent ascent while avoiding purely kinematic simplifications.
 
-The project repository can be viewed and downloaded by clicking the button below.
-
-<div class="rocket_repo">
-  <a class="btn" href="https://github.com/Sigfrido11/Rocket_simulator" target="_blank" rel="noopener">
-    Visit the repository
-  </a>
-</div>
-
 ## Build and Dependencies Linux
 
 This project uses **CMake** and requires a **C++20** compiler.
